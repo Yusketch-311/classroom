@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>授業ディスプレイ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: #f8f7f4;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e8e6e0;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 16px; font-weight: 500; color: #444; }
+  .header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    padding: 8px 16px; font-size: 13px;
+    border: 1px solid #d0cec8; border-radius: 8px;
+    background: #fff; color: #333;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s;
+  }
+  button:hover { background: #f0ede8; }
+  .btn-copy { font-weight: 500; border-color: #999; }
+  .btn-clear { color: #c0392b; border-color: #e8bdb9; }
+  .btn-mode {
+    font-size: 12px; padding: 6px 12px;
+    background: #f0ede8; border-color: #d0cec8;
+  }
+  .btn-mode.active {
+    background: #1a1a1a; color: #fff; border-color: #1a1a1a;
+  }
+  .count-badge {
+    font-size: 12px; color: #888;
+    background: #f0ede8; padding: 4px 10px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  #feed {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .entry {
+    background: #fff;
+    border: 1px solid #e8e6e0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    animation: fadeIn .3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .entry-text { font-size: 22px; line-height: 1.6; color: #1a1a1a; }
+  .entry-meta { font-size: 12px; color: #aaa; margin-top: 6px; }
+  .empty-state {
+    text-align: center; padding: 80px 24px;
+    color: #bbb; font-size: 18px; line-height: 1.8;
+  }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1a1a1a; color: #fff;
+    padding: 10px 20px; border-radius: 8px;
+    font-size: 14px; opacity: 0; transition: opacity .2s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+  /* 大画面表示モード */
+  body.bigmode #feed { padding: 40px; }
+  body.bigmode .entry-text { font-size: 32px; }
+  body.bigmode .entry { padding: 24px 28px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>授業ディスプレイ</h1>
+  <div class="header-btns">
+    <span class="count-badge" id="count">0 件</span>
+    <button class="btn-mode active" id="mode-normal" onclick="setMode('normal')">通常</button>
+    <button class="btn-mode" id="mode-big" onclick="setMode('big')">大画面</button>
+    <button class="btn-copy" onclick="copyMode('questions')">問いかけ生成 → コピー</button>
+    <button class="btn-copy" onclick="copyMode('summary')">要約 → コピー</button>
+    <button class="btn-copy" onclick="copyMode('reaction')">リアクション素材 → コピー</button>
+    <button class="btn-clear" onclick="clearAll()">クリア</button>
+  </div>
+</header>
+
+<div id="feed">
+  <div class="empty-state" id="empty">
+    学生の発言を待っています...<br>
+    <span style="font-size:14px;color:#ccc;">input.html のQRコードを学生に見せてください</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, onChildAdded, remove, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkzsfU81X3hoF32nlg58zHeHJcVXhAPG0",
+  authDomain: "classroom-stt.firebaseapp.com",
+  databaseURL: "https://classroom-stt-default-rtdb.firebaseio.com",
+  projectId: "classroom-stt",
+  storageBucket: "classroom-stt.firebasestorage.app",
+  messagingSenderId: "74071031952",
+  appId: "1:74071031952:web:dc22ed40bea81c88661815"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const entriesRef = ref(db, 'entries');
+
+let entries = [];
+let count = 0;
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function updateCount() {
+  document.getElementById('count').textContent = count + ' 件';
+}
+
+onChildAdded(entriesRef, (snapshot) => {
+  const data = snapshot.val();
+  if (!data || !data.text) return;
+
+  count++;
+  entries.push(data.text);
+  updateCount();
+
+  document.getElementById('empty').style.display = 'none';
+
+  const div = document.createElement('div');
+  div.className = 'entry';
+  const time = new Date(data.timestamp || Date.now());
+  const timeStr = time.getHours() + ':' + String(time.getMinutes()).padStart(2,'0');
+  div.innerHTML = `
+    <div class="entry-text">${escapeHtml(data.text)}</div>
+    <div class="entry-meta">${timeStr}</div>
+  `;
+  document.getElementById('feed').appendChild(div);
+  window.scrollTo(0, document.body.scrollHeight);
+});
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+const prompts = {
+  questions: `以下は授業中の学生の発言です。
+議論を深めるための問いかけを3〜5個、見落とされている視点とともに提示してください。
+
+【学生の発言】
+`,
+  summary: `以下は授業中の学生の発言です。
+【主なポイント】【キーワード】【論点・疑問点】の形で整理してください。
+
+【学生の発言】
+`,
+  reaction: `以下の学生発言をもとに、リアクションペーパー用の素材を作ってください。
+①今日の重要な問い（3個）②自分の意見を述べる視点（2〜3個）③次回に深めたいテーマ（1〜2個）
+
+【学生の発言】
+`
+};
+
+window.copyMode = function(mode) {
+  if (entries.length === 0) { toast('まだ発言がありません'); return; }
+  const text = prompts[mode] + entries.map((e, i) => `${i+1}. ${e}`).join('\n');
+  navigator.clipboard.writeText(text)
+    .then(() => toast('コピーしました — Claude.ai に貼り付けてください'))
+    .catch(() => toast('コピーに失敗しました'));
+};
+
+window.clearAll = function() {
+  if (!confirm('全ての発言を削除しますか？')) return;
+  remove(entriesRef).then(() => {
+    entries = [];
+    count = 0;
+    updateCount();
+    const feed = document.getElementById('feed');
+    feed.innerHTML = '<div class="empty-state" id="empty">学生の発言を待っています...<br><span style="font-size:14px;color:#ccc;">input.html のQRコードを学生に見せてください</span></div>';
+    toast('クリアしました');
+  });
+};
+
+window.setMode = function(mode) {
+  document.getElementById('mode-normal').classList.toggle('active', mode === 'normal');
+  document.getElementById('mode-big').classList.toggle('active', mode === 'big');
+  document.body.classList.toggle('bigmode', mode === 'big');
+};
+</script>
+</body>
+</html>

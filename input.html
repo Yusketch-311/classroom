@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>発言を送る</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: #f8f7f4;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 24px; }
+
+  .lang-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .lang-btn {
+    padding: 7px 16px; font-size: 13px;
+    border: 1px solid #d0cec8; border-radius: 20px;
+    background: #fff; color: #555;
+    cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .lang-btn.active {
+    background: #1a1a1a; color: #fff; border-color: #1a1a1a;
+  }
+
+  /* テキスト入力 */
+  .input-card {
+    background: #fff; border: 1px solid #e8e6e0;
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .card-label { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+  textarea {
+    width: 100%; border: 1px solid #e0ddd8;
+    border-radius: 8px; padding: 12px;
+    font-size: 16px; font-family: inherit;
+    resize: none; min-height: 100px;
+    background: #faf9f7; color: #1a1a1a;
+    outline: none; transition: border-color .15s;
+  }
+  textarea:focus { border-color: #999; background: #fff; }
+  .send-btn {
+    width: 100%; padding: 14px;
+    font-size: 16px; font-weight: 500;
+    border: none; border-radius: 8px;
+    background: #1a1a1a; color: #fff;
+    cursor: pointer; font-family: inherit;
+    margin-top: 10px; transition: background .15s;
+  }
+  .send-btn:hover { background: #333; }
+  .send-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+  /* 音声入力 */
+  .mic-card {
+    background: #fff; border: 1px solid #e8e6e0;
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .mic-btn {
+    width: 100%; padding: 14px;
+    font-size: 15px; font-weight: 500;
+    border: 1px solid #d0cec8; border-radius: 8px;
+    background: #fff; color: #1a1a1a;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; transition: all .15s;
+  }
+  .mic-btn.recording {
+    background: #fff5f4; border-color: #e8bdb9; color: #c0392b;
+  }
+  .mic-preview {
+    margin-top: 10px; font-size: 15px; color: #555;
+    min-height: 24px; line-height: 1.5;
+  }
+  .interim { color: #bbb; font-style: italic; }
+  .mic-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: currentColor; animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  .status {
+    text-align: center; font-size: 13px;
+    color: #888; margin-top: 16px; min-height: 20px;
+  }
+  .success { color: #27ae60; font-weight: 500; }
+  .error { color: #c0392b; }
+
+  .divider {
+    text-align: center; font-size: 12px; color: #bbb;
+    margin: 4px 0 12px; position: relative;
+  }
+  .divider::before, .divider::after {
+    content: ''; display: inline-block;
+    width: 80px; height: 1px;
+    background: #e8e6e0; vertical-align: middle; margin: 0 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>発言を送る</h1>
+<p class="subtitle">入力して送信ボタンを押してください</p>
+
+<div class="lang-row">
+  <span style="font-size:12px;color:#aaa;align-self:center;">音声言語：</span>
+  <button class="lang-btn active" onclick="setLang('ja-JP',this)">日本語</button>
+  <button class="lang-btn" onclick="setLang('de-DE',this)">Deutsch</button>
+  <button class="lang-btn" onclick="setLang('en-US',this)">English</button>
+</div>
+
+<!-- テキスト入力 -->
+<div class="input-card">
+  <div class="card-label">テキストで入力</div>
+  <textarea id="text-input" placeholder="ここに入力してください..."></textarea>
+  <button class="send-btn" id="send-btn" onclick="sendText()">送信</button>
+</div>
+
+<div class="divider">または</div>
+
+<!-- 音声入力 -->
+<div class="mic-card">
+  <div class="card-label">音声で入力（Chrome のみ対応）</div>
+  <button class="mic-btn" id="mic-btn" onclick="toggleMic()">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect x="5" y="1" width="6" height="9" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/>
+      <path d="M2.5 8.5C2.5 11.538 4.962 14 8 14s5.5-2.462 5.5-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      <line x1="8" y1="14" x2="8" y2="15.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <span id="mic-label">マイクで話す</span>
+  </button>
+  <div class="mic-preview">
+    <span id="mic-final"></span>
+    <span class="interim" id="mic-interim"></span>
+  </div>
+  <button class="send-btn" id="mic-send-btn" onclick="sendMicText()" disabled style="margin-top:10px;">音声内容を送信</button>
+</div>
+
+<div class="status" id="status"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkzsfU81X3hoF32nlg58zHeHJcVXhAPG0",
+  authDomain: "classroom-stt.firebaseapp.com",
+  databaseURL: "https://classroom-stt-default-rtdb.firebaseio.com",
+  projectId: "classroom-stt",
+  storageBucket: "classroom-stt.firebasestorage.app",
+  messagingSenderId: "74071031952",
+  appId: "1:74071031952:web:dc22ed40bea81c88661815"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const entriesRef = ref(db, 'entries');
+
+let currentLang = 'ja-JP';
+let rec = null, going = false, micText = '';
+
+function setStatus(msg, type='') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + type;
+}
+
+window.setLang = function(lang, el) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+};
+
+async function sendToFirebase(text) {
+  if (!text.trim()) { setStatus('テキストを入力してください', 'error'); return false; }
+  try {
+    await push(entriesRef, { text: text.trim(), timestamp: Date.now() });
+    return true;
+  } catch(e) {
+    setStatus('送信に失敗しました: ' + e.message, 'error');
+    return false;
+  }
+}
+
+window.sendText = async function() {
+  const input = document.getElementById('text-input');
+  const btn = document.getElementById('send-btn');
+  const text = input.value.trim();
+  if (!text) { setStatus('テキストを入力してください', 'error'); return; }
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  const ok = await sendToFirebase(text);
+  if (ok) {
+    input.value = '';
+    setStatus('送信しました！', 'success');
+    setTimeout(() => setStatus(''), 3000);
+  }
+  btn.disabled = false;
+  btn.textContent = '送信';
+};
+
+window.sendMicText = async function() {
+  if (!micText.trim()) { setStatus('先に音声を録音してください', 'error'); return; }
+  const btn = document.getElementById('mic-send-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  const ok = await sendToFirebase(micText);
+  if (ok) {
+    micText = '';
+    document.getElementById('mic-final').textContent = '';
+    document.getElementById('mic-interim').textContent = '';
+    document.getElementById('mic-send-btn').disabled = true;
+    setStatus('送信しました！', 'success');
+    setTimeout(() => setStatus(''), 3000);
+  }
+  btn.disabled = false;
+  btn.textContent = '音声内容を送信';
+};
+
+window.toggleMic = function() {
+  if (going) stopMic(); else startMic();
+};
+
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { setStatus('音声入力はChromeでのみ使えます', 'error'); return; }
+  rec = new SR();
+  rec.lang = currentLang;
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.onstart = () => {
+    going = true;
+    const btn = document.getElementById('mic-btn');
+    btn.classList.add('recording');
+    btn.innerHTML = `<span class="mic-dot"></span><span id="mic-label">停止</span>`;
+    setStatus('');
+  };
+  rec.onresult = (e) => {
+    let interim = '', fin = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) fin += t; else interim += t;
+    }
+    if (fin) {
+      micText += (micText ? '　' : '') + fin;
+      document.getElementById('mic-final').textContent = micText;
+      document.getElementById('mic-send-btn').disabled = false;
+    }
+    document.getElementById('mic-interim').textContent = interim;
+  };
+  rec.onerror = (e) => {
+    if (e.error === 'not-allowed') setStatus('マイクの許可が必要です', 'error');
+    else setStatus('エラー: ' + e.error, 'error');
+    stopMic();
+  };
+  rec.onend = () => { if (going) rec.start(); };
+  rec.start();
+}
+
+function stopMic() {
+  going = false;
+  if (rec) rec.stop();
+  const btn = document.getElementById('mic-btn');
+  btn.classList.remove('recording');
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5" y="1" width="6" height="9" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M2.5 8.5C2.5 11.538 4.962 14 8 14s5.5-2.462 5.5-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/><line x1="8" y1="14" x2="8" y2="15.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg><span id="mic-label">マイクで話す</span>`;
+  document.getElementById('mic-interim').textContent = '';
+  if (micText) setStatus('録音完了 — 「音声内容を送信」を押してください');
+}
+
+// Enterキーで送信（Shift+Enterで改行）
+document.getElementById('text-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendText(); }
+});
+</script>
+</body>
+</html>
