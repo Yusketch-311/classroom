@@ -231,26 +231,25 @@ function startMic() {
   rec = new SR();
   rec.lang = currentLang;
   rec.continuous = true;
-  rec.interimResults = true;
+  rec.interimResults = false;
   rec.onstart = () => {
     going = true;
     const btn = document.getElementById('mic-btn');
     btn.classList.add('recording');
     btn.innerHTML = `<span class="mic-dot"></span><span id="mic-label">停止</span>`;
-    setStatus('');
+    setStatus('話し終わるごとに認識されます');
   };
   rec.onresult = (e) => {
-    let interim = '', fin = '';
+    let fin = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) fin += t; else interim += t;
+      if (e.results[i].isFinal) fin += e.results[i][0].transcript;
     }
     if (fin) {
       micText += (micText ? '　' : '') + fin;
       document.getElementById('mic-final').textContent = micText;
+      document.getElementById('mic-interim').textContent = '';
       document.getElementById('mic-send-btn').disabled = false;
     }
-    document.getElementById('mic-interim').textContent = interim;
   };
   rec.onerror = (e) => {
     if (e.error === 'not-allowed') setStatus('マイクの許可が必要です', 'error');
