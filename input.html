@@ -270,10 +270,7 @@ function stopMic() {
   if (micText) setStatus('録音完了 — 「音声内容を送信」を押してください');
 }
 
-// Enterキーで送信（Shift+Enterで改行）
-document.getElementById('text-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendText(); }
-});
+// Enterキーは通常の改行。送信はボタンを押す。
 </script>
 </body>
 </html>
