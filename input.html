@@ -42,6 +42,12 @@
   }
   .success { color: #27ae60; font-weight: 500; }
   .error { color: #c0392b; }
+  .char-count {
+    text-align: right; font-size: 12px;
+    color: #ccc; margin-top: 4px;
+    transition: color .2s;
+  }
+  .char-count.active { color: #aaa; }
 </style>
 </head>
 <body>
@@ -49,7 +55,8 @@
 <h1>発言を送る</h1>
 <p class="subtitle">入力して送信ボタンを押してください</p>
 
-<textarea id="text-input" placeholder="ここに入力してください..."></textarea>
+<textarea id="text-input" placeholder="ここに入力してください..." oninput="updateCount()"></textarea>
+<div class="char-count" id="char-count">0</div>
 <button class="send-btn" id="send-btn" onclick="sendText()">送信</button>
 
 <div class="status" id="status"></div>
@@ -78,6 +85,13 @@ function setStatus(msg, type='') {
   el.className = 'status ' + type;
 }
 
+window.updateCount = function() {
+  const len = document.getElementById('text-input').value.length;
+  const el = document.getElementById('char-count');
+  el.textContent = len + ' 文字';
+  el.classList.toggle('active', len > 0);
+};
+
 window.sendText = async function() {
   const input = document.getElementById('text-input');
   const btn = document.getElementById('send-btn');
@@ -88,6 +102,7 @@ window.sendText = async function() {
   try {
     await push(entriesRef, { text, timestamp: Date.now() });
     input.value = '';
+    window.updateCount();
     setStatus('送信しました！', 'success');
     setTimeout(() => setStatus(''), 3000);
   } catch(e) {
