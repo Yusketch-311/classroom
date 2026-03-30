@@ -90,7 +90,7 @@
     <button class="btn-mode" id="mode-big" onclick="setMode('big')">大画面</button>
     <button class="btn-copy" onclick="copyMode('questions')">問いかけ生成 → コピー</button>
     <button class="btn-copy" onclick="copyMode('summary')">要約 → コピー</button>
-    <button class="btn-copy" onclick="copyMode('reaction')">リアクション素材 → コピー</button>
+    
     <button class="btn-clear" onclick="clearAll()">クリア</button>
   </div>
 </header>
@@ -163,20 +163,15 @@ function escapeHtml(str) {
 }
 
 const prompts = {
-  questions: `以下は授業中の学生の発言です。
+  questions: `以下は授業中の参加者の発言です。
 議論を深めるための問いかけを3〜5個、見落とされている視点とともに提示してください。
 
-【学生の発言】
+【参加者の発言】
 `,
-  summary: `以下は授業中の学生の発言です。
+  summary: `以下は授業中の参加者の発言です。
 【主なポイント】【キーワード】【論点・疑問点】の形で整理してください。
 
-【学生の発言】
-`,
-  reaction: `以下の学生発言をもとに、リアクションペーパー用の素材を作ってください。
-①今日の重要な問い（3個）②自分の意見を述べる視点（2〜3個）③次回に深めたいテーマ（1〜2個）
-
-【学生の発言】
+【参加者の発言】
 `
 };
 
