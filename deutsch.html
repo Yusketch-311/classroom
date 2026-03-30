@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deutsch – Sprachaufzeichnung</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', 'Arial', sans-serif;
+    background: #f8f7f4;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 24px 20px 48px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  h1 {
+    font-size: 17px;
+    font-weight: 500;
+    color: #333;
+  }
+  .rec-badge {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #c0392b;
+    background: #fff5f4;
+    border: 1px solid #e8bdb9;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .rec-badge.show { display: flex; }
+  .rec-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #c0392b;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  /* メイン表示エリア */
+  .transcript-box {
+    background: #fff;
+    border: 1px solid #e8e6e0;
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 200px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .transcript-box .label {
+    font-size: 11px;
+    color: #bbb;
+    margin-bottom: 12px;
+    letter-spacing: .03em;
+  }
+  #transcript {
+    font-size: 20px;
+    line-height: 1.8;
+    color: #1a1a1a;
+    min-height: 80px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #interim {
+    font-size: 18px;
+    color: #bbb;
+    font-style: italic;
+    margin-top: 4px;
+  }
+  .placeholder {
+    color: #ccc;
+    font-size: 16px;
+  }
+
+  /* ボタン行 */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  button {
+    padding: 11px 18px;
+    font-size: 14px;
+    border: 1px solid #d0cec8;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+  }
+  button:hover { background: #f0ede8; }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-main {
+    font-weight: 500;
+    border-color: #999;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-main.recording {
+    background: #fff5f4;
+    border-color: #e8bdb9;
+    color: #c0392b;
+  }
+  .btn-copy { color: #185FA5; border-color: #B5D4F4; }
+  .btn-copy:hover { background: #E6F1FB; }
+  .btn-clear { color: #888; }
+
+  /* プロンプト選択 */
+  .prompt-section {
+    background: #fff;
+    border: 1px solid #e8e6e0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .prompt-label {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+  .prompt-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .prompt-btn {
+    padding: 7px 14px;
+    font-size: 13px;
+    border: 1px solid #e0ddd8;
+    border-radius: 20px;
+    background: #f8f7f4;
+    color: #555;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .prompt-btn:hover {
+    background: #fff;
+    border-color: #999;
+    color: #1a1a1a;
+  }
+
+  .status {
+    font-size: 13px;
+    color: #aaa;
+    min-height: 20px;
+    text-align: center;
+  }
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a; color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    opacity: 0; transition: opacity .2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Deutsch – Sprachaufzeichnung</h1>
+  <span class="rec-badge" id="rec-badge">
+    <span class="rec-dot"></span>Aufnahme läuft
+  </span>
+</header>
+
+<div class="transcript-box">
+  <div class="label">Aufgezeichneter Text</div>
+  <div id="transcript">
+    <span class="placeholder">Drücken Sie „Aufnahme starten" und sprechen Sie auf Deutsch.</span>
+  </div>
+  <div id="interim"></div>
+</div>
+
+<div class="btn-row">
+  <button class="btn-main" id="btn-rec" onclick="toggleRec()">
+    <svg id="mic-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
+      <rect x="5" y="1" width="6" height="9" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/>
+      <path d="M2.5 8.5C2.5 11.538 4.962 14 8 14s5.5-2.462 5.5-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      <line x1="8" y1="14" x2="8" y2="15.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <span id="btn-label">Aufnahme starten</span>
+  </button>
+  <button class="btn-clear" onclick="clearAll()">Löschen</button>
+</div>
+
+<div class="prompt-section">
+  <div class="prompt-label">テキストをコピーして Claude.ai へ</div>
+  <div class="prompt-btns">
+    <button class="prompt-btn" onclick="copyWith('raw')">テキストのみコピー</button>
+    <button class="prompt-btn" onclick="copyWith('correct')">自然なドイツ語に直す ↗</button>
+    <button class="prompt-btn" onclick="copyWith('vocab')">重要表現・語彙を教える ↗</button>
+    <button class="prompt-btn" onclick="copyWith('feedback')">総合フィードバック ↗</button>
+  </div>
+</div>
+
+<div class="status" id="status"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let rec = null, going = false, full = '';
+
+const prompts = {
+  raw: '',
+  correct: `以下は学生がドイツ語授業で話したドイツ語の文字起こしです。
+内容を保ちながら、より自然なドイツ語の表現に直してください。
+元の表現と修正後の表現を並べて示し、修正点を簡単に説明してください。
+
+【文字起こし】
+`,
+  vocab: `以下は学生がドイツ語授業で話したドイツ語の文字起こしです。
+この内容に関連する重要な表現・語彙・言い回しを10個程度挙げてください。
+それぞれに日本語訳と例文（ドイツ語）を添えてください。
+
+【文字起こし】
+`,
+  feedback: `以下は学生がドイツ語授業で話したドイツ語の文字起こしです。
+以下の点について簡潔にフィードバックしてください：
+1. 全体的な評価（良かった点）
+2. 気になった表現・語順・語彙の誤り（2〜3点）
+3. より自然な言い方の提案
+
+【文字起こし】
+`
+};
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+function clearAll() {
+  if (full && !confirm('テキストをすべて削除しますか？')) return;
+  full = '';
+  document.getElementById('transcript').innerHTML =
+    '<span class="placeholder">Drücken Sie „Aufnahme starten" und sprechen Sie auf Deutsch.</span>';
+  document.getElementById('interim').textContent = '';
+  setStatus('');
+}
+
+function copyWith(type) {
+  if (!full.trim()) { toast('先に録音してください'); return; }
+  const text = (prompts[type] || '') + full;
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      const labels = {
+        raw: 'テキストをコピーしました',
+        correct: 'プロンプトをコピーしました — Claude.ai に貼り付けてください',
+        vocab: 'プロンプトをコピーしました — Claude.ai に貼り付けてください',
+        feedback: 'プロンプトをコピーしました — Claude.ai に貼り付けてください'
+      };
+      toast(labels[type]);
+    })
+    .catch(() => toast('コピーできませんでした'));
+}
+
+function toggleRec() {
+  if (going) stopRec(); else startRec();
+}
+
+function startRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    setStatus('Chrome または Edge でお試しください（このブラウザは非対応）');
+    return;
+  }
+  rec = new SR();
+  rec.lang = 'de-DE';
+  rec.continuous = true;
+  rec.interimResults = false;
+
+  rec.onstart = () => {
+    going = true;
+    document.getElementById('btn-rec').classList.add('recording');
+    document.getElementById('btn-label').textContent = 'Aufnahme stoppen';
+    document.getElementById('rec-badge').classList.add('show');
+    const el = document.getElementById('transcript');
+    if (el.querySelector('.placeholder')) el.innerHTML = '';
+    setStatus('');
+  };
+
+  rec.onresult = (e) => {
+    let fin = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) fin += e.results[i][0].transcript;
+    }
+    if (fin) {
+      full += (full ? '\n' : '') + fin;
+      document.getElementById('transcript').textContent = full;
+    }
+  };
+
+  rec.onerror = (e) => {
+    if (e.error === 'not-allowed')
+      setStatus('マイクの許可が必要です — アドレスバー左のアイコンから許可してください');
+    else
+      setStatus('エラー: ' + e.error);
+    stopRec();
+  };
+
+  rec.onend = () => { if (going) rec.start(); };
+  rec.start();
+}
+
+function stopRec() {
+  going = false;
+  if (rec) rec.stop();
+  document.getElementById('btn-rec').classList.remove('recording');
+  document.getElementById('btn-label').textContent = 'Aufnahme starten';
+  document.getElementById('rec-badge').classList.remove('show');
+  document.getElementById('interim').textContent = '';
+  if (full) setStatus('録音完了 — 下のボタンでコピーしてClaude.aiへ');
+}
+</script>
+</body>
+</html>
