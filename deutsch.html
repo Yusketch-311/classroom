@@ -49,7 +49,99 @@
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
 
-  /* メイン表示エリア */
+  /* タブ切り替え */
+  .tab-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #e8e6e0;
+  }
+  .tab-btn {
+    padding: 9px 18px;
+    font-size: 13px;
+    font-family: inherit;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: #aaa;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { color: #555; background: none; }
+  .tab-btn.active {
+    color: #1a1a1a;
+    border-bottom-color: #1a1a1a;
+    font-weight: 500;
+  }
+
+  /* 手入力エリア */
+  .input-box {
+    background: #fff;
+    border: 1px solid #e8e6e0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .input-box .label {
+    font-size: 11px;
+    color: #bbb;
+    margin-bottom: 10px;
+    letter-spacing: .03em;
+  }
+  #text-input {
+    width: 100%;
+    min-height: 160px;
+    font-size: 18px;
+    line-height: 1.8;
+    color: #1a1a1a;
+    border: none;
+    outline: none;
+    resize: vertical;
+    font-family: inherit;
+    background: transparent;
+  }
+  #text-input::placeholder { color: #ccc; }
+
+  .input-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0ede8;
+  }
+  .btn-use {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-family: inherit;
+    border: 1px solid #999;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background .15s;
+  }
+  .btn-use:hover { background: #333; }
+  .btn-use:disabled { opacity:.35; cursor:not-allowed; }
+  .btn-clear-input {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    border: 1px solid #d0cec8;
+    border-radius: 8px;
+    background: #fff;
+    color: #888;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-clear-input:hover { background: #f0ede8; }
+
+  /* 音声入力エリア（既存） */
   .transcript-box {
     background: #fff;
     border: 1px solid #e8e6e0;
@@ -84,6 +176,30 @@
     font-size: 16px;
   }
 
+  /* 確定テキスト表示エリア */
+  .result-box {
+    background: #f8f7f4;
+    border: 1px solid #e8e6e0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .result-box .label {
+    font-size: 11px;
+    color: #bbb;
+    margin-bottom: 10px;
+    letter-spacing: .03em;
+  }
+  #result-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: #1a1a1a;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 40px;
+  }
+  .result-empty { color: #ccc; font-size: 15px; }
+
   /* ボタン行 */
   .btn-row {
     display: flex;
@@ -116,8 +232,6 @@
     border-color: #e8bdb9;
     color: #c0392b;
   }
-  .btn-copy { color: #185FA5; border-color: #B5D4F4; }
-  .btn-copy:hover { background: #E6F1FB; }
   .btn-clear { color: #888; }
 
   /* プロンプト選択 */
@@ -174,37 +288,79 @@
     white-space: nowrap;
   }
   .toast.show { opacity: 1; }
+
+  /* タブパネル */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* モバイル対応 */
+  @media (max-width: 480px) {
+    #text-input { font-size: 16px; }
+    .prompt-btns { gap: 6px; }
+    .prompt-btn { font-size: 12px; padding: 6px 11px; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Deutsch – Sprachaufzeichnung</h1>
+  <h1>Deutsch – Texteingabe &amp; Sprachaufzeichnung</h1>
   <span class="rec-badge" id="rec-badge">
     <span class="rec-dot"></span>Aufnahme läuft
   </span>
 </header>
 
-<div class="transcript-box">
-  <div class="label">Aufgezeichneter Text</div>
-  <div id="transcript">
-    <span class="placeholder">Drücken Sie „Aufnahme starten" und sprechen Sie auf Deutsch.</span>
-  </div>
-  <div id="interim"></div>
-</div>
-
-<div class="btn-row">
-  <button class="btn-main" id="btn-rec" onclick="toggleRec()">
-    <svg id="mic-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
-      <rect x="5" y="1" width="6" height="9" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/>
-      <path d="M2.5 8.5C2.5 11.538 4.962 14 8 14s5.5-2.462 5.5-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-      <line x1="8" y1="14" x2="8" y2="15.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-    </svg>
-    <span id="btn-label">Aufnahme starten</span>
+<!-- タブ切り替え -->
+<div class="tab-row">
+  <button class="tab-btn active" onclick="switchTab('type')" id="tab-type">
+    ✏️ テキスト入力
   </button>
-  <button class="btn-clear" onclick="clearAll()">Löschen</button>
+  <button class="tab-btn" onclick="switchTab('voice')" id="tab-voice">
+    🎙️ 音声入力
+  </button>
 </div>
 
+<!-- ===== テキスト入力パネル ===== -->
+<div class="tab-panel active" id="panel-type">
+  <div class="input-box">
+    <div class="label">ドイツ語を入力 / 貼り付け</div>
+    <textarea id="text-input" placeholder="Schreiben Sie hier auf Deutsch …&#10;（ここにドイツ語を入力またはペーストしてください）" spellcheck="true" lang="de"></textarea>
+    <div class="input-actions">
+      <button class="btn-clear-input" onclick="clearTextInput()">クリア</button>
+      <button class="btn-use" onclick="useTextInput()">このテキストを使う ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 音声入力パネル ===== -->
+<div class="tab-panel" id="panel-voice">
+  <div class="transcript-box">
+    <div class="label">音声認識テキスト（リアルタイム）</div>
+    <div id="transcript">
+      <span class="placeholder">Drücken Sie „Aufnahme starten" und sprechen Sie auf Deutsch.</span>
+    </div>
+    <div id="interim"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-main" id="btn-rec" onclick="toggleRec()">
+      <svg id="mic-icon" width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <rect x="5" y="1" width="6" height="9" rx="3" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        <path d="M2.5 8.5C2.5 11.538 4.962 14 8 14s5.5-2.462 5.5-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <line x1="8" y1="14" x2="8" y2="15.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span id="btn-label">Aufnahme starten</span>
+    </button>
+    <button class="btn-clear" onclick="clearVoice()">音声テキストをクリア</button>
+  </div>
+</div>
+
+<!-- ===== 確定テキスト（両モード共通） ===== -->
+<div class="result-box">
+  <div class="label">Claude に送るテキスト ↓</div>
+  <div id="result-text"><span class="result-empty">テキスト入力または音声認識後にここに表示されます</span></div>
+</div>
+
+<!-- プロンプト選択 -->
 <div class="prompt-section">
   <div class="prompt-label">テキストをコピーして Claude.ai へ</div>
   <div class="prompt-btns">
@@ -219,7 +375,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let rec = null, going = false, full = '';
+let rec = null, going = false, voiceFull = '';
+let finalText = ''; // 確定テキスト（テキスト入力 or 音声）
 
 const prompts = {
   raw: '',
@@ -245,6 +402,27 @@ const prompts = {
 `
 };
 
+// ===== タブ切り替え =====
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  setStatus('');
+}
+
+// ===== 共通 =====
+function setResultText(text) {
+  finalText = text;
+  const el = document.getElementById('result-text');
+  if (text.trim()) {
+    el.textContent = text;
+    el.style.color = '';
+  } else {
+    el.innerHTML = '<span class="result-empty">テキスト入力または音声認識後にここに表示されます</span>';
+  }
+}
+
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -256,18 +434,37 @@ function setStatus(msg) {
   document.getElementById('status').textContent = msg;
 }
 
-function clearAll() {
-  if (full && !confirm('テキストをすべて削除しますか？')) return;
-  full = '';
+// ===== テキスト入力 =====
+function useTextInput() {
+  const val = document.getElementById('text-input').value.trim();
+  if (!val) { toast('テキストを入力してください'); return; }
+  setResultText(val);
+  setStatus('テキストを確定しました — 下のボタンでコピーして Claude.ai へ');
+  // スクロールして結果エリアを見せる
+  document.getElementById('result-text').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function clearTextInput() {
+  document.getElementById('text-input').value = '';
+  setStatus('');
+  // resultも音声由来でなければクリア
+  if (!voiceFull) setResultText('');
+}
+
+// ===== 音声入力 =====
+function clearVoice() {
+  if (voiceFull && !confirm('音声テキストをすべて削除しますか？')) return;
+  voiceFull = '';
   document.getElementById('transcript').innerHTML =
     '<span class="placeholder">Drücken Sie „Aufnahme starten" und sprechen Sie auf Deutsch.</span>';
   document.getElementById('interim').textContent = '';
+  setResultText('');
   setStatus('');
 }
 
 function copyWith(type) {
-  if (!full.trim()) { toast('先に録音してください'); return; }
-  const text = (prompts[type] || '') + full;
+  if (!finalText.trim()) { toast('先にテキストを確定してください'); return; }
+  const text = (prompts[type] || '') + finalText;
   navigator.clipboard.writeText(text)
     .then(() => {
       const labels = {
@@ -294,7 +491,7 @@ function startRec() {
   rec = new SR();
   rec.lang = 'de-DE';
   rec.continuous = true;
-  rec.interimResults = false;
+  rec.interimResults = true;
 
   rec.onstart = () => {
     going = true;
@@ -307,14 +504,17 @@ function startRec() {
   };
 
   rec.onresult = (e) => {
-    let fin = '';
+    let fin = '', inter = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (e.results[i].isFinal) fin += e.results[i][0].transcript;
+      else inter += e.results[i][0].transcript;
     }
     if (fin) {
-      full += (full ? '\n' : '') + fin;
-      document.getElementById('transcript').textContent = full;
+      voiceFull += (voiceFull ? '\n' : '') + fin;
+      document.getElementById('transcript').textContent = voiceFull;
+      setResultText(voiceFull);
     }
+    document.getElementById('interim').textContent = inter;
   };
 
   rec.onerror = (e) => {
@@ -336,7 +536,7 @@ function stopRec() {
   document.getElementById('btn-label').textContent = 'Aufnahme starten';
   document.getElementById('rec-badge').classList.remove('show');
   document.getElementById('interim').textContent = '';
-  if (full) setStatus('録音完了 — 下のボタンでコピーしてClaude.aiへ');
+  if (voiceFull) setStatus('録音完了 — 下のボタンでコピーして Claude.ai へ');
 }
 </script>
 </body>
