@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thema des Tages – Vol. 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef0f5;
+    --card: #f8f9fc;
+    --ink: #1a1d2e;
+    --muted: #7a7f96;
+    --accent: #3a5fc8;
+    --accent2: #c84a3a;
+    --border: #cdd2e0;
+    --timer-ring: #3a5fc8;
+    --timer-track: #dde1ec;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    gap: 32px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  header .vol {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-left: 8px;
+    vertical-align: middle;
+    position: relative;
+    top: -2px;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ── CARD ── */
+  .card-area {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 48px 40px;
+    text-align: center;
+    box-shadow: 4px 6px 0 0 var(--border);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .card:active {
+    transform: translate(2px, 3px);
+    box-shadow: 2px 3px 0 0 var(--border);
+  }
+
+  .card-corner {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 300;
+  }
+
+  .card-category {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .card-thema {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 4.5vw, 34px);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  .card-sub {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    font-style: italic;
+  }
+
+  .card-hint {
+    font-size: 12px;
+    color: var(--border);
+    margin-top: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  /* flip animation */
+  .card-area.flipping .card {
+    animation: flipCard 0.35s ease forwards;
+  }
+
+  @keyframes flipCard {
+    0%   { transform: rotateY(0deg) scale(1); }
+    40%  { transform: rotateY(90deg) scale(0.95); opacity: 0; }
+    60%  { transform: rotateY(-90deg) scale(0.95); opacity: 0; }
+    100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+  }
+
+  /* ── TIMER ── */
+  .timer-area {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .timer-ring-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+  }
+
+  .timer-svg {
+    width: 140px;
+    height: 140px;
+    transform: rotate(-90deg);
+  }
+
+  .timer-track {
+    fill: none;
+    stroke: var(--timer-track);
+    stroke-width: 6;
+  }
+
+  .timer-progress {
+    fill: none;
+    stroke: var(--timer-ring);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 377;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+  }
+
+  .timer-progress.warning {
+    stroke: #d97706;
+  }
+
+  .timer-display {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .timer-time {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .timer-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .timer-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  button {
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    transition: all 0.1s ease;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 28px;
+    min-width: 110px;
+  }
+
+  .btn-primary:hover {
+    background: #2e3350;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    color: var(--ink);
+    border-color: var(--muted);
+  }
+
+  .btn-new {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    padding: 11px 24px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+
+  .btn-new:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .timer-time.done {
+    color: var(--accent2);
+    animation: pulse 0.5s ease 3;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    font-size: 11px;
+    color: var(--border);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Thema des Tages <span class="vol">Vol. 2</span></h1>
+  <p>Sprechen Sie 2 Minuten auf Deutsch</p>
+</header>
+
+<!-- CARD -->
+<div class="card-area" id="cardArea">
+  <div class="card" id="card" onclick="newCard()">
+    <span class="card-corner">Thema</span>
+    <div class="card-category" id="cardCategory">Kategorie</div>
+    <div class="card-thema" id="cardThema">カードをクリック</div>
+    <div class="card-sub" id="cardSub"></div>
+    <div class="card-hint">クリックで新しいテーマ ↻</div>
+  </div>
+</div>
+
+<!-- NEUE FRAGE -->
+<div class="actions">
+  <button class="btn-new" onclick="newCard()">Neue Frage ↻</button>
+</div>
+
+<!-- TIMER -->
+<div class="timer-area">
+  <div class="timer-ring-wrap">
+    <svg class="timer-svg" viewBox="0 0 140 140">
+      <circle class="timer-track" cx="70" cy="70" r="60"/>
+      <circle class="timer-progress" id="timerProgress" cx="70" cy="70" r="60"/>
+    </svg>
+    <div class="timer-display">
+      <div class="timer-time" id="timerTime">2:00</div>
+      <div class="timer-label">Timer</div>
+    </div>
+  </div>
+  <div class="timer-controls">
+    <button class="btn-secondary" onclick="resetTimer()">Zurück</button>
+    <button class="btn-primary" id="timerBtn" onclick="toggleTimer()">Start</button>
+  </div>
+</div>
+
+<footer>Drücken Sie die Karte für ein neues Thema</footer>
+
+<script>
+// ── TOPICS – Vol. 2 ──
+const topics = [
+  // 日常・生活習慣
+  { category: "Alltag", thema: "Wie sieht Ihr typischer Morgen aus?", sub: "いつもの朝のルーティン" },
+  { category: "Alltag", thema: "Was machen Sie, wenn Sie gestresst sind?", sub: "ストレスを感じたときにすること" },
+  { category: "Alltag", thema: "Wie organisieren Sie Ihren Tag?", sub: "１日をどうやって整理しているか" },
+  { category: "Alltag", thema: "Schlafen Sie früh oder spät? Warum?", sub: "早起き派？夜型派？" },
+  { category: "Alltag", thema: "Was ist Ihr Lieblingsteil des Tages?", sub: "一日の中で一番好きな時間帯" },
+
+  // 人間関係・コミュニケーション
+  { category: "Beziehungen", thema: "Beschreiben Sie Ihren besten Freund.", sub: "親友について話す" },
+  { category: "Beziehungen", thema: "Wie halten Sie Kontakt zu Familie und Freunden?", sub: "家族や友達との連絡手段" },
+  { category: "Beziehungen", thema: "Was ist für Sie eine gute Freundschaft?", sub: "良い友情とはどういうものか" },
+  { category: "Beziehungen", thema: "Haben Sie schon mal jemandem geholfen? Wie?", sub: "誰かを助けた経験" },
+
+  // 学習・語学
+  { category: "Sprachen & Lernen", thema: "Warum lernen Sie Deutsch?", sub: "なぜドイツ語を学んでいるのか" },
+  { category: "Sprachen & Lernen", thema: "Was ist für Sie am Deutschlernen am schwersten?", sub: "ドイツ語学習で一番難しいこと" },
+  { category: "Sprachen & Lernen", thema: "Wie lernen Sie am liebsten neue Vokabeln?", sub: "自分に合った単語の覚え方" },
+  { category: "Sprachen & Lernen", thema: "Haben Sie schon mal etwas auf Deutsch geschrieben? Was?", sub: "ドイツ語で書いた経験" },
+  { category: "Sprachen & Lernen", thema: "Was möchten Sie als nächstes lernen?", sub: "次に学びたいこと" },
+
+  // 留学・海外生活
+  { category: "Auslandserfahrung", thema: "Warum möchten Sie ins Ausland gehen?", sub: "なぜ留学・海外生活をしたいのか" },
+  { category: "Auslandserfahrung", thema: "Welche Stadt in Deutschland würden Sie gern besuchen?", sub: "行きたいドイツの都市" },
+  { category: "Auslandserfahrung", thema: "Was packen Sie in Ihren Koffer für eine längere Reise?", sub: "長旅に持っていくもの" },
+  { category: "Auslandserfahrung", thema: "Worauf würden Sie sich im Ausland freuen?", sub: "海外で楽しみにしていること" },
+  { category: "Auslandserfahrung", thema: "Was würden Sie im Ausland vermissen?", sub: "海外でさみしく思いそうなこと" },
+  { category: "Auslandserfahrung", thema: "Wie würden Sie sich vorstellen, wenn Sie jemanden neu kennenlernen?", sub: "初対面の人への自己紹介" },
+
+  // 仕事・将来
+  { category: "Zukunft & Beruf", thema: "Was möchten Sie nach dem Studium machen?", sub: "卒業後にやりたいこと" },
+  { category: "Zukunft & Beruf", thema: "Welchen Beruf finden Sie interessant und warum?", sub: "興味のある仕事とその理由" },
+  { category: "Zukunft & Beruf", thema: "Was sind Ihre Stärken? Was können Sie gut?", sub: "自分の強み・得意なこと" },
+  { category: "Zukunft & Beruf", thema: "Wie stellen Sie sich Ihr Leben in 10 Jahren vor?", sub: "10年後の自分の生活" },
+
+  // 自然・環境・社会
+  { category: "Gesellschaft", thema: "Was tun Sie für die Umwelt?", sub: "環境のために自分がしていること" },
+  { category: "Gesellschaft", thema: "Welche Jahreszeit gefällt Ihnen am besten und warum?", sub: "好きな季節とその理由" },
+  { category: "Gesellschaft", thema: "Was ist in Japan gerade ein großes Thema?", sub: "日本で今話題になっていること" },
+  { category: "Gesellschaft", thema: "Wie nutzen Sie soziale Medien?", sub: "SNSとの付き合い方" },
+
+  // テクノロジー・デジタル
+  { category: "Technologie", thema: "Welche App nutzen Sie täglich? Warum?", sub: "毎日使っているアプリ" },
+  { category: "Technologie", thema: "Könnten Sie ohne Smartphone leben? Warum (nicht)?", sub: "スマホなしで生活できるか" },
+  { category: "Technologie", thema: "Was denken Sie über künstliche Intelligenz?", sub: "AI（人工知能）についての意見" },
+
+  // 旅行・場所
+  { category: "Reisen", thema: "Beschreiben Sie eine unvergessliche Reise.", sub: "忘れられない旅行の思い出" },
+  { category: "Reisen", thema: "Wohin möchten Sie unbedingt reisen? Warum?", sub: "ぜひ行きたい場所とその理由" },
+  { category: "Reisen", thema: "Reisen Sie lieber allein oder mit anderen?", sub: "一人旅 vs みんなで旅行" },
+  { category: "Reisen", thema: "Was empfehlen Sie Touristen in Japan?", sub: "外国人観光客へのおすすめ" },
+];
+
+let usedIndices = [];
+let currentIndex = -1;
+
+function newCard() {
+  if (usedIndices.length >= topics.length) usedIndices = [];
+
+  let idx;
+  do { idx = Math.floor(Math.random() * topics.length); }
+  while (usedIndices.includes(idx));
+
+  usedIndices.push(idx);
+  currentIndex = idx;
+
+  const area = document.getElementById('cardArea');
+  area.classList.add('flipping');
+
+  setTimeout(() => {
+    const t = topics[idx];
+    document.getElementById('cardCategory').textContent = t.category;
+    document.getElementById('cardThema').textContent = t.thema;
+    document.getElementById('cardSub').textContent = t.sub;
+    area.classList.remove('flipping');
+  }, 175);
+}
+
+// ── TIMER ──
+const TOTAL = 120;
+const CIRCUMFERENCE = 2 * Math.PI * 60;
+
+let remaining = TOTAL;
+let interval = null;
+let running = false;
+
+function toggleTimer() {
+  if (running) {
+    clearInterval(interval);
+    running = false;
+    document.getElementById('timerBtn').textContent = 'Weiter';
+  } else {
+    if (remaining <= 0) resetTimer();
+    running = true;
+    document.getElementById('timerBtn').textContent = 'Stop';
+    interval = setInterval(tick, 1000);
+  }
+}
+
+function tick() {
+  remaining--;
+  updateDisplay();
+  if (remaining <= 0) {
+    clearInterval(interval);
+    running = false;
+    document.getElementById('timerBtn').textContent = 'Start';
+    document.getElementById('timerTime').classList.add('done');
+  }
+}
+
+function resetTimer() {
+  clearInterval(interval);
+  running = false;
+  remaining = TOTAL;
+  document.getElementById('timerBtn').textContent = 'Start';
+  document.getElementById('timerTime').classList.remove('done');
+  updateDisplay();
+}
+
+function updateDisplay() {
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById('timerTime').textContent =
+    m + ':' + String(s).padStart(2, '0');
+
+  const ratio = remaining / TOTAL;
+  const offset = CIRCUMFERENCE * (1 - ratio);
+  const prog = document.getElementById('timerProgress');
+  prog.style.strokeDashoffset = offset;
+
+  if (remaining <= 30 && remaining > 0) {
+    prog.classList.add('warning');
+  } else {
+    prog.classList.remove('warning');
+  }
+}
+
+// init
+updateDisplay();
+newCard();
+</script>
+</body>
+</html>
