@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法学ドイツ語カード</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1a1e;
+    --surface: #24242a;
+    --surface2: #2e2e36;
+    --border: #38383f;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --accent: #7eb8d4;
+    --accent2: #c4a882;
+    --tag-law: #3a4a5a;
+    --tag-law-text: #7eb8d4;
+    --tag-conj: #3a3a20;
+    --tag-conj-text: #c4a882;
+    --tag-gen: #2e3a2e;
+    --tag-gen-text: #7ab87a;
+    --again: #c0392b;
+    --hard: #e67e22;
+    --good: #27ae60;
+    --easy: #2980b9;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  .filter-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .progress-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .card-wrap {
+    width: 100%;
+    max-width: 720px;
+    perspective: 1200px;
+    margin-bottom: 24px;
+    min-height: 320px;
+  }
+
+  .card {
+    width: 100%;
+    min-height: 320px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    min-height: 320px;
+    backface-visibility: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-face.back { transform: rotateY(180deg); align-items: flex-start; justify-content: flex-start; }
+
+  .card-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .tag-法学専門語彙 { background: var(--tag-law); color: var(--tag-law-text); }
+  .tag-法学論文語彙 { background: var(--tag-gen); color: var(--tag-gen-text); }
+  .tag-論文接続語彙 { background: var(--tag-conj); color: var(--tag-conj-text); }
+
+  .card-front-word {
+    font-family: 'EB Garamond', serif;
+    font-size: 2.6rem;
+    font-weight: 400;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 20px;
+  }
+
+  .card-hint {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .card-back-content {
+    width: 100%;
+  }
+
+  .card-back-word {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-weight: 400;
+  }
+
+  .card-back-body {
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .card-back-body .segment {
+    display: block;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-back-body .segment:last-child { border-bottom: none; }
+
+  .tap-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .answer-row {
+    width: 100%;
+    max-width: 720px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .answer-row.visible { opacity: 1; pointer-events: all; }
+
+  .ans-btn {
+    padding: 12px 8px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+  }
+  .ans-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .ans-btn:active { transform: translateY(0); }
+  .ans-btn .label { font-size: 0.85rem; }
+  .ans-btn .sublabel { font-size: 0.65rem; opacity: 0.75; }
+
+  .btn-again { background: var(--again); }
+  .btn-hard  { background: var(--hard); }
+  .btn-good  { background: var(--good); }
+  .btn-easy  { background: var(--easy); }
+
+  .controls {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .ctrl-btn {
+    padding: 8px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { color: var(--text); border-color: var(--text-dim); }
+
+  .done-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px;
+    text-align: center;
+  }
+  .done-screen.visible { display: flex; }
+
+  .done-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .done-sub {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+  .done-stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'EB Garamond', serif; font-size: 2rem; color: var(--text); }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); }
+
+  .restart-btn {
+    padding: 12px 32px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .restart-btn:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>法学ドイツ語カード</h1>
+  <div class="filter-row">
+    <button class="filter-btn active" data-tag="全て">全て</button>
+    <button class="filter-btn" data-tag="法学専門語彙">専門語彙</button>
+    <button class="filter-btn" data-tag="法学論文語彙">論文語彙</button>
+    <button class="filter-btn" data-tag="論文接続語彙">接続語彙</button>
+  </div>
+</header>
+
+<div class="progress-area">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 0</div>
+</div>
+
+<div class="card-wrap" id="cardWrap">
+  <div class="card" id="card" onclick="flipCard()">
+    <div class="card-face front" id="frontFace">
+      <div class="card-tag" id="frontTag"></div>
+      <div class="card-front-word" id="frontWord"></div>
+      <div class="card-hint">クリックして裏面を見る</div>
+    </div>
+    <div class="card-face back" id="backFace">
+      <div class="card-back-content">
+        <div class="card-back-word" id="backWord"></div>
+        <div class="card-back-body" id="backBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tap-hint" id="tapHint"></div>
+
+<div class="answer-row" id="answerRow">
+  <button class="ans-btn btn-again" onclick="answer(0)">
+    <span class="label">もう一度</span>
+    <span class="sublabel">Again</span>
+  </button>
+  <button class="ans-btn btn-hard" onclick="answer(1)">
+    <span class="label">難しい</span>
+    <span class="sublabel">Hard</span>
+  </button>
+  <button class="ans-btn btn-good" onclick="answer(2)">
+    <span class="label">普通</span>
+    <span class="sublabel">Good</span>
+  </button>
+  <button class="ans-btn btn-easy" onclick="answer(3)">
+    <span class="label">簡単</span>
+    <span class="sublabel">Easy</span>
+  </button>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="shuffleDeck()">シャッフル</button>
+  <button class="ctrl-btn" onclick="restartDeck()">最初から</button>
+</div>
+
+<div class="done-screen" id="doneScreen">
+  <div class="done-title">セッション完了</div>
+  <div class="done-sub" id="doneSubText"></div>
+  <div class="done-stats">
+    <div class="stat"><div class="stat-num" id="statAgain">0</div><div class="stat-label">もう一度</div></div>
+    <div class="stat"><div class="stat-num" id="statHard">0</div><div class="stat-label">難しい</div></div>
+    <div class="stat"><div class="stat-num" id="statGood">0</div><div class="stat-label">普通</div></div>
+    <div class="stat"><div class="stat-num" id="statEasy">0</div><div class="stat-label">簡単</div></div>
+  </div>
+  <button class="restart-btn" onclick="restartDeck()">もう一度やる</button>
+</div>
+
+<script>
+const RAW = [
+["Kontinuität","（女性名詞）継続性・連続性／das Prinzip der Kontinuität＝継続性の原則／形容詞形：kontinuierlich（継続的な）","法学論文語彙"],
+["Staatlichkeit","（女性名詞）国家性・国家としての性質／Staatslichkeit とも／形容詞 staatlich（国家の・国家的な）から派生","法学専門語彙"],
+["Wohlfahrtsstaat","（男性名詞）福祉国家／wohlfahrtsstaatlich（形容詞）＝福祉国家的な／Wohlfahrtsstaatlichkeit＝福祉国家性","法学専門語彙"],
+["Legitimation","（女性名詞）正当化・正統性の付与／Legitimität（正統性）と区別：Legitimation は行為・プロセスを指す／動詞：legitimieren","法学専門語彙"],
+["Finanzordnung","（女性名詞）財政秩序・財政制度／Finanz-（財政）＋Ordnung（秩序）の複合語／財政法分野の基本概念","法学専門語彙"],
+["Gebietskörperschaft","（女性名詞）地域的公共団体・地方公共団体／Bund・Land・Gemeinde などを包括する概念／複数形：Gebietskörperschaften","法学専門語彙"],
+["Vertragsparität","（女性名詞）契約当事者間の対等性・契約パリテ／gestörte Vertragsparität＝歪められた契約対等性／私法・契約法の概念","法学専門語彙"],
+["Wohnraummietvertrag","（男性名詞）住居賃貸借契約／Wohnraum（居住空間）＋Miet-（賃貸）＋Vertrag（契約）の複合語／借主保護法制の核心概念","法学専門語彙"],
+["Schutzbedürftigkeit","（女性名詞）保護の必要性・要保護性／schutzbedürftig（形容詞）＝保護を必要とする／借主・消費者保護の文脈で頻出","法学専門語彙"],
+["Vermieter","（男性名詞）賃貸人・貸主／vermieten（動詞）＝賃貸する／対義語：Mieter（賃借人・借主）","法学専門語彙"],
+["Mieter","（男性名詞）賃借人・借主／mieten（動詞）＝借りる／対義語：Vermieter（賃貸人）／Wohnraummieter＝住居の借主","法学専門語彙"],
+["Verwaltungsrat","（男性名詞）取締役会・理事会（スイス法用語）／ドイツ法の Vorstand（取締役）に相当／Alleinverwaltungsrat＝唯一の取締役","法学専門語彙"],
+["Alleinaktionär","（男性名詞）単独株主・唯一の株主／allein（唯一の）＋Aktionär（株主）／Unternehmensinteresse と Eigeninteresse が一致する場面で登場","法学専門語彙"],
+["Unternehmensinteresse","（中性名詞）会社の利益・企業利益／Eigeninteresse（自己利益）との対比で用いられる／会社法・コーポレートガバナンスの基本概念","法学専門語彙"],
+["Verordnungsermächtigung","（女性名詞）命令制定権限・委任立法の授権／Art. 80 GG に基づく要件／Ermächtigung（授権）＋Verordnung（命令）","法学専門語彙"],
+["Wesentlichkeitsgrundsatz","（男性名詞）本質性原則・重要事項留保原則／民主主義原理・法治国家原理から導かれる／議会が本質的事項を自ら決定すべきとの原則","法学専門語彙"],
+["Volksvertretung","（女性名詞）国民代表・議会／Volk（国民）＋Vertretung（代表）／民主主義論の文脈で頻出","法学専門語彙"],
+["Grundrechtseingriff","（男性名詞）基本権への介入・基本権侵害／Grundrecht（基本権）＋Eingriff（介入）／公法・憲法の基本概念","法学専門語彙"],
+["Rechtsstaatsprinzip","（中性名詞）法治国家原則／Rechtsstaat（法治国家）＋Prinzip（原則）／Demokratieprinzip と並ぶ憲法の基本原理","法学専門語彙"],
+["Demokratieprinzip","（中性名詞）民主主義原則／GG の基本原理の一つ／Rechtsstaatsprinzip・Bundesstaatsprinzip などと並置される","法学専門語彙"],
+["öffentliches Recht","（中性名詞）公法／Privatrecht（私法）との二分法はドイツ法の基本構造／VwVfG・GG などが適用される領域","法学専門語彙"],
+["Privatrecht","（中性名詞）私法／öffentliches Recht（公法）との対比／BGB・HGB などが適用される領域","法学専門語彙"],
+["Streitigkeit","（女性名詞）紛争・争訟／öffentlich-rechtliche Streitigkeit＝公法上の紛争／gerichtsverfassungsrechtliche Zuständigkeit（裁判所構成法上の管轄）を決定する","法学専門語彙"],
+["Gemeinwohl","（中性名詞）公共の福祉・公益／Gemeinwohl と Eigeninteresse（私益）の対比／Gemeinwohlverantwortung＝公益責任","法学専門語彙"],
+["Verantwortungsteilung","（女性名詞）責任分担・責任の分有／staatliche と private Verantwortung の間の概念／行政法・規制法の文脈","法学専門語彙"],
+["Minderheitsschutz","（男性名詞）少数派保護・少数株主保護／Minderheit（少数派）＋Schutz（保護）／会社法における基本的保護原理","法学専門語彙"],
+["Treuepflicht","（女性名詞）忠実義務・誠実義務／gesellschaftliche Treuepflicht＝会社法上の忠実義務／Aktionärsmehrheit・Vorstand・Aufsichtsrat に課される","法学専門語彙"],
+["Normativsystem","（中性名詞）規範体制・準則主義（株式会社設立に関する歴史的概念）／Konzessionssystem（特許主義）に対する概念／1870年の AG 設立に関連","法学専門語彙"],
+["Rechtsgutstheorie","（女性名詞）法益論・保護法益理論／刑法の基本理論／systemimmanente Funktion と systemkritische Funktion の二機能が論じられる","法学専門語彙"],
+["Rechtsgut","（中性名詞）法益・保護法益／刑法上の犯罪論の核心概念／strafschutzwürdiges Rechtsgut＝刑事的保護に値する法益","法学専門語彙"],
+["Vorwerfbarkeit","（女性名詞）非難可能性・帰責可能性／Schuld（責任）の定義として「Vorwerfbarkeit」が使われる（Frank の定式）／刑法責任論の核心","法学専門語彙"],
+["Schuld","（女性名詞）責任・有責性（刑法）／Vorsatz（故意）・Fahrlässigkeit（過失）を含む／Frank：「Schuld ist Vorwerfbarkeit」","法学専門語彙"],
+["Vorsatz","（男性名詞）故意／Fahrlässigkeit（過失）との対比／刑法上の主観的要件の基本概念","法学専門語彙"],
+["Fahrlässigkeit","（女性名詞）過失／Vorsatz（故意）との対比／bewusste Fahrlässigkeit（認識ある過失）・unbewusste Fahrlässigkeit（認識なき過失）","法学専門語彙"],
+["Staatsoberhaupt","（中性名詞）国家元首／parlamentarisches System では Regierung が議会に依存／konstitutionelles System では Staatsoberhaupt への依存も","法学専門語彙"],
+["Regierungssystem","（中性名詞）統治制度・政府制度／parlamentarisch・präsidentiell・konstitutionell の三類型が論じられる","法学専門語彙"],
+["faktischer Vertrag","（男性名詞）事実的契約／wirksames Rechtsgeschäft（有効な法律行為）なしに契約的効果が生じる法的構成／BGH のハンブルク駐車場事件が著名","法学専門語彙"],
+["soweit","～する限りにおいて／条件・範囲を示す従属接続詞／insoweit（その限りで）と対比して使われることも多い","論文接続語彙"],
+["insoweit","その限りにおいて・その点では／soweit と同義だが副詞的用法が多い／insoweit gilt...＝その限りで～が妥当する","論文接続語彙"],
+["jedoch","しかし・ところが／対比・逆接を示す副詞／aber より書き言葉的・論文的／文中に置かれることが多い（動詞の後）","論文接続語彙"],
+["allerdings","もっとも・ただし／部分的な留保・修正を導く副詞／jedoch より譲歩のニュアンスが強い","論文接続語彙"],
+["hingegen","これに対して・一方で／対比を示す副詞／dagegen と同義だがやや文語的","論文接続語彙"],
+["dagegen","これに対して・反対に／対比・反論を導く副詞／jedoch・hingegen と類似するが対立のニュアンスが強い","論文接続語彙"],
+["demgegenüber","これに対して・それとは対照的に／対比を強調する副詞／論文で対立する立場や事実を導入する際に使う","論文接続語彙"],
+["zugleich","同時に・また一方で／二つの性質・機能が並存することを示す副詞","論文接続語彙"],
+["mithin","したがって・それゆえ／論理的帰結を導く副詞／also・daher より格調高い書き言葉","論文接続語彙"],
+["somit","したがって・こうして／mithin・also と同義／論理的な結論・帰結を示す","論文接続語彙"],
+["deshalb","それゆえ・そのため／因果関係を示す副詞／daher・deswegen と同義","論文接続語彙"],
+["daher","それゆえ・したがって／deshalb・mithin と同義／原因・理由から結果を導く","論文接続語彙"],
+["zwar … aber","確かに～だが…／譲歩構文の定型表現／zwar で部分的に認めつつ aber で反論・留保を示す","論文接続語彙"],
+["einerseits … andererseits","一方では～他方では…／二項対比の定型表現／論文で両面を論じる際の基本構文","論文接続語彙"],
+["zum einen … zum anderen","第一に～第二に（理由・観点の列挙）／einerseits…andererseits と同義だが列挙的ニュアンス","論文接続語彙"],
+["nicht nur … sondern auch","～だけでなく…もまた／付加・累加を示す相関接続詞／sowohl…als auch と同義","論文接続語彙"],
+["sowohl … als auch","～も…も両方／並列・累加を示す相関接続詞／nicht nur…sondern auch と同義","論文接続語彙"],
+["weder … noch","～も…もない／二重否定の相関接続詞","論文接続語彙"],
+["sofern","～する限り・～であれば／条件を示す従属接続詞／soweit と類似するが条件のニュアンスが強い","論文接続語彙"],
+["insbesondere","とりわけ・特に／特定の事例・点を強調する副詞／vor allem と同義","論文接続語彙"],
+["vor allem","何よりも・とりわけ／insbesondere と同義／列挙の中で最重要項目を導く","論文接続語彙"],
+["im Übrigen","その他の点では・なお／話題を転換・補足する際の表現／余事記載的な補足に使う","論文接続語彙"],
+["vielmehr","むしろ・それよりも／前の記述を訂正・強化する副詞／nicht A, vielmehr B＝AではなくむしろB","論文接続語彙"],
+["zumal","とりわけ・特に（理由を強調）／理由節を導く接続詞的副詞／zumal da...＝特に～であるから","論文接続語彙"],
+["darüber hinaus","それに加えて・さらに／付加情報を導く副詞句／außerdem・ferner と同義","論文接続語彙"],
+["im Rahmen","～の枠内で・～の範囲で／法的・制度的文脈での範囲限定表現","論文接続語彙"],
+["im Hinblick auf","～の観点から・～を考慮して／論点・視点の限定を示す前置詞句","論文接続語彙"],
+["hinsichtlich","～に関して・～の点では（二格支配）／bezüglich と同義／論文で論点を限定する際に頻出","論文接続語彙"],
+["bezüglich","～に関して（二格支配）／hinsichtlich と同義","論文接続語彙"],
+["gegebenenfalls","場合によっては・必要に応じて／条件的・留保的表現／略記：ggf.","論文接続語彙"],
+["grundsätzlich","原則として・基本的に／例外の存在を示唆しつつ原則を述べる副詞／im Grundsatz と同義","論文接続語彙"],
+["im Grundsatz","原則として／grundsätzlich と同義だが名詞句的表現","論文接続語彙"],
+["in der Praxis","実務上・実践においては／理論（in der Theorie）との対比で使われることが多い","論文接続語彙"],
+["in diesem Zusammenhang","この文脈において・この関連で／話題の連続性を示す表現","論文接続語彙"]
+];
+
+let deck = [];
+let current = 0;
+let flipped = false;
+let activeTag = '全て';
+let stats = {again:0, hard:0, good:0, easy:0};
+
+function buildDeck(tag) {
+  deck = RAW.filter(c => tag === '全て' || c[2] === tag);
+  current = 0;
+  stats = {again:0, hard:0, good:0, easy:0};
+}
+
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  current = 0;
+  stats = {again:0, hard:0, good:0, easy:0};
+  showCard();
+}
+
+function restartDeck() {
+  buildDeck(activeTag);
+  showCard();
+}
+
+function showCard() {
+  const doneScreen = document.getElementById('doneScreen');
+  const cardWrap = document.getElementById('cardWrap');
+  const answerRow = document.getElementById('answerRow');
+  const tapHint = document.getElementById('tapHint');
+
+  if (current >= deck.length) {
+    doneScreen.classList.add('visible');
+    cardWrap.style.display = 'none';
+    answerRow.classList.remove('visible');
+    tapHint.textContent = '';
+    document.getElementById('statAgain').textContent = stats.again;
+    document.getElementById('statHard').textContent = stats.hard;
+    document.getElementById('statGood').textContent = stats.good;
+    document.getElementById('statEasy').textContent = stats.easy;
+    document.getElementById('doneSubText').textContent = `${deck.length}枚のカードを学習しました。`;
+    return;
+  }
+
+  doneScreen.classList.remove('visible');
+  cardWrap.style.display = '';
+
+  const card = document.getElementById('card');
+  card.classList.remove('flipped');
+  flipped = false;
+  answerRow.classList.remove('visible');
+  tapHint.textContent = '';
+
+  const c = deck[current];
+  document.getElementById('frontTag').textContent = c[2];
+  document.getElementById('frontTag').className = 'card-tag tag-' + c[2];
+  document.getElementById('frontWord').textContent = c[0];
+
+  document.getElementById('backWord').textContent = c[0];
+  const segments = c[1].split('／').map(s => `<span class="segment">${s}</span>`).join('');
+  document.getElementById('backBody').innerHTML = segments;
+
+  updateProgress();
+}
+
+function flipCard() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('card').classList.add('flipped');
+  document.getElementById('answerRow').classList.add('visible');
+  document.getElementById('tapHint').textContent = '理解度を選んでください';
+}
+
+function answer(level) {
+  if (level === 0) stats.again++;
+  else if (level === 1) stats.hard++;
+  else if (level === 2) stats.good++;
+  else stats.easy++;
+
+  if (level === 0) {
+    // put card back near end
+    const card = deck.splice(current, 1)[0];
+    const insertAt = Math.min(current + 3, deck.length);
+    deck.splice(insertAt, 0, card);
+  } else {
+    current++;
+  }
+  showCard();
+}
+
+function updateProgress() {
+  const total = deck.length;
+  const done = current;
+  const pct = total > 0 ? (done / total) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = done + ' / ' + total;
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTag = btn.dataset.tag;
+    buildDeck(activeTag);
+    showCard();
+  });
+});
+
+// Init
+buildDeck('全て');
+shuffleDeck();
+</script>
+</body>
+</html>
