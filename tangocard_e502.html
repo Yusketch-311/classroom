@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einladungen und Verabschiedungen カード</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0eee8;
+    --border: #ddd8cc;
+    --text: #2b2a28;
+    --text-dim: #8a8578;
+    --accent: #3a7d8c;
+    --accent2: #b5793a;
+    --tag-law: #e3eef0;
+    --tag-law-text: #2c6b7a;
+    --tag-conj: #f4ecd9;
+    --tag-conj-text: #9c6f2a;
+    --tag-gen: #e7f0e3;
+    --tag-gen-text: #4f7a45;
+    --again: #c0392b;
+    --hard: #d68a1a;
+    --good: #2f9e5e;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  .filter-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .progress-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .mastered-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+    color: var(--good);
+    font-weight: 500;
+  }
+  .mastered-area span { font-family: 'EB Garamond', serif; font-size: 0.95rem; }
+
+  .card-wrap {
+    width: 100%;
+    max-width: 720px;
+    perspective: 1200px;
+    margin-bottom: 24px;
+    min-height: 320px;
+  }
+
+  .card {
+    width: 100%;
+    min-height: 320px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    min-height: 320px;
+    backface-visibility: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .card-face.back { transform: rotateY(180deg); align-items: flex-start; justify-content: flex-start; }
+
+  .card-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .tag-招待・誘い { background: var(--tag-law); color: var(--tag-law-text); }
+  .tag-予定確認 { background: var(--tag-gen); color: var(--tag-gen-text); }
+  .tag-別れの挨拶 { background: var(--tag-conj); color: var(--tag-conj-text); }
+  .tag-発音 { background: var(--surface2); color: var(--accent); }
+
+  .card-front-word {
+    font-family: 'EB Garamond', serif;
+    font-size: 2.6rem;
+    font-weight: 400;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 20px;
+  }
+
+  .card-hint {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .card-back-content {
+    width: 100%;
+  }
+
+  .card-back-word {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-weight: 400;
+  }
+
+  .card-back-body {
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .card-back-body .segment {
+    display: block;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-back-body .segment:last-child { border-bottom: none; }
+
+  .tap-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .answer-row {
+    width: 100%;
+    max-width: 720px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .answer-row.visible { opacity: 1; pointer-events: all; }
+
+  .ans-btn {
+    padding: 12px 8px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+  }
+  .ans-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .ans-btn:active { transform: translateY(0); }
+  .ans-btn .label { font-size: 0.85rem; }
+  .ans-btn .sublabel { font-size: 0.65rem; opacity: 0.75; }
+
+  .btn-bad   { background: var(--again); }
+  .btn-mid   { background: var(--hard); }
+  .btn-good  { background: var(--good); }
+
+  .controls {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .ctrl-btn {
+    padding: 8px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { color: var(--text); border-color: var(--text-dim); }
+
+  .done-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px;
+    text-align: center;
+  }
+  .done-screen.visible { display: flex; }
+
+  .done-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .done-sub {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+  .done-stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'EB Garamond', serif; font-size: 2rem; color: var(--text); }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); }
+
+  .restart-btn {
+    padding: 12px 32px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .restart-btn:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Einladungen und Verabschiedungen カード</h1>
+  <div class="filter-row">
+    <button class="filter-btn active" data-tag="全て">全て</button>
+    <button class="filter-btn" data-tag="招待・誘い">招待・誘い</button>
+    <button class="filter-btn" data-tag="予定確認">予定確認</button>
+    <button class="filter-btn" data-tag="別れの挨拶">別れの挨拶</button>
+    <button class="filter-btn" data-tag="発音">発音</button>
+  </div>
+</header>
+
+<div class="progress-area">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 0</div>
+</div>
+<div class="mastered-area" id="masteredArea">
+  ✅ もう大丈夫：<span id="masteredCount">0</span> / <span id="totalCount">0</span>
+</div>
+
+<div class="card-wrap" id="cardWrap">
+  <div class="card" id="card" onclick="flipCard()">
+    <div class="card-face front" id="frontFace">
+      <div class="card-tag" id="frontTag"></div>
+      <div class="card-front-word" id="frontWord"></div>
+      <div class="card-hint">クリックして裏面を見る</div>
+    </div>
+    <div class="card-face back" id="backFace">
+      <div class="card-back-content">
+        <div class="card-back-word" id="backWord"></div>
+        <div class="card-back-body" id="backBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tap-hint" id="tapHint"></div>
+
+<div class="answer-row" id="answerRow">
+  <button class="ans-btn btn-bad" onclick="answer(0)">
+    <span class="label">全然さっぱり</span>
+    <span class="sublabel">もう一度すぐ</span>
+  </button>
+  <button class="ans-btn btn-mid" onclick="answer(1)">
+    <span class="label">まだもう少し</span>
+    <span class="sublabel">あとで再挑戦</span>
+  </button>
+  <button class="ans-btn btn-good" onclick="answer(2)">
+    <span class="label">もう大丈夫</span>
+    <span class="sublabel">これでクリア</span>
+  </button>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="shuffleDeck()">シャッフル</button>
+  <button class="ctrl-btn" onclick="restartDeck()">最初から</button>
+</div>
+
+<div class="done-screen" id="doneScreen">
+  <div class="done-title">🎉 全部「もう大丈夫」！</div>
+  <div class="done-sub" id="doneSubText"></div>
+  <div class="done-stats">
+    <div class="stat"><div class="stat-num" id="statBad">0</div><div class="stat-label">全然さっぱり<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statMid">0</div><div class="stat-label">まだもう少し<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statGood">0</div><div class="stat-label">もう大丈夫<br>と答えた回数</div></div>
+  </div>
+  <button class="restart-btn" onclick="restartDeck()">もう一度やる</button>
+</div>
+
+<script>
+const RAW = [
+["Lust haben","気が向く・〜したい気分である／Hast du Lust?＝行く気はある？／Ich habe keine Lust.＝気分じゃない","招待・誘い"],
+["die Party","（女性名詞）パーティー／複数形：die Partys／eine Party machen＝パーティーを開く","招待・誘い"],
+["Hast du Lust?","「（一緒に行く）気はある？」誘うときの定番フレーズ／Ja, gern! / Nein, leider nicht.","招待・誘い"],
+["mitbringen","（動詞・分離動詞）持って来る・持参する／Kann ich etwas mitbringen?＝何か持って行ってもいい？","招待・誘い"],
+["Kommst du mit?","一緒に来る？／Kommen wir heute Abend ins Konzert?＝今夜コンサートに行く？（一緒に誘う表現）","招待・誘い"],
+["ein bisschen später","少し遅れて／Ich komme ein bisschen später.＝少し遅れて行きます","招待・誘い"],
+["Geht das?","それでいい？・都合つく？／Ja, das geht. / Nein, das geht nicht.＝はい、大丈夫です／いいえ、無理です","予定確認"],
+["seit (wann)","（前置詞・3格支配）〜以来・いつから／Seit wann findet der Marathon statt?＝そのマラソンはいつから開催されていますか","予定確認"],
+["treffen","（動詞）会う・待ち合わせる／Wann trifft Silvia Markus?＝シルヴィアはいつマルクスと会いますか","予定確認"],
+["die Konferenz / die Telefonkonferenz","会議／電話会議／eine Telefonkonferenz haben＝電話会議がある","予定確認"],
+["der Frisörtermin","美容院・理容室の予約／Wann ist der Frisörtermin?＝美容院の予約はいつですか","予定確認"],
+["bestellen","（動詞）注文する／Pizza bestellen＝ピザを注文する","予定確認"],
+["frei haben / keine Zeit haben","時間がある（暇である）／時間がない／Ich habe heute frei. / Ich habe keine Zeit.","予定確認"],
+["ausfallen","（動詞・分離動詞）（予定・電車などが）中止になる・運休する／Die Bahn fällt aus.＝電車が運休になる","予定確認"],
+["Tut mir leid.","ごめんなさい・残念です／予定が合わない時などに使う表現","別れの挨拶"],
+["Bis später! / Bis dann!","あとでね！／じゃあまた！（軽い別れの挨拶）","別れの挨拶"],
+["Bis gleich!","すぐにね！（少し後にまた会う・連絡する時の挨拶）","別れの挨拶"],
+["Auf Wiederhören!","（電話で）さようなら／対面のAuf Wiedersehenの電話バージョン","別れの挨拶"],
+["Kein Problem!","問題ないよ！・大丈夫！（誘いやお願いへの快い返事）","別れの挨拶"],
+["Ich freue mich!","嬉しいです・楽しみにしています／誘いを受けたときの喜びの表現","別れの挨拶"],
+["lange / kurze Vokale","長母音／短母音／曜日の発音(Montag, Dienstag…)などで母音の長さを区別する練習","発音"],
+["der Wortakzent","（男性名詞）語のアクセント・強勢／分離動詞では前綴り(an-, auf-, ab-など)にアクセントが置かれる","発音"],
+];
+
+let deck = [];        // active queue of card indices (into RAW), still not mastered
+let masteredSet = new Set();
+let current = 0;       // pointer into deck (always 0, but kept for clarity)
+let flipped = false;
+let activeTag = '全て';
+let stats = {bad:0, mid:0, good:0};
+let totalCardsInScope = 0;
+
+function buildDeck(tag) {
+  const scopeIndices = RAW
+    .map((c, i) => i)
+    .filter(i => tag === '全て' || RAW[i][2] === tag);
+
+  deck = [...scopeIndices];
+  masteredSet = new Set();
+  totalCardsInScope = scopeIndices.length;
+  stats = {bad:0, mid:0, good:0};
+}
+
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  showCard();
+}
+
+function restartDeck() {
+  buildDeck(activeTag);
+  shuffleDeck();
+}
+
+function showCard() {
+  const doneScreen = document.getElementById('doneScreen');
+  const cardWrap = document.getElementById('cardWrap');
+  const answerRow = document.getElementById('answerRow');
+  const tapHint = document.getElementById('tapHint');
+
+  if (deck.length === 0) {
+    doneScreen.classList.add('visible');
+    cardWrap.style.display = 'none';
+    answerRow.classList.remove('visible');
+    tapHint.textContent = '';
+    document.getElementById('statBad').textContent = stats.bad;
+    document.getElementById('statMid').textContent = stats.mid;
+    document.getElementById('statGood').textContent = stats.good;
+    document.getElementById('doneSubText').textContent =
+      `${totalCardsInScope}枚すべてが「もう大丈夫」になりました。お疲れさまでした！`;
+    updateProgress();
+    return;
+  }
+
+  doneScreen.classList.remove('visible');
+  cardWrap.style.display = '';
+
+  const card = document.getElementById('card');
+  card.classList.remove('flipped');
+  flipped = false;
+  answerRow.classList.remove('visible');
+  tapHint.textContent = '';
+
+  const c = RAW[deck[0]];
+  document.getElementById('frontTag').textContent = c[2];
+  document.getElementById('frontTag').className = 'card-tag tag-' + c[2];
+  document.getElementById('frontWord').textContent = c[0];
+
+  document.getElementById('backWord').textContent = c[0];
+  const segments = c[1].split('／').map(s => `<span class="segment">${s}</span>`).join('');
+  document.getElementById('backBody').innerHTML = segments;
+
+  updateProgress();
+}
+
+function flipCard() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('card').classList.add('flipped');
+  document.getElementById('answerRow').classList.add('visible');
+  document.getElementById('tapHint').textContent = '理解度を選んでください';
+}
+
+function answer(level) {
+  // level 0 = 全然さっぱり, 1 = まだもう少し, 2 = もう大丈夫
+  const cardIndex = deck.shift();
+
+  if (level === 0) {
+    stats.bad++;
+    // 全然さっぱり：比較的近い位置で再提示（直後の連続は避ける）
+    const insertAt = deck.length === 0 ? 0 : Math.min(2, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else if (level === 1) {
+    stats.mid++;
+    // まだもう少し：もう少し間隔を空けて再提示
+    const insertAt = deck.length === 0 ? 0 : Math.min(5, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else {
+    stats.good++;
+    masteredSet.add(cardIndex);
+    // 「もう大丈夫」はキューから除外（再提示しない）
+  }
+
+  showCard();
+}
+
+function updateProgress() {
+  const remaining = deck.length;
+  const masteredCount = masteredSet.size;
+  const pct = totalCardsInScope > 0 ? (masteredCount / totalCardsInScope) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = remaining + ' 枚 残り';
+  document.getElementById('masteredCount').textContent = masteredCount;
+  document.getElementById('totalCount').textContent = totalCardsInScope;
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTag = btn.dataset.tag;
+    buildDeck(activeTag);
+    shuffleDeck();
+  });
+});
+
+// Init
+buildDeck('全て');
+shuffleDeck();
+</script>
+</body>
+</html>
