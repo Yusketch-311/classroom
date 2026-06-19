@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>騎手チェックシート</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel: #16213e;
+    --border: #0f3460;
+    --done-bg: #2d4a22;
+    --done-text: #7ec850;
+    --undone-bg: #2a2a3e;
+    --undone-text: #c8c8e0;
+    --header-text: #ffffff;
+    --sub-text: #8888aa;
+    --font: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--undone-text);
+    font-family: var(--font);
+    min-height: 100vh;
+    padding: 20px 16px 60px;
+  }
+
+  /* ===== HEADER ===== */
+  header { text-align: center; margin-bottom: 24px; }
+  header h1 { font-size: 1.1rem; font-weight: 700; color: var(--sub-text); letter-spacing: 0.15em; }
+  #date-display { font-size: 0.85rem; color: var(--sub-text); margin-top: 4px; }
+  .header-btns { display: flex; justify-content: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .header-btns button {
+    background: transparent; border: 1px solid #444466; color: var(--sub-text);
+    padding: 5px 16px; border-radius: 4px; cursor: pointer; font-size: 0.78rem; letter-spacing: 0.08em;
+  }
+  .header-btns button:hover { border-color: #888899; color: #aaaacc; }
+  .btn-import { border-color: #336655 !important; color: #66aa88 !important; }
+  .btn-import:hover { background: #1a2e24 !important; }
+  .btn-clear-data { border-color: #553333 !important; color: #cc6666 !important; }
+  .btn-clear-data:hover { background: #2a1a1a !important; }
+
+  /* ===== VENUES ===== */
+  .venues {
+    display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+    max-width: 960px; margin: 0 auto;
+  }
+  .venue-block {
+    flex: 1; min-width: 260px; max-width: 420px;
+    background: var(--panel); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .venue-header {
+    padding: 14px 18px 12px; display: flex; align-items: baseline; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .venue-header h2 { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.05em; color: var(--header-text); }
+  .venue-tag {
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
+    padding: 2px 8px; border-radius: 20px; color: #fff;
+  }
+  .venue-stats { margin-left: auto; font-size: 0.78rem; color: var(--sub-text); }
+  .venue-stats span { color: #7ec850; font-weight: 700; }
+  .jockey-grid { padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .empty-msg { color: var(--sub-text); font-size: 0.82rem; text-align: center; padding: 20px 0; opacity: 0.6; }
+  .jockey-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-radius: 6px; border: 1px solid #333355;
+    cursor: pointer; font-size: 0.95rem; font-family: var(--font); font-weight: 500;
+    transition: all 0.15s ease; background: var(--undone-bg); color: var(--undone-text);
+    text-align: left; width: 100%;
+  }
+  .jockey-btn:hover { border-color: #555577; color: #e0e0f0; }
+  .jockey-btn.done { background: var(--done-bg); color: var(--done-text); border-color: #3d6a2a; }
+  .jockey-btn .status-icon { font-size: 0.75rem; opacity: 0.4; }
+  .jockey-btn.done .status-icon {
+    opacity: 1; font-weight: 800; font-size: 0.85rem;
+    background: rgba(126,200,80,0.18); color: var(--done-text);
+    border-radius: 10px; min-width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 6px;
+  }
+  .venue-footer {
+    border-top: 1px solid var(--border); padding: 10px 14px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .venue-footer button {
+    font-size: 0.72rem; color: var(--sub-text); background: transparent;
+    border: 1px solid #333355; border-radius: 4px; padding: 4px 10px; cursor: pointer;
+  }
+  .venue-footer button:hover { border-color: #555577; color: #aaaacc; }
+  .btn-del-venue { color: #884444 !important; border-color: #553333 !important; margin-left: auto; }
+  .btn-del-venue:hover { color: #cc6666 !important; }
+
+  /* ===== MODAL OVERLAY ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 100;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #1e1e32; border: 1px solid #334466; border-radius: 12px;
+    width: 100%; max-width: 560px; padding: 24px; position: relative;
+  }
+  .modal h3 { font-size: 1rem; color: #ccd; margin-bottom: 6px; }
+  .modal .modal-sub { font-size: 0.78rem; color: var(--sub-text); margin-bottom: 16px; line-height: 1.7; }
+  .modal .modal-sub code {
+    background: #0e0e22; padding: 1px 5px; border-radius: 3px;
+    font-family: monospace; color: #88ccaa; font-size: 0.85em;
+  }
+  .modal label { font-size: 0.78rem; color: var(--sub-text); display: block; margin-bottom: 4px; }
+  .modal input[type=text] {
+    width: 100%; background: #0e0e1e; border: 1px solid #334466; color: #c8c8e0;
+    border-radius: 5px; padding: 8px 10px; font-size: 0.88rem; font-family: var(--font);
+    margin-bottom: 12px;
+  }
+  .modal textarea {
+    width: 100%; background: #0e0e1e; border: 1px solid #334466; color: #c8c8e0;
+    border-radius: 5px; padding: 8px 10px; font-size: 0.85rem; font-family: var(--font);
+    resize: vertical; min-height: 160px; line-height: 1.7; margin-bottom: 12px;
+  }
+  .modal input[type=file] { display: none; }
+  .file-btn {
+    display: inline-block; background: #1a2a3a; border: 1px dashed #445566;
+    color: #7799bb; padding: 8px 16px; border-radius: 5px; cursor: pointer;
+    font-size: 0.8rem; margin-bottom: 12px; width: 100%; text-align: center;
+  }
+  .file-btn:hover { border-color: #6688aa; color: #99bbdd; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-actions button {
+    padding: 8px 20px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-family: var(--font);
+  }
+  .btn-cancel { background: transparent; border: 1px solid #445566; color: var(--sub-text); }
+  .btn-cancel:hover { border-color: #667788; }
+  .btn-apply { background: #2a4a35; border: 1px solid #3d6a4a; color: #7ec850; font-weight: 700; }
+  .btn-apply:hover { background: #336040; }
+  .modal .close-x {
+    position: absolute; top: 14px; right: 16px; background: none; border: none;
+    color: var(--sub-text); font-size: 1.1rem; cursor: pointer;
+  }
+  .parsed-preview {
+    background: #0e0e1e; border: 1px solid #334466; border-radius: 5px;
+    padding: 8px 10px; font-size: 0.78rem; color: #66aa88; margin-bottom: 12px;
+    display: none; max-height: 80px; overflow-y: auto; line-height: 1.7;
+  }
+
+  .hint { text-align: center; font-size: 0.72rem; color: var(--sub-text); margin-top: 28px; opacity: 0.5; }
+
+  /* add venue button */
+  .add-venue-wrap { display: flex; justify-content: center; width: 100%; margin-top: 4px; }
+  .btn-add-venue {
+    background: transparent; border: 1px dashed #334466; color: #556688;
+    padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 0.82rem;
+    letter-spacing: 0.08em; width: 100%; max-width: 260px;
+  }
+  .btn-add-venue:hover { border-color: #557799; color: #7799bb; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏇 騎手チェックシート</h1>
+  <div id="date-display"></div>
+  <div class="header-btns">
+    <button class="btn-import" onclick="openImportModal(null)">＋ 開催場を追加 / インポート</button>
+    <button onclick="resetAll()">全てリセット</button>
+    <button class="btn-clear-data" onclick="clearAllData()">登録内容を全消去</button>
+  </div>
+</header>
+
+<div class="venues" id="venues-container"></div>
+<div style="display:flex;justify-content:center;max-width:960px;margin:16px auto 0;">
+</div>
+
+<p class="hint">名前をクリック → カウント+1　右クリック（長押し）→ -1　数字はチェック回数　状態はブラウザに保存されます</p>
+
+<!-- ===== インポートモーダル ===== -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal()">✕</button>
+    <h3>開催場・騎手のインポート</h3>
+    <p class="modal-sub">
+      JRAや各競馬場サイトからコピーしたテキスト、またはtxtファイルをそのまま貼ればOK。<br>
+      日本語の氏名（漢字・カナ）を自動で抽出します。<br>
+      例：<code>川田将雅</code>　<code>ルメール</code>　<code>C.ルメール</code> など混在していても可
+    </p>
+
+    <label>開催場名</label>
+    <input type="text" id="import-venue-name" placeholder="例：阪神　函館　大井" />
+
+    <label>騎手テキスト（コピペ or ファイル読み込み）</label>
+    <label class="file-btn" for="import-file">📂 txtファイルを選択</label>
+    <input type="file" id="import-file" accept=".txt,text/plain" />
+    <textarea id="import-text" placeholder="ここにテキストを貼り付け&#10;&#10;（出馬表・騎手一覧など、余分な文字が混じっていても騎手名だけ抽出します）"></textarea>
+    <div class="parsed-preview" id="parsed-preview"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-apply" onclick="applyImport()">この内容で登録</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// データ管理
+// =============================================
+const STORAGE_VENUES = "jockey_venues_v2";
+const STORAGE_STATE  = "jockey_state_v2";
+
+function loadVenues() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_VENUES) || "[]"); } catch { return []; }
+}
+function saveVenues(v) { localStorage.setItem(STORAGE_VENUES, JSON.stringify(v)); }
+function loadState()  { try { return JSON.parse(localStorage.getItem(STORAGE_STATE) || "{}"); } catch { return {}; } }
+function saveState(s) { localStorage.setItem(STORAGE_STATE, JSON.stringify(s)); }
+
+const VENUE_COLORS = ["#e94560","#00b4d8","#f4a261","#a8dadc","#c77dff","#06d6a0","#ffb703"];
+let venues = loadVenues();
+let state  = loadState();
+let importTargetId = null; // null=新規, id=上書き
+
+// =============================================
+// 騎手名の抽出ロジック
+// =============================================
+function extractJockeys(rawText) {
+  // 不要な記号・英数字ブロックをある程度除去
+  const lines = rawText.split(/[\n\r]+/);
+  const results = [];
+
+  // 日本語名パターン: 漢字・ひらがな・カタカナが2〜8文字、またはカタカナのみ（外国人騎手）
+  // "C.ルメール" "M.デムーロ" などの「アルファベット.カタカナ」も対応
+  const nameRe = /(?:[A-Z]\.[　 ]?)?[\u4e00-\u9fff\u3040-\u30ff\uff66-\uff9f]{2,8}/g;
+
+  // 除外ワード（競馬用語・場所名など）
+  const STOP_WORDS = new Set([
+    "競馬場","開催","出馬表","レース","結果","着順","馬名","騎手","斤量","馬番","着差",
+    "タイム","馬場","天候","芝","ダート","オープン","重賞","特別","未勝利","新馬",
+    "サラブレッド","牡","牝","せん","発走","単勝","複勝","枠連","馬連","馬単",
+    "三連複","三連単","払戻","配当","東京","京都","阪神","函館","札幌","福島",
+    "新潟","中山","中京","小倉","鳴尾","金杯","皐月","菊花","天皇","有馬",
+    "ジャパン","ダービー","オークス","春秋","調教師","馬主","牧場","着","番",
+    "良","稍重","不良","晴","曇","雨","国際","指定","混合","登録","除外","取消"
+  ]);
+
+  const seen = new Set();
+  for (const line of lines) {
+    const matches = line.matchAll(nameRe);
+    for (const m of matches) {
+      const name = m[0].replace(/^[A-Z]\.[　 ]?/, s => s); // prefix保持
+      const base = name.replace(/^[A-Z]\.[　 ]?/,"");
+      if (base.length < 2) continue;
+      if (STOP_WORDS.has(base)) continue;
+      if (seen.has(name)) continue;
+      seen.add(name);
+      results.push(name);
+    }
+  }
+  return results;
+}
+
+// =============================================
+// モーダル
+// =============================================
+function openImportModal(venueId) {
+  importTargetId = venueId;
+  const modal = document.getElementById("import-modal");
+
+  if (venueId !== null) {
+    // 既存開催場の編集
+    const venue = venues.find(v => v.id === venueId);
+    document.getElementById("import-venue-name").value = venue ? venue.name : "";
+  } else {
+    document.getElementById("import-venue-name").value = "";
+  }
+  document.getElementById("import-text").value = "";
+  document.getElementById("parsed-preview").style.display = "none";
+  modal.classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("import-modal").classList.remove("open");
+}
+
+// ファイル読み込み
+document.getElementById("import-file").addEventListener("change", function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById("import-text").value = e.target.result;
+    updatePreview();
+  };
+  reader.readAsText(file, "UTF-8");
+  this.value = "";
+});
+
+// テキスト変更時にプレビュー更新
+document.getElementById("import-text").addEventListener("input", updatePreview);
+
+function updatePreview() {
+  const raw = document.getElementById("import-text").value;
+  if (!raw.trim()) {
+    document.getElementById("parsed-preview").style.display = "none";
+    return;
+  }
+  const names = extractJockeys(raw);
+  const preview = document.getElementById("parsed-preview");
+  if (names.length === 0) {
+    preview.textContent = "騎手名を検出できませんでした";
+    preview.style.display = "block";
+  } else {
+    preview.textContent = "抽出: " + names.join("、");
+    preview.style.display = "block";
+  }
+}
+
+function applyImport() {
+  const venueName = document.getElementById("import-venue-name").value.trim();
+  const rawText   = document.getElementById("import-text").value;
+
+  if (!venueName) { alert("開催場名を入力してください"); return; }
+
+  let jockeys = extractJockeys(rawText);
+
+  // テキストがなければ空のまま作る（後で編集可能）
+  if (rawText.trim() && jockeys.length === 0) {
+    // フォールバック: 1行1名として単純分割
+    jockeys = rawText.split(/[\n\r]+/).map(s => s.trim()).filter(s => s.length >= 2 && s.length <= 10);
+  }
+
+  if (importTargetId !== null) {
+    // 既存を上書き
+    const idx = venues.findIndex(v => v.id === importTargetId);
+    if (idx >= 0) {
+      venues[idx].name = venueName;
+      venues[idx].jockeys = jockeys;
+    }
+  } else {
+    // 新規追加
+    const newId = "venue_" + Date.now();
+    const colorIdx = venues.length % VENUE_COLORS.length;
+    venues.push({ id: newId, name: venueName, tagColor: VENUE_COLORS[colorIdx], jockeys });
+  }
+
+  saveVenues(venues);
+  renderAll();
+  closeModal();
+}
+
+// =============================================
+// 描画
+// =============================================
+function toggleJockey(venueId, name) {
+  if (!state[venueId]) state[venueId] = {};
+  state[venueId][name] = (state[venueId][name] || 0) + 1;
+  saveState(state);
+  renderVenueJockeys(venueId);
+}
+
+function decrementJockey(venueId, name) {
+  if (!state[venueId]) state[venueId] = {};
+  const cur = state[venueId][name] || 0;
+  state[venueId][name] = Math.max(0, cur - 1);
+  saveState(state);
+  renderVenueJockeys(venueId);
+}
+
+function renderVenueJockeys(venueId) {
+  const venue = venues.find(v => v.id === venueId);
+  const block = document.getElementById("block-" + venueId);
+  if (!block || !venue) return;
+
+  const venueState = state[venueId] || {};
+  const doneCount = venue.jockeys.filter(j => (venueState[j] || 0) > 0).length;
+  block.querySelector(".venue-stats").innerHTML = `済 <span>${doneCount}</span> / ${venue.jockeys.length}`;
+
+  const grid = block.querySelector(".jockey-grid");
+  grid.innerHTML = "";
+
+  if (venue.jockeys.length === 0) {
+    grid.innerHTML = `<p class="empty-msg">「騎手を更新」から騎手を登録してください</p>`;
+    return;
+  }
+
+  venue.jockeys.forEach(name => {
+    const count = venueState[name] || 0;
+    const done = count > 0;
+    const btn = document.createElement("button");
+    btn.className = "jockey-btn" + (done ? " done" : "");
+    btn.innerHTML = `<span>${name}</span><span class="status-icon">${done ? count : "—"}</span>`;
+    btn.addEventListener("click", () => toggleJockey(venueId, name));
+    btn.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      decrementJockey(venueId, name);
+    });
+    let pressTimer = null;
+    let longPressed = false;
+    btn.addEventListener("touchstart", () => {
+      longPressed = false;
+      pressTimer = setTimeout(() => {
+        longPressed = true;
+        decrementJockey(venueId, name);
+      }, 500);
+    });
+    btn.addEventListener("touchend", (e) => {
+      clearTimeout(pressTimer);
+      if (longPressed) e.preventDefault();
+    });
+    btn.addEventListener("touchmove", () => clearTimeout(pressTimer));
+    grid.appendChild(btn);
+  });
+}
+
+function buildVenueBlock(venue) {
+  const div = document.createElement("div");
+  div.className = "venue-block";
+  div.id = "block-" + venue.id;
+  div.innerHTML = `
+    <div class="venue-header">
+      <h2>${venue.name}</h2>
+      <span class="venue-tag" style="background:${venue.tagColor}">騎手</span>
+      <span class="venue-stats">済 <span>0</span> / 0</span>
+    </div>
+    <div class="jockey-grid"></div>
+    <div class="venue-footer">
+      <button onclick="openImportModal('${venue.id}')">✏ 騎手を更新</button>
+      <button onclick="resetVenue('${venue.id}')">↺ チェックリセット</button>
+      <button class="btn-del-venue" onclick="deleteVenue('${venue.id}')">✕ 削除</button>
+    </div>
+  `;
+  return div;
+}
+
+function renderAll() {
+  const container = document.getElementById("venues-container");
+  container.innerHTML = "";
+  venues.forEach(venue => {
+    container.appendChild(buildVenueBlock(venue));
+    renderVenueJockeys(venue.id);
+  });
+}
+
+function resetVenue(venueId) {
+  if (!confirm("このチェックをリセットしますか？")) return;
+  state[venueId] = {};
+  saveState(state);
+  renderVenueJockeys(venueId);
+}
+
+function deleteVenue(venueId) {
+  const venue = venues.find(v => v.id === venueId);
+  if (!confirm(`「${venue?.name || ""}」を削除しますか？`)) return;
+  venues = venues.filter(v => v.id !== venueId);
+  delete state[venueId];
+  saveVenues(venues);
+  saveState(state);
+  renderAll();
+}
+
+function resetAll() {
+  if (!confirm("全てのチェックをリセットしますか？")) return;
+  state = {};
+  saveState(state);
+  venues.forEach(v => renderVenueJockeys(v.id));
+}
+
+function clearAllData() {
+  if (!confirm("登録されている開催場・騎手データを全て削除しますか？\nこの操作は元に戻せません。")) return;
+  venues = [];
+  state = {};
+  saveVenues(venues);
+  saveState(state);
+  renderAll();
+}
+
+// モーダル外クリックで閉じる
+document.getElementById("import-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeModal();
+});
+
+// 日付表示
+document.getElementById("date-display").textContent =
+  new Date().toLocaleDateString("ja-JP", {year:"numeric",month:"long",day:"numeric",weekday:"short"});
+
+// 初期描画
+renderAll();
+</script>
+</body>
+</html>
