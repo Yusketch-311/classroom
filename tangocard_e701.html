@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ドイツ語A1 単語カード — Büro編</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0eee8;
+    --border: #ddd8cc;
+    --text: #2b2a28;
+    --text-dim: #8a8578;
+    --accent: #2a5d6e;
+    --accent2: #a8455a;
+    --tag-basho:  #e3eef0; --tag-basho-text:  #2c6b7a;
+    --tag-mono:   #f4ecd9; --tag-mono-text:   #9c6f2a;
+    --tag-ichi:   #e7f0e3; --tag-ichi-text:   #4f7a45;
+    --tag-wichi:  #ede8f5; --tag-wichi-text:  #5a3d8a;
+    --tag-mae:    #fde8f0; --tag-mae-text:    #9b2050;
+    --tag-hyogen: #e8f3e8; --tag-hyogen-text: #2a6e3a;
+    --again: #c0392b;
+    --hard:  #d68a1a;
+    --good:  #2f9e5e;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  .filter-btn:hover  { border-color: var(--text-dim); color: var(--text); }
+
+  .mode-row {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .mode-btn {
+    padding: 6px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(168,69,90,0.07); }
+  .mode-btn:hover  { border-color: var(--text-dim); color: var(--text); }
+
+  .progress-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .mastered-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 16px;
+    font-size: 0.8rem;
+    color: var(--good);
+    font-weight: 500;
+  }
+  .mastered-area span { font-family: 'EB Garamond', serif; font-size: 0.95rem; }
+
+  .card-wrap {
+    width: 100%;
+    max-width: 720px;
+    perspective: 1200px;
+    margin-bottom: 20px;
+    min-height: 300px;
+  }
+
+  .card {
+    width: 100%;
+    min-height: 300px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    min-height: 300px;
+    backface-visibility: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .card-face.back { transform: rotateY(180deg); align-items: flex-start; justify-content: flex-start; }
+
+  .card-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .tag-場所       { background: var(--tag-basho);  color: var(--tag-basho-text); }
+  .tag-オフィス用品 { background: var(--tag-mono);   color: var(--tag-mono-text); }
+  .tag-位置の前置詞 { background: var(--tag-mae);    color: var(--tag-mae-text); }
+  .tag-場所を尋ねる { background: var(--tag-wichi);  color: var(--tag-wichi-text); }
+  .tag-職場の動詞   { background: var(--tag-ichi);   color: var(--tag-ichi-text); }
+  .tag-会話表現    { background: var(--tag-hyogen); color: var(--tag-hyogen-text); }
+
+  .card-front-word {
+    font-family: 'EB Garamond', serif;
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+    font-weight: 400;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .card-article {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    letter-spacing: 0.03em;
+    font-style: italic;
+  }
+
+  .card-hint {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
+
+  .card-back-content { width: 100%; }
+
+  .card-back-word {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+
+  .card-back-body {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .card-back-body .segment {
+    display: block;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-back-body .segment:last-child { border-bottom: none; }
+
+  .tap-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+    min-height: 1.2em;
+  }
+
+  .answer-row {
+    width: 100%;
+    max-width: 720px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .answer-row.visible { opacity: 1; pointer-events: all; }
+
+  .ans-btn {
+    padding: 12px 8px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+  }
+  .ans-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .ans-btn:active { transform: translateY(0); }
+  .ans-btn .label { font-size: 0.85rem; }
+  .ans-btn .sublabel { font-size: 0.65rem; opacity: 0.75; }
+
+  .btn-bad  { background: var(--again); }
+  .btn-mid  { background: var(--hard); }
+  .btn-good { background: var(--good); }
+
+  .controls {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .ctrl-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .done-screen {
+    display: none;
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 40px;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .done-screen.visible { display: flex; }
+
+  .done-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .done-sub {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+  .done-stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'EB Garamond', serif; font-size: 2rem; color: var(--text); }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); }
+
+  .restart-btn {
+    padding: 12px 32px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .restart-btn:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ドイツ語 A1 — Büro編</h1>
+  <div class="filter-row">
+    <button class="filter-btn active" data-tag="全て">全て</button>
+    <button class="filter-btn" data-tag="場所">場所</button>
+    <button class="filter-btn" data-tag="オフィス用品">オフィス用品</button>
+    <button class="filter-btn" data-tag="位置の前置詞">位置の前置詞</button>
+    <button class="filter-btn" data-tag="場所を尋ねる">場所を尋ねる</button>
+    <button class="filter-btn" data-tag="職場の動詞">職場の動詞</button>
+    <button class="filter-btn" data-tag="会話表現">会話表現</button>
+  </div>
+</header>
+
+<div class="mode-row">
+  <button class="mode-btn active" data-mode="de2jp">独 → 日</button>
+  <button class="mode-btn" data-mode="jp2de">日 → 独</button>
+</div>
+
+<div class="progress-area">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 0</div>
+</div>
+<div class="mastered-area" id="masteredArea">
+  ✅ もう大丈夫：<span id="masteredCount">0</span> / <span id="totalCount">0</span>
+</div>
+
+<div class="card-wrap" id="cardWrap">
+  <div class="card" id="card" onclick="flipCard()">
+    <div class="card-face front" id="frontFace">
+      <div class="card-tag" id="frontTag"></div>
+      <div class="card-article" id="frontArticle"></div>
+      <div class="card-front-word" id="frontWord"></div>
+      <div class="card-hint">クリックして裏面を見る</div>
+    </div>
+    <div class="card-face back" id="backFace">
+      <div class="card-back-content">
+        <div class="card-back-word" id="backWord"></div>
+        <div class="card-back-body" id="backBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tap-hint" id="tapHint"></div>
+
+<div class="answer-row" id="answerRow">
+  <button class="ans-btn btn-bad" onclick="answer(0)">
+    <span class="label">全然さっぱり</span>
+    <span class="sublabel">もう一度すぐ</span>
+  </button>
+  <button class="ans-btn btn-mid" onclick="answer(1)">
+    <span class="label">まだもう少し</span>
+    <span class="sublabel">あとで再挑戦</span>
+  </button>
+  <button class="ans-btn btn-good" onclick="answer(2)">
+    <span class="label">もう大丈夫</span>
+    <span class="sublabel">これでクリア</span>
+  </button>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="shuffleDeck()">シャッフル</button>
+  <button class="ctrl-btn" onclick="restartDeck()">最初から</button>
+</div>
+
+<div class="done-screen" id="doneScreen">
+  <div class="done-title">🎉 全部「もう大丈夫」！</div>
+  <div class="done-sub" id="doneSubText"></div>
+  <div class="done-stats">
+    <div class="stat"><div class="stat-num" id="statBad">0</div><div class="stat-label">全然さっぱり<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statMid">0</div><div class="stat-label">まだもう少し<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statGood">0</div><div class="stat-label">もう大丈夫<br>と答えた回数</div></div>
+  </div>
+  <button class="restart-btn" onclick="restartDeck()">もう一度やる</button>
+</div>
+
+<script>
+// [表面の見出し, 裏面の詳細（／区切り）, カテゴリ, 冠詞ヒント（省略可）]
+// 裏面: 1行目=意味・訳, 2行目以降=例文・補足
+const RAW = [
+
+  // ── 場所 ──
+  ["die Empfangshalle", "（女性名詞）受付ホール・エントランスホール／Die Empfangshalle ist im Erdgeschoss. ─ 受付ホールは1階にあります。", "場所", "die"],
+  ["der Kopierraum", "（男性名詞）コピー室／Der Kopierraum ist neben dem Büro. ─ コピー室はオフィスの隣にあります。", "場所", "der"],
+  ["der Konferenzraum / die Konferenzräume", "（男性名詞・複数）会議室／Wo sind die Konferenzräume? ─ 会議室はどこですか？／In der siebten Etage. ─ 7階にあります。", "場所", "der/die"],
+  ["die Kantine", "（女性名詞）社員食堂／Die Kantine ist im Erdgeschoss. ─ 社員食堂は1階にあります。", "場所", "die"],
+  ["der Eingang / der Ausgang", "（男性名詞）入口 / 出口／Wo ist der Eingang? ─ 入口はどこですか？／Im Erdgeschoss. ─ 1階にあります。", "場所", "der"],
+  ["das Sekretariat", "（中性名詞）事務局・秘書室／Das Sekretariat ist in der dritten Etage rechts. ─ 事務局は3階の右にあります。", "場所", "das"],
+  ["das Lehrerzimmer", "（中性名詞）職員室・教員室／In welcher Etage ist das Lehrerzimmer? ─ 職員室は何階ですか？", "場所", "das"],
+  ["die Bibliothek", "（女性名詞）図書館・図書室／Die Bibliothek ist hier links. ─ 図書館はここの左にあります。", "場所", "die"],
+  ["die Toiletten", "（女性名詞・複数）トイレ／Wo sind die Toiletten? ─ トイレはどこですか？／Im Erdgeschoss rechts. ─ 1階の右にあります。", "場所", "die"],
+  ["der Fahrstuhl", "（男性名詞）エレベーター／Wo finde ich den Fahrstuhl? ─ エレベーターはどこにありますか？", "場所", "der"],
+  ["das Erdgeschoss", "（中性名詞）1階（地上階）／im Erdgeschoss ─ 1階に（前置詞imとともに使う）", "場所", "das"],
+  ["die Etage / die Etagen", "（女性名詞）階（2階以上）／In der ersten Etage. ─ 2階に。／in der dritten Etage rechts ─ 3階の右に", "場所", "die"],
+  ["das Büro", "（中性名詞）オフィス・職場／im Büro arbeiten ─ オフィスで働く／Ich zeige das Büro. ─ オフィスを案内します。", "場所", "das"],
+  ["die Agentur", "（女性名詞）代理店・エージェンシー／Die Agentur SANA ist eine Design-Agentur. ─ SANAエージェンシーはデザイン会社です。", "場所", "die"],
+
+  // ── オフィス用品 ──
+  ["die Maus", "（女性名詞）マウス（コンピューター）／Die Maus liegt neben der Tastatur. ─ マウスはキーボードの隣にあります。", "オフィス用品", "die"],
+  ["der Computer", "（男性名詞）パソコン／der Computer steht auf dem Tisch ─ パソコンは机の上にあります", "オフィス用品", "der"],
+  ["die Tastatur", "（女性名詞）キーボード／Das Handy liegt neben der Tastatur. ─ 携帯がキーボードの隣にあります。", "オフィス用品", "die"],
+  ["der Notizblock", "（男性名詞）メモ帳・ノートパッド／der Notizblock liegt auf dem Tisch ─ メモ帳は机の上にあります", "オフィス用品", "der"],
+  ["der Stift", "（男性名詞）ペン・鉛筆／Der Stift liegt zwischen der Tastatur und dem Buch. ─ ペンはキーボードと本の間にあります。", "オフィス用品", "der"],
+  ["das Telefon", "（中性名詞）電話（固定電話）／telefonieren ─ 電話をかける（動詞）／Das Telefon steht auf dem Tisch. ─ 電話は机の上にあります。", "オフィス用品", "das"],
+  ["das Handy", "（中性名詞）携帯電話／Das Handy liegt neben der Tastatur. ─ 携帯はキーボードの隣にあります。", "オフィス用品", "das"],
+  ["die Pflanze", "（女性名詞）植物・鉢植え／Die Pflanze steht vor dem Fenster. ─ 植物は窓の前にあります。", "オフィス用品", "die"],
+  ["der Ordner", "（男性名詞）バインダー・ファイル／Der Ordner steht im Regal. ─ バインダーは棚にあります。", "オフィス用品", "der"],
+  ["die Lampe", "（女性名詞）ランプ・照明／Die Lampe steht auf dem Tisch. ─ ランプは机の上にあります。", "オフィス用品", "die"],
+  ["das Bild", "（中性名詞）絵・写真／Das Bild hängt an der Wand. ─ 絵は壁にかかっています。", "オフィス用品", "das"],
+  ["das Magazin", "（中性名詞）雑誌／Das Magazin liegt auf dem Tisch. ─ 雑誌は机の上にあります。", "オフィス用品", "das"],
+  ["der Papierkorb", "（男性名詞）ゴミ箱・くずかご／Der Papierkorb steht unter dem Tisch. ─ ゴミ箱は机の下にあります。", "オフィス用品", "der"],
+  ["das Fenster", "（中性名詞）窓／Die Pflanze steht vor dem Fenster. ─ 植物は窓の前にあります。", "オフィス用品", "das"],
+  ["das Tablet", "（中性名詞）タブレット端末／Das Tablet liegt auf dem Tisch. ─ タブレットは机の上にあります。", "オフィス用品", "das"],
+  ["die Tasche", "（女性名詞）バッグ・かばん／Die Tasche steht neben der Tür. ─ バッグはドアの隣にあります。", "オフィス用品", "die"],
+  ["der Schlüssel", "（男性名詞）鍵／Der Schlüssel liegt auf dem Tisch. ─ 鍵は机の上にあります。", "オフィス用品", "der"],
+  ["das Buch / die Bücher", "（中性名詞・複数）本／Die Bücher liegen im Regal. ─ 本は棚にあります。", "オフィス用品", "das/die"],
+  ["das Regal", "（中性名詞）棚・本棚／Der Ordner steht im Regal. ─ バインダーは棚にあります。", "オフィス用品", "das"],
+
+  // ── 位置の前置詞 ──
+  ["neben + Dativ", "（前置詞）〜の隣に・横に／neben der Tür ─ ドアの隣に／neben der Tastatur ─ キーボードの隣に／neben dem Tisch ─ 机の隣に", "位置の前置詞", ""],
+  ["auf + Dativ", "（前置詞）〜の上に（接触）／auf dem Tisch ─ 机の上に／auf dem Tisch liegen ─ 机の上に置いてある", "位置の前置詞", ""],
+  ["im Regal liegen / stehen", "（定型表現）棚の中にある／im = in dem（縮約形）／Der Ordner steht im Regal. ─ バインダーは棚にある。", "位置の前置詞", ""],
+  ["unter + Dativ", "（前置詞）〜の下に／unter dem Tisch ─ 机の下に／Der Papierkorb steht unter dem Tisch. ─ ゴミ箱は机の下にある。", "位置の前置詞", ""],
+  ["an + Dativ（hängen）", "（前置詞）〜に（壁などに掛かっている）／an der Wand hängen ─ 壁にかかっている／Das Bild hängt an der Wand. ─ 絵は壁にかかっている。", "位置の前置詞", ""],
+  ["vor + Dativ", "（前置詞）〜の前に／vor dem Fenster ─ 窓の前に／Die Pflanze steht vor dem Fenster. ─ 植物は窓の前にある。", "位置の前置詞", ""],
+  ["zwischen + Dativ", "（前置詞）〜の間に（２つのものの間）／zwischen der Tastatur und dem Buch ─ キーボードと本の間に", "位置の前置詞", ""],
+  ["über + Dativ", "（前置詞）〜の上に（離れて上）／über dem Tisch ─ 机の上方に／Das Bild hängt über dem Tisch. ─ 絵は机の上方にかかっている。", "位置の前置詞", ""],
+  ["liegen", "（動詞）横になっている・置いてある（平たいもの）／Das Magazin liegt auf dem Tisch. ─ 雑誌は机の上にある。", "位置の前置詞", ""],
+  ["stehen", "（動詞）立っている・置いてある（縦長のもの）／Der Ordner steht im Regal. ─ バインダーは棚にある。", "位置の前置詞", ""],
+  ["hängen", "（動詞）かかっている・吊るされている／Das Bild hängt an der Wand. ─ 絵は壁にかかっている。", "位置の前置詞", ""],
+
+  // ── 場所を尋ねる ──
+  ["Wo ist/sind bitte …?", "〜はどこにありますか？（丁寧）／Wo ist bitte der Eingang? ─ 入口はどこですか？／Wo sind bitte die Toiletten? ─ トイレはどこですか？", "場所を尋ねる", ""],
+  ["In welcher Etage ist/sind …?", "〜は何階にありますか？／In welcher Etage ist das Lehrerzimmer? ─ 職員室は何階ですか？／In der ersten Etage. ─ 2階にあります。", "場所を尋ねる", ""],
+  ["Entschuldigung, wo finde ich …?", "すみません、〜はどこにありますか？（フォーマル）／Entschuldigung, wo finde ich den Fahrstuhl? ─ エレベーターはどこにありますか？", "場所を尋ねる", ""],
+  ["Entschuldigung, wo ist …?", "すみません、〜はどこですか？（カジュアル）／Entschuldigung, wo ist das Sekretariat? ─ すみません、事務局はどこですか？", "場所を尋ねる", ""],
+  ["Im Erdgeschoss.", "（答え方）1階にあります。／Wo ist die Kantine? ─ Im Erdgeschoss. ─ 社員食堂は？─ 1階にあります。", "場所を尋ねる", ""],
+  ["In der ersten / dritten / siebten Etage.", "（答え方）〜階にあります。／erste（1番目）→ zweite（2番目）→ dritte（3番目）→ siebte（7番目）→ siebzehnte（17番目）", "場所を尋ねる", ""],
+  ["Hier links / rechts.", "（答え方）ここの左 / 右にあります。／links ─ 左　⇔　rechts ─ 右", "場所を尋ねる", ""],
+  ["In der dritten Etage rechts.", "（答え方）3階の右にあります。／方向と階の組み合わせ表現", "場所を尋ねる", ""],
+
+  // ── 職場の動詞 ──
+  ["organisieren", "（動詞）整理する・段取りする／Ich organisiere viel. ─ 私はたくさん整理・段取りをします。／ich organisiere ─ ich の現在形", "職場の動詞", ""],
+  ["Termine machen", "（動詞句）アポを取る・予定を入れる／Ich mache Termine. ─ 私は予定を入れます。／der Termin ─ 予約・アポ（男性名詞）", "職場の動詞", ""],
+  ["E-Mails schreiben", "（動詞句）メールを書く／Ich schreibe E-Mails. ─ 私はメールを書きます。", "職場の動詞", ""],
+  ["telefonieren", "（動詞）電話をする／Ich telefoniere. ─ 私は電話をします。／mit jemandem telefonieren ─ 誰かと電話する", "職場の動詞", ""],
+  ["begrüßen", "（動詞）出迎える・挨拶する／Ich begrüße neue Mitarbeiterinnen und Mitarbeiter. ─ 私は新しい従業員を出迎えます。", "職場の動詞", ""],
+  ["zeigen", "（動詞）見せる・案内する／Ich zeige das Gebäude und das Büro. ─ 私は建物とオフィスを案内します。", "職場の動詞", ""],
+  ["arbeiten", "（動詞）働く／Hier arbeiten 70 Mitarbeiterinnen und Mitarbeiter. ─ ここには70名の従業員が働いています。", "職場の動詞", ""],
+
+  // ── 会話表現 ──
+  ["seit wann …?", "いつから〜ですか？（期間の始まりを尋ねる）／Seit wann arbeiten Sie hier? ─ いつからここで働いているのですか？", "会話表現", ""],
+  ["seit + Dativ", "（前置詞）〜から・〜以来（現在まで継続）／seit fünf Jahren ─ 5年前から（ずっと）／Ich arbeite seit fünf Jahren hier. ─ 5年前からここで働いています。", "会話表現", ""],
+  ["Was sind Ihre Aufgaben?", "あなたの業務は何ですか？（敬語）／Aufgabe ─ 課題・業務（女性名詞）／Ihre ─ Sie（敬語）の所有冠詞", "会話表現", ""],
+  ["Was arbeiten Sie?", "どんなお仕事をされていますか？（敬語）／Was arbeiten Sie? ─ Ich bin Assistentin. ─ 助手です。", "会話表現", ""],
+  ["Mein erster Tag war sehr gut.", "最初の日はとても良かったです。／der erste Tag ─ 最初の日／war ─ war（sein の過去形）", "会話表現", ""],
+  ["die Mitarbeiterinnen und Mitarbeiter", "（名詞・複数）（女性・男性）従業員、スタッフ／die Mitarbeiterin（女性）・der Mitarbeiter（男性）", "会話表現", ""],
+  ["der Arbeitstag", "（男性名詞）労働日・勤務日／Der erste Arbeitstag ist wichtig. ─ 最初の勤務日は大切です。", "会話表現", ""],
+  ["Das Sekretariat ist …", "事務局は〜にあります。（道案内の答え方）／Das Sekretariat ist in der dritten Etage. ─ 事務局は3階にあります。", "会話表現", ""],
+];
+
+let deck = [];
+let masteredSet = new Set();
+let flipped = false;
+let activeTag = '全て';
+let currentMode = 'de2jp';
+let stats = { bad: 0, mid: 0, good: 0 };
+let totalCardsInScope = 0;
+
+function buildDeck(tag) {
+  const scopeIndices = RAW
+    .map((c, i) => i)
+    .filter(i => tag === '全て' || RAW[i][2] === tag);
+  deck = [...scopeIndices];
+  masteredSet = new Set();
+  totalCardsInScope = scopeIndices.length;
+  stats = { bad: 0, mid: 0, good: 0 };
+}
+
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  showCard();
+}
+
+function restartDeck() {
+  buildDeck(activeTag);
+  shuffleDeck();
+}
+
+function showCard() {
+  const doneScreen = document.getElementById('doneScreen');
+  const cardWrap   = document.getElementById('cardWrap');
+  const answerRow  = document.getElementById('answerRow');
+  const tapHint    = document.getElementById('tapHint');
+
+  if (deck.length === 0) {
+    doneScreen.classList.add('visible');
+    cardWrap.style.display = 'none';
+    answerRow.classList.remove('visible');
+    tapHint.textContent = '';
+    document.getElementById('statBad').textContent  = stats.bad;
+    document.getElementById('statMid').textContent  = stats.mid;
+    document.getElementById('statGood').textContent = stats.good;
+    document.getElementById('doneSubText').textContent =
+      `${totalCardsInScope}枚すべてが「もう大丈夫」になりました。お疲れさまでした！`;
+    updateProgress();
+    return;
+  }
+
+  doneScreen.classList.remove('visible');
+  cardWrap.style.display = '';
+
+  const card = document.getElementById('card');
+  card.classList.remove('flipped');
+  flipped = false;
+  answerRow.classList.remove('visible');
+  tapHint.textContent = '';
+
+  const c        = RAW[deck[0]];
+  const tag      = c[2];
+  const article  = c[3];
+  const segments = c[1].split('／');
+
+  document.getElementById('frontTag').textContent = tag;
+  document.getElementById('frontTag').className   = 'card-tag tag-' + tag;
+
+  const articleEl = document.getElementById('frontArticle');
+  if (currentMode === 'de2jp' && article) {
+    articleEl.textContent   = article;
+    articleEl.style.display = '';
+  } else {
+    articleEl.style.display = 'none';
+  }
+
+  if (currentMode === 'de2jp') {
+    document.getElementById('frontWord').textContent = c[0];
+    document.getElementById('backWord').textContent  = c[0];
+  } else {
+    const meaningRaw = segments[0].replace(/（[^）]+）/, '').trim();
+    document.getElementById('frontWord').textContent = meaningRaw;
+    document.getElementById('backWord').textContent  = c[0];
+  }
+
+  const segmentsHtml = segments.map(s => `<span class="segment">${s}</span>`).join('');
+  document.getElementById('backBody').innerHTML = segmentsHtml;
+
+  updateProgress();
+}
+
+function flipCard() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('card').classList.add('flipped');
+  document.getElementById('answerRow').classList.add('visible');
+  document.getElementById('tapHint').textContent = '理解度を選んでください';
+}
+
+function answer(level) {
+  const cardIndex = deck.shift();
+  if (level === 0) {
+    stats.bad++;
+    const insertAt = deck.length === 0 ? 0 : Math.min(2, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else if (level === 1) {
+    stats.mid++;
+    const insertAt = deck.length === 0 ? 0 : Math.min(5, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else {
+    stats.good++;
+    masteredSet.add(cardIndex);
+  }
+  showCard();
+}
+
+function updateProgress() {
+  const masteredCount = masteredSet.size;
+  const pct = totalCardsInScope > 0 ? (masteredCount / totalCardsInScope) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = deck.length + ' 枚 残り';
+  document.getElementById('masteredCount').textContent = masteredCount;
+  document.getElementById('totalCount').textContent    = totalCardsInScope;
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTag = btn.dataset.tag;
+    buildDeck(activeTag);
+    shuffleDeck();
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    buildDeck(activeTag);
+    shuffleDeck();
+  });
+});
+
+buildDeck('全て');
+shuffleDeck();
+</script>
+</body>
+</html>

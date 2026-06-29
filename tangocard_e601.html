@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ドイツ語A1 単語カード</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0eee8;
+    --border: #ddd8cc;
+    --text: #2b2a28;
+    --text-dim: #8a8578;
+    --accent: #2a5d6e;
+    --accent2: #a8455a;
+    --tag-mono: #e3eef0;
+    --tag-mono-text: #2c6b7a;
+    --tag-kotsu: #e7f0e3;
+    --tag-kotsu-text: #4f7a45;
+    --tag-hindo: #f4ecd9;
+    --tag-hindo-text: #9c6f2a;
+    --tag-shoyu: #ede8f5;
+    --tag-shoyu-text: #5a3d8a;
+    --tag-bunri: #fde8f0;
+    --tag-bunri-text: #9b2050;
+    --tag-michi: #e8f3e8;
+    --tag-michi-text: #2a6e3a;
+    --again: #c0392b;
+    --hard: #d68a1a;
+    --good: #2f9e5e;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  .filter-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .mode-row {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .mode-btn {
+    padding: 6px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(168,69,90,0.07); }
+  .mode-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .progress-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .mastered-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 16px;
+    font-size: 0.8rem;
+    color: var(--good);
+    font-weight: 500;
+  }
+  .mastered-area span { font-family: 'EB Garamond', serif; font-size: 0.95rem; }
+
+  .card-wrap {
+    width: 100%;
+    max-width: 720px;
+    perspective: 1200px;
+    margin-bottom: 20px;
+    min-height: 300px;
+  }
+
+  .card {
+    width: 100%;
+    min-height: 300px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    min-height: 300px;
+    backface-visibility: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .card-face.back { transform: rotateY(180deg); align-items: flex-start; justify-content: flex-start; }
+
+  .card-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .tag-持ち物     { background: var(--tag-mono);  color: var(--tag-mono-text); }
+  .tag-交通手段   { background: var(--tag-kotsu); color: var(--tag-kotsu-text); }
+  .tag-頻度の副詞 { background: var(--tag-hindo); color: var(--tag-hindo-text); }
+  .tag-所有冠詞   { background: var(--tag-shoyu); color: var(--tag-shoyu-text); }
+  .tag-分離動詞   { background: var(--tag-bunri); color: var(--tag-bunri-text); }
+  .tag-道案内     { background: var(--tag-michi); color: var(--tag-michi-text); }
+
+  .card-front-word {
+    font-family: 'EB Garamond', serif;
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+    font-weight: 400;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .card-article {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    letter-spacing: 0.03em;
+    font-style: italic;
+  }
+
+  .card-hint {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
+
+  .card-back-content { width: 100%; }
+
+  .card-back-word {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+
+  .card-back-body {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .card-back-body .segment {
+    display: block;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-back-body .segment:last-child { border-bottom: none; }
+
+  .tap-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+    min-height: 1.2em;
+  }
+
+  .answer-row {
+    width: 100%;
+    max-width: 720px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .answer-row.visible { opacity: 1; pointer-events: all; }
+
+  .ans-btn {
+    padding: 12px 8px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+  }
+  .ans-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .ans-btn:active { transform: translateY(0); }
+  .ans-btn .label { font-size: 0.85rem; }
+  .ans-btn .sublabel { font-size: 0.65rem; opacity: 0.75; }
+
+  .btn-bad  { background: var(--again); }
+  .btn-mid  { background: var(--hard); }
+  .btn-good { background: var(--good); }
+
+  .controls {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .ctrl-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .done-screen {
+    display: none;
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 40px;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .done-screen.visible { display: flex; }
+
+  .done-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .done-sub {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+  .done-stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'EB Garamond', serif; font-size: 2rem; color: var(--text); }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); }
+
+  .restart-btn {
+    padding: 12px 32px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .restart-btn:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ドイツ語 A1 — 単語カード</h1>
+  <div class="filter-row">
+    <button class="filter-btn active" data-tag="全て">全て</button>
+    <button class="filter-btn" data-tag="持ち物">持ち物</button>
+    <button class="filter-btn" data-tag="交通手段">交通手段</button>
+    <button class="filter-btn" data-tag="頻度の副詞">頻度の副詞</button>
+    <button class="filter-btn" data-tag="所有冠詞">所有冠詞</button>
+    <button class="filter-btn" data-tag="分離動詞">分離動詞</button>
+    <button class="filter-btn" data-tag="道案内">道案内</button>
+  </div>
+</header>
+
+<div class="mode-row">
+  <button class="mode-btn active" data-mode="de2jp">独 → 日</button>
+  <button class="mode-btn" data-mode="jp2de">日 → 独</button>
+</div>
+
+<div class="progress-area">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 0</div>
+</div>
+<div class="mastered-area" id="masteredArea">
+  ✅ もう大丈夫：<span id="masteredCount">0</span> / <span id="totalCount">0</span>
+</div>
+
+<div class="card-wrap" id="cardWrap">
+  <div class="card" id="card" onclick="flipCard()">
+    <div class="card-face front" id="frontFace">
+      <div class="card-tag" id="frontTag"></div>
+      <div class="card-article" id="frontArticle"></div>
+      <div class="card-front-word" id="frontWord"></div>
+      <div class="card-hint">クリックして裏面を見る</div>
+    </div>
+    <div class="card-face back" id="backFace">
+      <div class="card-back-content">
+        <div class="card-back-word" id="backWord"></div>
+        <div class="card-back-body" id="backBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tap-hint" id="tapHint"></div>
+
+<div class="answer-row" id="answerRow">
+  <button class="ans-btn btn-bad" onclick="answer(0)">
+    <span class="label">全然さっぱり</span>
+    <span class="sublabel">もう一度すぐ</span>
+  </button>
+  <button class="ans-btn btn-mid" onclick="answer(1)">
+    <span class="label">まだもう少し</span>
+    <span class="sublabel">あとで再挑戦</span>
+  </button>
+  <button class="ans-btn btn-good" onclick="answer(2)">
+    <span class="label">もう大丈夫</span>
+    <span class="sublabel">これでクリア</span>
+  </button>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="shuffleDeck()">シャッフル</button>
+  <button class="ctrl-btn" onclick="restartDeck()">最初から</button>
+</div>
+
+<div class="done-screen" id="doneScreen">
+  <div class="done-title">🎉 全部「もう大丈夫」！</div>
+  <div class="done-sub" id="doneSubText"></div>
+  <div class="done-stats">
+    <div class="stat"><div class="stat-num" id="statBad">0</div><div class="stat-label">全然さっぱり<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statMid">0</div><div class="stat-label">まだもう少し<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statGood">0</div><div class="stat-label">もう大丈夫<br>と答えた回数</div></div>
+  </div>
+  <button class="restart-btn" onclick="restartDeck()">もう一度やる</button>
+</div>
+
+<script>
+// [表面の見出し, 裏面の詳細（／区切り）, カテゴリ, 冠詞ヒント（省略可）]
+// 裏面: 1行目=意味・訳, 2行目以降=例文・補足
+const RAW = [
+  // ── 持ち物 ──
+  ["der USB-Stick", "（男性名詞）USBメモリ／Ist das dein USB-Stick? ─ これはあなたのUSBメモリですか？／Mein USB-Stick. ─ 私のUSBメモリです。", "持ち物", "der"],
+  ["das Handy", "（中性名詞）携帯電話／Das ist das Handy von Leon. ─ これはレオンの携帯電話です。／sein Handy ─ 彼の携帯", "持ち物", "das"],
+  ["das Buch / die Bücher", "（中性名詞・複数）本／Sind das deine Bücher? ─ これはあなたの本ですか？／Das sind ihre Bücher. ─ それは彼女の本です。", "持ち物", "das/die"],
+  ["die Brille", "（女性名詞）メガネ／Ist das deine Brille? ─ これはあなたのメガネですか？／Das ist ihre Brille. ─ それは彼女のメガネです。", "持ち物", "die"],
+  ["der Schlüssel", "（男性名詞・複数も同形）鍵／Sind das eure Schlüssel? ─ これはあなたたちの鍵ですか？／das sind unsere Schlüssel ─ 私たちの鍵です", "持ち物", "der"],
+  ["die Tasche", "（女性名詞）バッグ・かばん／Die Tasche gehört Sina. ─ そのバッグはジナのものです。／seine Tasche / ihre Tasche ─ 彼のバッグ／彼女のバッグ", "持ち物", "die"],
+  ["der Computer", "（男性名詞）パソコン／mein Computer ─ 私のパソコン／dein Computer ─ あなたのパソコン", "持ち物", "der"],
+
+  // ── 交通手段 ──
+  ["der E-Roller", "（男性名詞）電動キックボード／Leon fährt nie mit dem E-Roller. ─ レオンは決して電動キックボードに乗らない。", "交通手段", "der"],
+  ["der Zug", "（男性名詞）電車・列車／Leon fährt immer mit dem Zug nach Hamburg. ─ レオンはいつも電車でハンブルクへ行く。", "交通手段", "der"],
+  ["das Fahrrad", "（中性名詞）自転車／Ich fahre immer mit dem Fahrrad zum Sport. ─ 私はいつも自転車でスポーツに行く。", "交通手段", "das"],
+  ["das Auto", "（中性名詞）車／Johanna fährt oft mit dem Auto zur Arbeit. ─ ヨハンナはよく車で職場へ行く。", "交通手段", "das"],
+  ["der Bus", "（男性名詞）バス／mit dem Bus fahren ─ バスで行く／Bus 100 ─ 100番のバス", "交通手段", "der"],
+  ["das Motorrad", "（中性名詞）バイク／mit dem Motorrad fahren ─ バイクで行く", "交通手段", "das"],
+
+  // ── 頻度の副詞 ──
+  ["nie", "（副詞）決して〜ない（頻度：最も少ない）／Leon fährt nie mit dem E-Roller. ─ レオンは決して電動キックボードに乗らない。", "頻度の副詞", ""],
+  ["manchmal", "（副詞）ときどき／Ich fahre manchmal mit dem Bus. ─ 私はときどきバスで行く。", "頻度の副詞", ""],
+  ["oft", "（副詞）よく・たびたび／Johanna fährt oft mit dem Auto. ─ ヨハンナはよく車で行く。", "頻度の副詞", ""],
+  ["immer", "（副詞）いつも（頻度：最も多い）／Ich fahre immer mit dem Fahrrad. ─ 私はいつも自転車で行く。", "頻度の副詞", ""],
+
+  // ── 所有冠詞 ──
+  ["mein / meine", "（ich の所有冠詞）私の／男・中性：mein　女・複数：meine／mein Computer（私のパソコン）／meine Brille（私のメガネ）／meine Bücher（私の本）", "所有冠詞", ""],
+  ["dein / deine", "（du の所有冠詞）あなたの／男・中性：dein　女・複数：deine／dein Handy（あなたの携帯）／deine Tasche（あなたのバッグ）", "所有冠詞", ""],
+  ["sein / seine", "（er の所有冠詞）彼の／男・中性：sein　女・複数：seine／sein Handy（彼の携帯）／seine Tasche（彼のバッグ）", "所有冠詞", ""],
+  ["ihr / ihre", "（sie の所有冠詞）彼女の／男・中性：ihr　女・複数：ihre／ihr Computer（彼女のパソコン）／ihre Brille（彼女のメガネ）", "所有冠詞", ""],
+  ["unser / unsere", "（wir の所有冠詞）私たちの／男・中性：unser　女・複数：unsere／das sind unsere Schlüssel ─ これは私たちの鍵です", "所有冠詞", ""],
+  ["euer / eure", "（ihr の所有冠詞）あなたたちの／男・中性：euer　女・複数：eure／Sind das eure Schlüssel? ─ これはあなたたちの鍵ですか？", "所有冠詞", ""],
+
+  // ── 分離動詞 ──
+  ["ein|steigen", "（分離動詞）乗り込む／Sie steigen am Alexanderplatz ein. ─ 彼女たちはアレクサンダー広場で乗る。／前綴り ein が文末へ移動", "分離動詞", ""],
+  ["aus|steigen", "（分離動詞）降りる／Sie steigen am Brandenburger Tor aus. ─ 彼女たちはブランデンブルク門で降りる。", "分離動詞", ""],
+  ["um|steigen", "（分離動詞）乗り換える／Dort steigen sie um. ─ そこで乗り換える。", "分離動詞", ""],
+  ["ab|fahren", "（分離動詞）出発する／Der Bus fährt um 13:51 ab. ─ バスは13:51に出発する。", "分離動詞", ""],
+  ["an|kommen", "（分離動詞）到着する／Die S1 kommt um 14:18 an. ─ S1は14:18に到着する。", "分離動詞", ""],
+  ["weiter|fahren", "（分離動詞）乗り続ける・先へ進む／Sie fahren mit der S1 weiter. ─ 彼女たちはS1で乗り続ける。", "分離動詞", ""],
+
+  // ── 道案内 ──
+  ["Gehen Sie geradeaus.", "まっすぐ進んでください。／in Richtung Hotel Berlin ─ ホテルベルリン方面に向かって／道案内の基本表現", "道案内", ""],
+  ["Biegen Sie links ab.", "左に曲がってください。／分離動詞 abbiegen（曲がる）の命令形／links ─ 左　⇔　rechts ─ 右", "道案内", ""],
+  ["Biegen Sie rechts ab.", "右に曲がってください。／rechts ─ 右　⇔　links ─ 左", "道案内", ""],
+  ["Entschuldigung, können Sie mir helfen?", "すみません、助けていただけますか？／道を尋ねるときの冒頭表現／Entschuldigung ─ すみません（呼びかけ）", "道案内", ""],
+  ["Wie komme ich zum …?", "〜へはどうやって行けばいいですか？／zum = zu dem（男性・中性名詞）／zur = zu der（女性名詞）／Wie komme ich zum Brandenburger Tor? ─ ブランデンブルク門へは？", "道案内", ""],
+  ["Moment, bitte.", "少々お待ちください。／道を調べるときの応答表現／Ich sehe mal im Handy nach. ─ 携帯で調べてみます。", "道案内", ""],
+];
+
+let deck = [];
+let masteredSet = new Set();
+let flipped = false;
+let activeTag = '全て';
+let currentMode = 'de2jp';
+let stats = { bad: 0, mid: 0, good: 0 };
+let totalCardsInScope = 0;
+
+function buildDeck(tag) {
+  const scopeIndices = RAW
+    .map((c, i) => i)
+    .filter(i => tag === '全て' || RAW[i][2] === tag);
+  deck = [...scopeIndices];
+  masteredSet = new Set();
+  totalCardsInScope = scopeIndices.length;
+  stats = { bad: 0, mid: 0, good: 0 };
+}
+
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  showCard();
+}
+
+function restartDeck() {
+  buildDeck(activeTag);
+  shuffleDeck();
+}
+
+function showCard() {
+  const doneScreen = document.getElementById('doneScreen');
+  const cardWrap = document.getElementById('cardWrap');
+  const answerRow = document.getElementById('answerRow');
+  const tapHint = document.getElementById('tapHint');
+
+  if (deck.length === 0) {
+    doneScreen.classList.add('visible');
+    cardWrap.style.display = 'none';
+    answerRow.classList.remove('visible');
+    tapHint.textContent = '';
+    document.getElementById('statBad').textContent = stats.bad;
+    document.getElementById('statMid').textContent = stats.mid;
+    document.getElementById('statGood').textContent = stats.good;
+    document.getElementById('doneSubText').textContent =
+      `${totalCardsInScope}枚すべてが「もう大丈夫」になりました。お疲れさまでした！`;
+    updateProgress();
+    return;
+  }
+
+  doneScreen.classList.remove('visible');
+  cardWrap.style.display = '';
+
+  const card = document.getElementById('card');
+  card.classList.remove('flipped');
+  flipped = false;
+  answerRow.classList.remove('visible');
+  tapHint.textContent = '';
+
+  const c = RAW[deck[0]];
+  const tag = c[2];
+  const article = c[3]; // 冠詞ヒント
+  const segments = c[1].split('／');
+
+  // タグ
+  document.getElementById('frontTag').textContent = tag;
+  document.getElementById('frontTag').className = 'card-tag tag-' + tag;
+
+  // 冠詞ヒント（独→日モードの表面のみ表示）
+  const articleEl = document.getElementById('frontArticle');
+  if (currentMode === 'de2jp' && article) {
+    articleEl.textContent = article;
+    articleEl.style.display = '';
+  } else {
+    articleEl.style.display = 'none';
+  }
+
+  if (currentMode === 'de2jp') {
+    document.getElementById('frontWord').textContent = c[0];
+    document.getElementById('backWord').textContent = c[0];
+  } else {
+    // 日→独モード：表面に日本語の意味（1行目の「（品詞）〇〇」を抜いた核心部分）
+    const meaningRaw = segments[0].replace(/（[^）]+）/, '').trim();
+    document.getElementById('frontWord').textContent = meaningRaw;
+    document.getElementById('backWord').textContent = c[0];
+  }
+
+  const segmentsHtml = segments.map(s => `<span class="segment">${s}</span>`).join('');
+  document.getElementById('backBody').innerHTML = segmentsHtml;
+
+  updateProgress();
+}
+
+function flipCard() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('card').classList.add('flipped');
+  document.getElementById('answerRow').classList.add('visible');
+  document.getElementById('tapHint').textContent = '理解度を選んでください';
+}
+
+function answer(level) {
+  const cardIndex = deck.shift();
+  if (level === 0) {
+    stats.bad++;
+    const insertAt = deck.length === 0 ? 0 : Math.min(2, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else if (level === 1) {
+    stats.mid++;
+    const insertAt = deck.length === 0 ? 0 : Math.min(5, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else {
+    stats.good++;
+    masteredSet.add(cardIndex);
+  }
+  showCard();
+}
+
+function updateProgress() {
+  const masteredCount = masteredSet.size;
+  const pct = totalCardsInScope > 0 ? (masteredCount / totalCardsInScope) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = deck.length + ' 枚 残り';
+  document.getElementById('masteredCount').textContent = masteredCount;
+  document.getElementById('totalCount').textContent = totalCardsInScope;
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTag = btn.dataset.tag;
+    buildDeck(activeTag);
+    shuffleDeck();
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    buildDeck(activeTag);
+    shuffleDeck();
+  });
+});
+
+buildDeck('全て');
+shuffleDeck();
+</script>
+</body>
+</html>
