@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ドイツ語A1 単語カード — Freizeit & Studium編</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0eee8;
+    --border: #ddd8cc;
+    --text: #2b2a28;
+    --text-dim: #8a8578;
+    --accent: #2a5d6e;
+    --accent2: #a8455a;
+    --tag-basho:  #e3eef0; --tag-basho-text:  #2c6b7a;
+    --tag-mono:   #f4ecd9; --tag-mono-text:   #9c6f2a;
+    --tag-ichi:   #e7f0e3; --tag-ichi-text:   #4f7a45;
+    --tag-wichi:  #ede8f5; --tag-wichi-text:  #5a3d8a;
+    --tag-mae:    #fde8f0; --tag-mae-text:    #9b2050;
+    --tag-hyogen: #e8f3e8; --tag-hyogen-text: #2a6e3a;
+    --again: #c0392b;
+    --hard:  #d68a1a;
+    --good:  #2f9e5e;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  .filter-btn:hover  { border-color: var(--text-dim); color: var(--text); }
+
+  .mode-row {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .mode-btn {
+    padding: 6px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-btn.active { border-color: var(--accent2); color: var(--accent2); background: rgba(168,69,90,0.07); }
+  .mode-btn:hover  { border-color: var(--text-dim); color: var(--text); }
+
+  .progress-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .mastered-area {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 16px;
+    font-size: 0.8rem;
+    color: var(--good);
+    font-weight: 500;
+  }
+  .mastered-area span { font-family: 'EB Garamond', serif; font-size: 0.95rem; }
+
+  .card-wrap {
+    width: 100%;
+    max-width: 720px;
+    perspective: 1200px;
+    margin-bottom: 20px;
+    min-height: 300px;
+  }
+
+  .card {
+    width: 100%;
+    min-height: 300px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    min-height: 300px;
+    backface-visibility: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .card-face.back { transform: rotateY(180deg); align-items: flex-start; justify-content: flex-start; }
+
+  .card-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .tag-趣味スポーツ { background: var(--tag-basho);  color: var(--tag-basho-text); }
+  .tag-大学勉強    { background: var(--tag-mono);   color: var(--tag-mono-text); }
+  .tag-過去形     { background: var(--tag-mae);    color: var(--tag-mae-text); }
+  .tag-助動詞     { background: var(--tag-wichi);  color: var(--tag-wichi-text); }
+  .tag-場所頻度    { background: var(--tag-ichi);   color: var(--tag-ichi-text); }
+  .tag-会話表現    { background: var(--tag-hyogen); color: var(--tag-hyogen-text); }
+
+  .card-front-word {
+    font-family: 'EB Garamond', serif;
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+    font-weight: 400;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .card-article {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    letter-spacing: 0.03em;
+    font-style: italic;
+  }
+
+  .card-hint {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
+
+  .card-back-content { width: 100%; }
+
+  .card-back-word {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+
+  .card-back-body {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .card-back-body .segment {
+    display: block;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-back-body .segment:last-child { border-bottom: none; }
+
+  .tap-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 12px;
+    min-height: 1.2em;
+  }
+
+  .answer-row {
+    width: 100%;
+    max-width: 720px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .answer-row.visible { opacity: 1; pointer-events: all; }
+
+  .ans-btn {
+    padding: 12px 8px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+  }
+  .ans-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .ans-btn:active { transform: translateY(0); }
+  .ans-btn .label { font-size: 0.85rem; }
+  .ans-btn .sublabel { font-size: 0.65rem; opacity: 0.75; }
+
+  .btn-bad  { background: var(--again); }
+  .btn-mid  { background: var(--hard); }
+  .btn-good { background: var(--good); }
+
+  .controls {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .ctrl-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .done-screen {
+    display: none;
+    width: 100%;
+    max-width: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 40px;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .done-screen.visible { display: flex; }
+
+  .done-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .done-sub {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+  .done-stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'EB Garamond', serif; font-size: 2rem; color: var(--text); }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); }
+
+  .restart-btn {
+    padding: 12px 32px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .restart-btn:hover { filter: brightness(1.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ドイツ語 A1 — Freizeit & Studium編</h1>
+  <div class="filter-row">
+    <button class="filter-btn active" data-tag="全て">全て</button>
+    <button class="filter-btn" data-tag="趣味スポーツ">趣味・スポーツ</button>
+    <button class="filter-btn" data-tag="大学勉強">大学・勉強</button>
+    <button class="filter-btn" data-tag="過去形">過去形</button>
+    <button class="filter-btn" data-tag="助動詞">助動詞</button>
+    <button class="filter-btn" data-tag="場所頻度">場所・頻度</button>
+    <button class="filter-btn" data-tag="会話表現">会話表現</button>
+  </div>
+</header>
+
+<div class="mode-row">
+  <button class="mode-btn active" data-mode="de2jp">独 → 日</button>
+  <button class="mode-btn" data-mode="jp2de">日 → 独</button>
+</div>
+
+<div class="progress-area">
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 0</div>
+</div>
+<div class="mastered-area" id="masteredArea">
+  ✅ もう大丈夫：<span id="masteredCount">0</span> / <span id="totalCount">0</span>
+</div>
+
+<div class="card-wrap" id="cardWrap">
+  <div class="card" id="card" onclick="flipCard()">
+    <div class="card-face front" id="frontFace">
+      <div class="card-tag" id="frontTag"></div>
+      <div class="card-article" id="frontArticle"></div>
+      <div class="card-front-word" id="frontWord"></div>
+      <div class="card-hint">クリックして裏面を見る</div>
+    </div>
+    <div class="card-face back" id="backFace">
+      <div class="card-back-content">
+        <div class="card-back-word" id="backWord"></div>
+        <div class="card-back-body" id="backBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tap-hint" id="tapHint"></div>
+
+<div class="answer-row" id="answerRow">
+  <button class="ans-btn btn-bad" onclick="answer(0)">
+    <span class="label">全然さっぱり</span>
+    <span class="sublabel">もう一度すぐ</span>
+  </button>
+  <button class="ans-btn btn-mid" onclick="answer(1)">
+    <span class="label">まだもう少し</span>
+    <span class="sublabel">あとで再挑戦</span>
+  </button>
+  <button class="ans-btn btn-good" onclick="answer(2)">
+    <span class="label">もう大丈夫</span>
+    <span class="sublabel">これでクリア</span>
+  </button>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="shuffleDeck()">シャッフル</button>
+  <button class="ctrl-btn" onclick="restartDeck()">最初から</button>
+</div>
+
+<div class="done-screen" id="doneScreen">
+  <div class="done-title">🎉 全部「もう大丈夫」！</div>
+  <div class="done-sub" id="doneSubText"></div>
+  <div class="done-stats">
+    <div class="stat"><div class="stat-num" id="statBad">0</div><div class="stat-label">全然さっぱり<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statMid">0</div><div class="stat-label">まだもう少し<br>と答えた回数</div></div>
+    <div class="stat"><div class="stat-num" id="statGood">0</div><div class="stat-label">もう大丈夫<br>と答えた回数</div></div>
+  </div>
+  <button class="restart-btn" onclick="restartDeck()">もう一度やる</button>
+</div>
+
+<script>
+// [表面の見出し, 裏面の詳細（／区切り）, カテゴリ, 冠詞ヒント（省略可）]
+// 裏面: 1行目=意味・訳, 2行目以降=例文・補足
+const RAW = [
+
+  // ── 趣味・スポーツ ──
+  ["wandern", "（動詞）ハイキングする、山歩きをする／Ich wandere gern. ─ 私はハイキングするのが好きです。／Wanderst du gern? ─ ハイキングは好きですか？", "趣味スポーツ", ""],
+  ["klettern", "（動詞）登る、クライミングをする／Ich klettere seit vier Jahren. ─ 私は4年前からクライミングをしています。／Gestern war ich im Kletterkurs. ─ 昨日はクライミング講座にいました。", "趣味スポーツ", ""],
+  ["tanzen", "（動詞）踊る／Ich tanze gern. ─ 私は踊るのが好きです。／Gehst du gern tanzen? ─ ダンスに行くのは好きですか？", "趣味スポーツ", ""],
+  ["ausgehen", "（動詞）出かける・外出する／Ich gehe gern aus. ─ 私は出かけるのが好きです。／In Innsbruck geht Larissa gern aus. ─ インスブルックでラリッサはよく出かけます。", "趣味スポーツ", ""],
+  ["malen", "（動詞）絵を描く／Ich male gern. ─ 私は絵を描くのが好きです。／Ich male und fotografiere gern. ─ 私は絵を描いたり写真を撮ったりするのが好きです。", "趣味スポーツ", ""],
+  ["fotografieren", "（動詞）写真を撮る／Kannst du gut fotografieren? ─ 写真を撮るのは得意ですか？／Ich fotografiere gern Berge und Natur. ─ 私は山や自然の写真を撮るのが好きです。", "趣味スポーツ", ""],
+  ["Ski fahren", "（動詞句）スキーをする／Kannst du Ski fahren? ─ スキーはできますか？／In Österreich kann man gut Skifahren. ─ オーストリアではスキーがよくできます。", "趣味スポーツ", ""],
+  ["Tennis spielen", "（動詞句）テニスをする／Ich spiele gern Tennis. ─ 私はテニスをするのが好きです。", "趣味スポーツ", ""],
+  ["Yoga machen", "（動詞句）ヨガをする／Ich mache gern Yoga. ─ 私はヨガをするのが好きです。／Machst du Yoga? ─ ヨガをしますか？", "趣味スポーツ", ""],
+  ["Fußball spielen", "（動詞句）サッカーをする／Ich spiele manchmal Fußball. ─ 私は時々サッカーをします。／Gehst du gern tanzen? ─ Nein, aber ich spiele gern Fußball. ─ いいえ、でもサッカーをするのは好きです。", "趣味スポーツ", ""],
+  ["Gitarre spielen", "（動詞句）ギターを弾く／Kannst du Gitarre spielen? ─ ギターは弾けますか？", "趣味スポーツ", ""],
+  ["Rad fahren", "（動詞句）自転車に乗る／Man kann hier gut wandern und Rad fahren. ─ ここではハイキングや自転車もよくできます。", "趣味スポーツ", ""],
+  ["lesen", "（動詞）読書する／Mein Hobby? Ich lese gern. ─ 私の趣味？読書が好きです。", "趣味スポーツ", ""],
+  ["Musik hören", "（動詞句）音楽を聴く／Ich höre gern Musik. ─ 私は音楽を聴くのが好きです。", "趣味スポーツ", ""],
+  ["der Wintersport", "（男性名詞）ウィンタースポーツ／Magst du Wintersport? ─ ウィンタースポーツは好きですか？／Ich mache oft Wintersport. ─ 私はよくウィンタースポーツをします。", "趣味スポーツ", "der"],
+
+  // ── 大学・勉強 ──
+  ["der Campus", "（男性名詞）（大学の）キャンパス／Sammeln Sie Wörter zum Thema Campus. ─ キャンパスに関する単語を集めましょう。", "大学勉強", "der"],
+  ["das Semester / die Semester", "（中性名詞・複数）学期／Ich bin jetzt im zweiten Semester. ─ 私は今2学期目です。／im achten Semester ─ 8学期目に", "大学勉強", "das"],
+  ["studieren", "（動詞）大学で学ぶ・専攻する／Ich studiere Medizin in Innsbruck. ─ 私はインスブルックで医学を専攻しています。／Was studierst du? ─ 何を専攻していますか？", "大学勉強", ""],
+  ["die Universität / die Uni", "（女性名詞）大学／Die Universität ist 350 Jahre alt. ─ その大学は350年の歴史があります。", "大学勉強", "die"],
+  ["der Student / die Studentin", "（名詞）（男子・女子）大学生／Innsbruck ist für Studentinnen und Studenten sehr attraktiv. ─ インスブルックは学生にとってとても魅力的です。", "大学勉強", "der/die"],
+  ["das Sportangebot", "（中性名詞）スポーツプログラム・体育の授業／Das Sportangebot ist hier echt gut. ─ ここのスポーツプログラムは本当に充実しています。", "大学勉強", "das"],
+  ["die Club-Szene", "（女性名詞）クラブシーン（夜のクラブ文化）／Die Club-Szene ist interessant. ─ クラブシーンは興味深いです。", "大学勉強", "die"],
+  ["international", "（形容詞）国際的な／Innsbruck ist sehr international. ─ インスブルックはとても国際的です。", "大学勉強", ""],
+  ["die WG (Wohngemeinschaft)", "（女性名詞）ルームシェア、シェアハウス／Larissa studiert in Innsbruck und wohnt in einer WG. ─ ラリッサはインスブルックで学び、シェアハウスに住んでいます。", "大学勉強", "die"],
+  ["das Wintersemester", "（中性名詞）冬学期／Im Wintersemester studiere ich Germanistik. ─ 冬学期には私はドイツ文学を専攻します。", "大学勉強", "das"],
+
+  // ── 過去形（sein / haben の Präteritum）──
+  ["war", "（sein の過去形・ich／er／sie）〜だった／Ich war schon mal in Berlin. ─ 私は以前ベルリンに行ったことがあります。／Frieda war gestern klettern. ─ フリーダは昨日クライミングに行きました。", "過去形", ""],
+  ["warst", "（sein の過去形・du）〜だった／Warst du schon mal in den Alpen? ─ アルプスに行ったことはありますか？／Du warst gestern nicht da. ─ あなたは昨日いませんでした。", "過去形", ""],
+  ["waren", "（sein の過去形・wir／sie複数）〜だった／Gestern waren wir in der Stadt. ─ 昨日私たちは街にいました。", "過去形", ""],
+  ["hatte", "（haben の過去形・ich／er／sie）持っていた／Gestern hatte ich keine Zeit. ─ 昨日は時間がありませんでした。／Gestern hatte ich Geburtstag. ─ 昨日は私の誕生日でした。", "過去形", ""],
+  ["hattest", "（haben の過去形・du）持っていた／Gestern hattest du keine Zeit. ─ 昨日あなたは時間がありませんでした。", "過去形", ""],
+  ["hatten", "（haben の過去形・wir／sie複数）持っていた／Gestern hatten wir ein Seminar. ─ 昨日私たちはゼミがありました。", "過去形", ""],
+
+  // ── 助動詞 können ──
+  ["können", "（話法の助動詞）〜できる／Ich kann fotografieren. ─ 私は写真を撮ることができます。／Ich kann nicht Ski fahren. ─ 私はスキーができません。（人称変化：ich kann, du kannst, er/sie kann, wir können）", "助動詞", ""],
+  ["Kannst du …?", "（疑問文）〜できますか？／Kannst du Ski fahren? ─ スキーはできますか？／Nein, ich kann nicht Ski fahren. ─ いいえ、スキーはできません。", "助動詞", ""],
+  ["Könnt ihr …?", "（疑問文・ihrに対して）あなたたちは〜できますか？／Könnt ihr Fußball spielen? ─ サッカーはできますか？／Ja, wir können Fußball spielen. ─ はい、サッカーができます。", "助動詞", ""],
+
+  // ── 場所・頻度表現 ──
+  ["hier", "（副詞）ここで、ここに／Ich wohne in Innsbruck. Ich studiere hier. ─ 私はインスブルックに住んでいます。ここで勉強しています。", "場所頻度", ""],
+  ["dort", "（副詞）そこで、あそこに／Ich war in Passau. Dort war ich ein Semester. ─ 私はパッサウにいました。そこに1学期いました。", "場所頻度", ""],
+  ["erste / zweite / dritte …", "（序数詞）1番目の／2番目の／3番目の／im ersten Semester ─ 1学期目に／im dritten Semester ─ 3学期目に／im achten Semester ─ 8学期目に", "場所頻度", ""],
+  ["oft", "（副詞）よく、頻繁に／Ich mache oft Wintersport. ─ 私はよくウィンタースポーツをします。", "場所頻度", ""],
+  ["manchmal", "（副詞）時々／Ich spiele manchmal Tennis. ─ 私は時々テニスをします。", "場所頻度", ""],
+  ["die Berge", "（女性名詞・複数）山々／Die Berge sind nicht weit. ─ 山々はそう遠くありません。／Ich liebe die Berge. ─ 私は山が大好きです。", "場所頻度", "die"],
+  ["die Alpen", "（女性名詞・複数）アルプス山脈／Warst du schon mal in den Alpen? ─ アルプスに行ったことはありますか？", "場所頻度", "die"],
+  ["der Kletterkurs", "（男性名詞）クライミング講座／Gestern war ich im Kletterkurs. ─ 昨日私はクライミング講座にいました。", "場所頻度", "der"],
+
+  // ── 会話表現 ──
+  ["Warst du schon mal in …?", "（定型表現）〜に行ったことがありますか？／Warst du schon mal in Berlin? ─ ベルリンに行ったことはありますか？／Ja, dort war ich schon. ─ はい、そこに行ったことがあります。", "会話表現", ""],
+  ["Wo warst du gestern?", "（定型表現）昨日どこにいましたか？／Wo warst du gestern? ─ Am Montag war ich zu Hause. ─ 昨日はどこにいましたか？─ 月曜日は家にいました。", "会話表現", ""],
+  ["Wie war dein Tag?", "（定型表現）今日一日どうだった？／Wie war dein Tag? ─ Ich war heute im Kino. ─ 今日はどうだった？─ 今日は映画館に行きました。", "会話表現", ""],
+  ["Was kann man in … machen?", "（定型表現）〜では何ができますか？／Was kann man in Ihrer Stadt machen? ─ あなたの街では何ができますか？／Hier kann man gut wandern. ─ ここではハイキングがよくできます。", "会話表現", ""],
+  ["die Autogrammjagd", "（女性名詞）サイン集め（アンケート形式の会話練習）／Fragen Sie und sammeln Sie Unterschriften. ─ 質問してサインを集めましょう。", "会話表現", "die"],
+  ["Findest du … interessant?", "（定型表現）〜は面白いと思いますか？／Findest du Innsbruck interessant? ─ インスブルックは面白いと思いますか？／Ich finde Innsbruck interessant. ─ 私はインスブルックが面白いと思います。", "会話表現", ""],
+  ["Mein Hobby ist …", "（定型表現）私の趣味は〜です／Mein Hobby ist Wandern. ─ 私の趣味はハイキングです。", "会話表現", ""],
+  ["Ich liebe die Berge.", "（定型表現）私は山が大好きです／Ich liebe die Berge. Ich wandere gern. ─ 私は山が大好きです。ハイキングをするのが好きです。", "会話表現", ""],
+];
+
+let deck = [];
+let masteredSet = new Set();
+let flipped = false;
+let activeTag = '全て';
+let currentMode = 'de2jp';
+let stats = { bad: 0, mid: 0, good: 0 };
+let totalCardsInScope = 0;
+
+function buildDeck(tag) {
+  const scopeIndices = RAW
+    .map((c, i) => i)
+    .filter(i => tag === '全て' || RAW[i][2] === tag);
+  deck = [...scopeIndices];
+  masteredSet = new Set();
+  totalCardsInScope = scopeIndices.length;
+  stats = { bad: 0, mid: 0, good: 0 };
+}
+
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  showCard();
+}
+
+function restartDeck() {
+  buildDeck(activeTag);
+  shuffleDeck();
+}
+
+function showCard() {
+  const doneScreen = document.getElementById('doneScreen');
+  const cardWrap   = document.getElementById('cardWrap');
+  const answerRow  = document.getElementById('answerRow');
+  const tapHint    = document.getElementById('tapHint');
+
+  if (deck.length === 0) {
+    doneScreen.classList.add('visible');
+    cardWrap.style.display = 'none';
+    answerRow.classList.remove('visible');
+    tapHint.textContent = '';
+    document.getElementById('statBad').textContent  = stats.bad;
+    document.getElementById('statMid').textContent  = stats.mid;
+    document.getElementById('statGood').textContent = stats.good;
+    document.getElementById('doneSubText').textContent =
+      `${totalCardsInScope}枚すべてが「もう大丈夫」になりました。お疲れさまでした！`;
+    updateProgress();
+    return;
+  }
+
+  doneScreen.classList.remove('visible');
+  cardWrap.style.display = '';
+
+  const card = document.getElementById('card');
+  card.classList.remove('flipped');
+  flipped = false;
+  answerRow.classList.remove('visible');
+  tapHint.textContent = '';
+
+  const c        = RAW[deck[0]];
+  const tag      = c[2];
+  const article  = c[3];
+  const segments = c[1].split('／');
+
+  document.getElementById('frontTag').textContent = tag;
+  document.getElementById('frontTag').className   = 'card-tag tag-' + tag;
+
+  const articleEl = document.getElementById('frontArticle');
+  if (currentMode === 'de2jp' && article) {
+    articleEl.textContent   = article;
+    articleEl.style.display = '';
+  } else {
+    articleEl.style.display = 'none';
+  }
+
+  if (currentMode === 'de2jp') {
+    document.getElementById('frontWord').textContent = c[0];
+    document.getElementById('backWord').textContent  = c[0];
+  } else {
+    const meaningRaw = segments[0].replace(/（[^）]+）/, '').trim();
+    document.getElementById('frontWord').textContent = meaningRaw;
+    document.getElementById('backWord').textContent  = c[0];
+  }
+
+  const segmentsHtml = segments.map(s => `<span class="segment">${s}</span>`).join('');
+  document.getElementById('backBody').innerHTML = segmentsHtml;
+
+  updateProgress();
+}
+
+function flipCard() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('card').classList.add('flipped');
+  document.getElementById('answerRow').classList.add('visible');
+  document.getElementById('tapHint').textContent = '理解度を選んでください';
+}
+
+function answer(level) {
+  const cardIndex = deck.shift();
+  if (level === 0) {
+    stats.bad++;
+    const insertAt = deck.length === 0 ? 0 : Math.min(2, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else if (level === 1) {
+    stats.mid++;
+    const insertAt = deck.length === 0 ? 0 : Math.min(5, deck.length);
+    deck.splice(insertAt, 0, cardIndex);
+  } else {
+    stats.good++;
+    masteredSet.add(cardIndex);
+  }
+  showCard();
+}
+
+function updateProgress() {
+  const masteredCount = masteredSet.size;
+  const pct = totalCardsInScope > 0 ? (masteredCount / totalCardsInScope) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = deck.length + ' 枚 残り';
+  document.getElementById('masteredCount').textContent = masteredCount;
+  document.getElementById('totalCount').textContent    = totalCardsInScope;
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTag = btn.dataset.tag;
+    buildDeck(activeTag);
+    shuffleDeck();
+  });
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    buildDeck(activeTag);
+    shuffleDeck();
+  });
+});
+
+buildDeck('全て');
+shuffleDeck();
+</script>
+</body>
+</html>
