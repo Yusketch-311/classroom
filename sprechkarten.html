@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sprechkarten A1</title>
+<style>
+:root{
+  --bg:#f6f3ee; --card:#ffffff; --ink:#1f1d1a; --muted:#6b665e; --line:#e3ddd3;
+  --accent:#c8102e; --accent-ink:#fff; --gold:#e8b100; --chip:#ece6dc; --hint:#fbf6e6;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#16150f; --card:#23211b; --ink:#f1ece2; --muted:#a39d91; --line:#39352c;
+    --accent:#e0435a; --accent-ink:#fff; --gold:#f0c43a; --chip:#302d25; --hint:#2c2818; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
+  min-height:100dvh;display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent}
+header{padding:14px 16px 6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:18px;margin:0;letter-spacing:.02em}
+.flag{display:inline-block;width:18px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:2px;
+  background:linear-gradient(#111 0 33.3%,#dd0000 33.3% 66.6%,#ffce00 66.6%)}
+.tabs{display:flex;gap:6px;padding:4px 16px 8px}
+.tab{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 8px;border-radius:12px;font-size:15px;font-weight:600}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+details.filter{margin:0 16px 8px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+details.filter summary{padding:10px 12px;font-size:14px;color:var(--muted);cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:7px 11px;border-radius:999px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+main{flex:1;display:flex;flex-direction:column;padding:4px 16px 16px;gap:12px}
+.card{flex:1;min-height:320px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;
+  display:flex;flex-direction:column;box-shadow:0 6px 20px rgba(0,0,0,.06);position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;right:0;height:6px;background:linear-gradient(90deg,#111 0 33.3%,#dd0000 33.3% 66.6%,#ffce00 66.6%)}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.badge{font-size:12px;padding:4px 9px;border-radius:999px;background:var(--chip);color:var(--muted);font-weight:600}
+.badge.type{background:var(--accent);color:var(--accent-ink)}
+.q{font-size:clamp(24px,7vw,34px);font-weight:700;line-height:1.3;margin:22px 0 10px;overflow-wrap:anywhere}
+.big{font-size:clamp(44px,15vw,72px);text-align:center;margin:18px 0;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.sub{color:var(--muted);font-size:15px;line-height:1.6}
+.hint{margin-top:auto;background:var(--hint);border-radius:14px;padding:12px 14px;font-size:15px;line-height:1.6;display:none}
+.hint.show{display:block;animation:fade .2s ease}
+.hint b{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+.hint .ex{font-weight:600;margin-bottom:8px}
+.role dl{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:16px 0 0;font-size:18px}
+.role dt{color:var(--muted);font-size:14px;align-self:center}
+.role dd{margin:0;font-weight:700}
+.controls{display:grid;grid-template-columns:1fr 1fr 2fr;gap:8px}
+button.ctl{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:14px 8px;font-size:15px;font-weight:600}
+button.next{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-size:17px}
+button:active{transform:scale(.97)}
+.count{text-align:center;font-size:12px;color:var(--muted)}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card.enter{animation:fade .22s ease}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="flag"></span>Sprechkarten A1</h1>
+  <span class="badge" id="deckInfo"></span>
+</header>
+
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-mode="karten">🗣 Fragekarten</button>
+  <button class="tab" role="tab" aria-selected="false" data-mode="rolle">🎭 Rollenkarte</button>
+</div>
+
+<details class="filter" id="filterBox">
+  <summary>範囲を選ぶ（Einheit）</summary>
+  <div class="chips" id="chips"></div>
+</details>
+
+<main>
+  <section class="card enter" id="card" aria-live="polite"></section>
+  <div class="controls">
+    <button class="ctl" id="btnHint">💡 ヒント</button>
+    <button class="ctl" id="btnSpeak">🔊 聞く</button>
+    <button class="ctl next" id="btnNext">Nächste Karte ›</button>
+  </div>
+  <div class="count" id="count"></div>
+</main>
+
+<script>
+/* ============ カードデータ ============
+  e: Einheit（0 = Ferien/Bonus）
+  t: 種類  Frage=質問に答える / Partner=相手に聞く / Aufgabe=ミニ課題 / Rollenspiel=ペアで会話
+  de: 表示するドイツ語 / sub: 補足（日本語可） / ex: 例文 / ja: ヒント
+  gen: 毎回ランダムに値が変わるカード
+*/
+const UNITS = {
+  1:"E1 Sommerkurs", 2:"E2 Möller/Müller", 3:"E3 Café", 4:"E4 Essen",
+  5:"E5 Zeit", 6:"E6 Stadt", 7:"E7 Job", 8:"E8 Freizeit", 0:"Ferien ☀"
+};
+
+const CARDS = [
+  // ---- Einheit 1: Kennenlernen ----
+  {e:1,t:"Frage",de:"Wie heißt du?",ex:"Ich heiße Yuki.",ja:"名前を言う"},
+  {e:1,t:"Frage",de:"Woher kommst du?",ex:"Ich komme aus Japan, aus Osaka.",ja:"出身を言う：aus + 国/町"},
+  {e:1,t:"Frage",de:"Wo wohnst du?",ex:"Ich wohne in Kyoto.",ja:"住んでいる所：in + 町"},
+  {e:1,t:"Frage",de:"Welche Sprachen sprichst du?",ex:"Ich spreche Japanisch, Englisch und ein bisschen Deutsch.",ja:"sprechen → du sprichst"},
+  {e:1,t:"Frage",de:"Wie geht's?",ex:"Sehr gut, danke! Und dir?",ja:"調子を答えて、聞き返そう"},
+  {e:1,t:"Partner",de:"Frag deine Partnerin / deinen Partner: Name, Herkunft, Wohnort.",sub:"3つ質問して、答えを覚えよう",ex:"Wie heißt du? Woher kommst du? Wo wohnst du?",ja:"heißen / kommen / wohnen"},
+  {e:1,t:"Aufgabe",de:"Stell dich vor! Sag 4 Sätze.",sub:"自己紹介を4文で",ex:"Hallo! Ich heiße Ken. Ich komme aus Japan. Ich wohne in Nagoya. Ich spreche Japanisch und Englisch.",ja:"名前・出身・住所・言語"},
+  {e:1,t:"Aufgabe",de:"Stell deine Partnerin / deinen Partner vor.",sub:"ペアの人を3人称で紹介",ex:"Das ist Mika. Sie kommt aus Kobe. Sie wohnt in Osaka.",ja:"er/sie kommt, wohnt, spricht…"},
+
+  // ---- Einheit 2: Buchstabieren, Zahlen, Sie ----
+  {e:2,t:"Aufgabe",de:"Buchstabier deinen Vornamen und Nachnamen.",ex:"T – A – N – A – K – A",ja:"アルファベットをドイツ語読みで"},
+  {e:2,t:"Frage",de:"Wie ist Ihr Name?",sub:"Sie（敬称）で聞かれています",ex:"Mein Name ist Sato. – Wie bitte? – S-A-T-O.",ja:"Mein Name ist …"},
+  {e:2,t:"Frage",de:"Wie alt bist du?",ex:"Ich bin achtzehn / neunzehn.",ja:"Ich bin + 数字"},
+  {e:2,t:"Frage",de:"Wie ist deine Telefonnummer?",sub:"※本物ではなく、架空の番号でOK！",ex:"Null – neun – null, eins – zwei – drei – vier …",ja:"数字を1つずつ読む"},
+  {e:2,t:"Rollenspiel",de:"Anmeldung im Sprachkurs",sub:"A：受付（Sie で質問）／B：学生。名前・つづり・電話番号・メールを聞く",ex:"A: Wie ist Ihr Name? – B: Takahashi. – A: Wie schreibt man das? – B: T-A-K-A…",ja:"Wie schreibt man das? = どう書きますか"},
+  {e:2,gen:"spell",t:"Aufgabe"},
+  {e:2,gen:"number",t:"Aufgabe"},
+  {e:2,gen:"math",t:"Aufgabe"},
+
+  // ---- Einheit 3: Café, Gegenstände, Artikel ----
+  {e:3,t:"Aufgabe",de:"Zeig auf etwas im Raum. Was ist das?",ex:"Das ist ein Stuhl. / Das ist eine Tasche. / Das ist ein Handy.",ja:"der→ein / das→ein / die→eine"},
+  {e:3,t:"Aufgabe",de:"Nenne 5 Dinge in deiner Tasche – mit Artikel!",ex:"das Handy, der Kuli, das Heft, die Flasche, der Schlüssel",ja:"der / das / die をつけて"},
+  {e:3,t:"Partner",de:"Zeig auf etwas und frag: „Ist das ein …?“",sub:"相手はわざと違うものを言ってもOK",ex:"Ist das ein Bleistift? – Nein, das ist kein Bleistift. Das ist ein Kuli.",ja:"否定は kein / keine"},
+  {e:3,t:"Rollenspiel",de:"Im Café bestellen",sub:"A：店員／B：お客さん。飲み物と食べ物を注文して、支払う",ex:"A: Was möchten Sie? – B: Einen Kaffee und einen Kuchen, bitte. – A: Das macht 6,80 Euro.",ja:"Ich möchte … / Zahlen, bitte!"},
+  {e:3,t:"Frage",de:"Was trinkst du im Café?",ex:"Ich trinke gern Cappuccino.",ja:"trinken / gern"},
+
+  // ---- Einheit 4: Essen ----
+  {e:4,t:"Frage",de:"Was isst du gern?",ex:"Ich esse gern Pizza und Sushi.",ja:"essen → du isst"},
+  {e:4,t:"Frage",de:"Was isst du nicht gern?",ex:"Ich esse nicht gern Fisch. / Ich mag keine Tomaten.",ja:"nicht gern / mag kein…"},
+  {e:4,t:"Frage",de:"Was isst und trinkst du zum Frühstück?",ex:"Zum Frühstück esse ich Brot und trinke Kaffee.",ja:"Zum Frühstück … (動詞が2番目！)"},
+  {e:4,t:"Frage",de:"Was ist dein Lieblingsessen?",ex:"Mein Lieblingsessen ist Ramen.",ja:"Lieblings- = 一番好きな"},
+  {e:4,t:"Partner",de:"Frag 2 Personen: „Magst du …?“",sub:"答えを使って文を作る",ex:"Magst du Käse? – Ja! / Nein, ich mag keinen Käse.",ja:"Akkusativ：der → keinen"},
+  {e:4,t:"Rollenspiel",de:"Auf dem Markt einkaufen",sub:"A：店の人／B：客。2つ以上買って、値段を聞こう",ex:"B: Ich hätte gern ein Kilo Äpfel. Was kostet das? – A: 2,50 Euro. – B: Und noch zwei Tomaten, bitte.",ja:"Was kostet …? / Das kostet …"},
+  {e:4,gen:"price",t:"Aufgabe"},
+
+  // ---- Einheit 5: Uhrzeit, Tagesablauf ----
+  {e:5,gen:"time",t:"Aufgabe"},
+  {e:5,t:"Frage",de:"Wann stehst du auf?",ex:"Ich stehe um sieben Uhr auf.",ja:"分離動詞：auf|stehen → aufは文末"},
+  {e:5,t:"Frage",de:"Was machst du am Samstag?",ex:"Am Samstag arbeite ich. / Am Samstag treffe ich Freunde.",ja:"Am + 曜日、動詞は2番目"},
+  {e:5,t:"Frage",de:"Welcher Tag ist heute? Und morgen?",ex:"Heute ist Dienstag. Morgen ist Mittwoch.",ja:"Montag, Dienstag, Mittwoch …"},
+  {e:5,t:"Aufgabe",de:"Beschreib deinen Tag – von morgens bis abends.",sub:"時刻を入れて4文以上",ex:"Ich stehe um 7 Uhr auf. Um 8 Uhr frühstücke ich. Um 9 Uhr fahre ich zur Uni. Um 23 Uhr gehe ich ins Bett.",ja:"um … Uhr"},
+  {e:5,t:"Rollenspiel",de:"Hast du Zeit? – Einen Termin finden",sub:"一緒に出かける日時を決めよう。最初の2回は断ること！",ex:"A: Hast du am Freitag Zeit? – B: Nein, leider nicht. Am Freitag arbeite ich. Und am Samstag? – A: Ja, gut! Um wie viel Uhr?",ja:"Leider nicht… / Das passt!"},
+
+  // ---- Einheit 6: Stadt ----
+  {e:6,t:"Frage",de:"Was gibt es in deiner Stadt?",ex:"In meiner Stadt gibt es einen Bahnhof, ein Kino und viele Cafés.",ja:"es gibt + Akkusativ"},
+  {e:6,t:"Frage",de:"Wie kommst du zur Uni?",ex:"Ich fahre mit dem Zug. / Ich komme mit dem Fahrrad. / Ich gehe zu Fuß.",ja:"mit dem Bus / Zug / Fahrrad"},
+  {e:6,t:"Frage",de:"Was ist dein Lieblingsort in deiner Stadt?",ex:"Mein Lieblingsort ist der Park. Dort ist es ruhig.",ja:"dort = そこで"},
+  {e:6,t:"Rollenspiel",de:"Nach dem Weg fragen",sub:"教室を町と見立てて、出口・窓・ドアまで道案内",ex:"Entschuldigung, wo ist der Bahnhof? – Gehen Sie geradeaus und dann links.",ja:"geradeaus / links / rechts"},
+  {e:6,t:"Partner",de:"Frag: „Wohnst du gern in …? Warum?“",ex:"Ja, ich wohne gern in Kyoto. Die Stadt ist schön und nicht so groß.",ja:"schön, groß, klein, laut, ruhig…"},
+
+  // ---- Einheit 7: Job ----
+  {e:7,t:"Frage",de:"Hast du einen Job?",ex:"Ja, ich jobbe in einem Restaurant. / Nein, ich habe keinen Job.",ja:"jobben = アルバイトする"},
+  {e:7,t:"Frage",de:"Was musst du heute noch machen?",ex:"Ich muss heute noch Hausaufgaben machen.",ja:"müssen + 不定詞は文末"},
+  {e:7,t:"Frage",de:"Was kannst du gut?",ex:"Ich kann gut kochen, aber ich kann nicht gut singen.",ja:"können + 不定詞は文末"},
+  {e:7,t:"Frage",de:"Welchen Beruf findest du interessant? Warum?",ex:"Ich finde Lehrer interessant. Der Beruf ist kreativ.",ja:"Ich finde … interessant"},
+  {e:7,t:"Aufgabe",de:"Pantomime! Spiel einen Beruf. Die anderen raten.",sub:"声を出さずに演技。周りは Ja/Nein で質問",ex:"Bist du Koch? – Nein. – Bist du Arzt? – Ja!",ja:"Bist du …?"},
+  {e:7,t:"Partner",de:"Frag: Wo arbeitest du? Wie viele Stunden? Wie findest du den Job?",ex:"Ich arbeite im Supermarkt, 10 Stunden pro Woche. Der Job ist anstrengend, aber nett.",ja:"pro Woche = 週に"},
+
+  // ---- Einheit 8: Freizeit ----
+  {e:8,t:"Frage",de:"Was machst du in deiner Freizeit?",ex:"In meiner Freizeit spiele ich Tennis und sehe Serien.",ja:"動詞は2番目"},
+  {e:8,t:"Frage",de:"Was machst du gern am Wochenende?",ex:"Am Wochenende schlafe ich gern lange.",ja:"gern = 好んで"},
+  {e:8,t:"Frage",de:"Was machst du lieber: lesen oder Filme sehen?",ex:"Ich sehe lieber Filme.",ja:"gern → lieber → am liebsten"},
+  {e:8,t:"Frage",de:"Spielst du ein Instrument? Machst du Sport?",ex:"Ich spiele Gitarre. Sport mache ich nicht so gern.",ja:"spielen / machen"},
+  {e:8,t:"Partner",de:"Finde 1 Sache, die ihr beide gern macht!",sub:"質問しあって共通の趣味を探そう",ex:"Kochst du gern? – Nein. – Hörst du gern Musik? – Ja! – Wir hören beide gern Musik!",ja:"wir … beide gern"},
+  {e:8,t:"Aufgabe",de:"Was machst du am liebsten? Sag 3 Sätze mit gern / lieber / am liebsten.",ex:"Ich lese gern. Ich koche lieber. Am liebsten tanze ich!",ja:"gern < lieber < am liebsten"},
+
+  // ---- Bonus: Ferien ----
+  {e:0,t:"Frage",de:"Wie waren deine Ferien?",ex:"Super! / Gut. / Ganz okay. / Ein bisschen langweilig.",ja:"waren = sein の過去形"},
+  {e:0,t:"Frage",de:"Wo warst du in den Ferien?",ex:"Ich war in Okinawa. / Ich war zu Hause.",ja:"Ich war in … / zu Hause"},
+  {e:0,t:"Frage",de:"Was hast du in den Ferien gemacht?",sub:"まだ習っていない形は、下の決まり文句を使おう",ex:"Ich habe viel gearbeitet. / Ich habe viel geschlafen. / Ich habe Freunde getroffen.",ja:"Ich habe … gemacht（まるごと覚えてOK）"},
+  {e:0,t:"Partner",de:"Frag 3 Personen: „Wie waren deine Ferien?“",sub:"一番楽しそうだった人は誰？",ex:"Ich war in … / Die Ferien waren super!",ja:"Und du?"},
+];
+
+/* ランダム生成カード */
+const WORDS = ["Straße","Brötchen","Kühlschrank","Wochenende","Frühstück","Fahrrad","Bahnhof","Schlüssel","Müller","Möller","Äpfel","Hausaufgabe","Deutschland","Quark","Joghurt"];
+const zahlen = n => {
+  const e=["null","eins","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf","dreizehn","vierzehn","fünfzehn","sechzehn","siebzehn","achtzehn","neunzehn"];
+  const z={2:"zwanzig",3:"dreißig",4:"vierzig",5:"fünfzig",6:"sechzig",7:"siebzig",8:"achtzig",9:"neunzig"};
+  if(n<20) return e[n];
+  if(n<100){const t=Math.floor(n/10),o=n%10;return o?(o===1?"ein":e[o])+"und"+z[t]:z[t];}
+  if(n<1000){const h=Math.floor(n/100),r=n%100;return (h===1?"ein":e[h])+"hundert"+(r?zahlen(r):"");}
+  return String(n);
+};
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+function generate(c){
+  if(c.gen==="time"){
+    const h=rnd(1,12), m=pick([0,5,10,15,20,25,30,35,40,45,50,55]);
+    const nh=h%12+1, H=zahlen(h)==="eins"?"eins":zahlen(h), NH=zahlen(nh);
+    let inf;
+    if(m===0) inf=`${H==="eins"?"ein":H} Uhr`;
+    else if(m===15) inf=`Viertel nach ${H}`;
+    else if(m===30) inf=`halb ${NH}`;
+    else if(m===45) inf=`Viertel vor ${NH}`;
+    else if(m<30 && m!==25) inf=`${zahlen(m)} nach ${H}`;
+    else if(m===25) inf=`fünf vor halb ${NH}`;
+    else if(m===35) inf=`fünf nach halb ${NH}`;
+    else inf=`${zahlen(60-m)} vor ${NH}`;
+    const hh=String(h).padStart(2,"0"), mm=String(m).padStart(2,"0");
+    return {...c,de:"Wie spät ist es?",big:`${hh}:${mm}`,sub:"日常の言い方で答えよう",
+      ex:`Es ist ${inf}.`,ja:"halb 3 = 2時半（3時に向かって半分）",speak:"Wie spät ist es?"};
+  }
+  if(c.gen==="price"){
+    const eur=rnd(0,49), ct=pick([10,20,40,50,75,80,90,95,99]);
+    return {...c,de:"Was kostet das?",big:`${eur},${String(ct).padStart(2,"0")} €`,sub:"値段を声に出して読もう",
+      ex:`Das kostet ${eur?zahlen(eur)+" Euro ":""}${zahlen(ct)}${eur?"":" Cent"}.`,ja:"◯ Euro ◯（Centは省略OK）",speak:"Was kostet das?"};
+  }
+  if(c.gen==="number"){
+    const n=rnd(13,999);
+    return {...c,de:"Lies die Zahl laut!",big:String(n),sub:"数字を声に出して読もう",ex:zahlen(n),ja:"1の位 → und → 10の位 の順！",speak:"Lies die Zahl laut!",answerSpeak:String(n)};
+  }
+  if(c.gen==="math"){
+    const a=rnd(5,60), b=rnd(3,39), plus=Math.random()<.6;
+    const r=plus?a+b:Math.max(a,b)-Math.min(a,b), A=plus?a:Math.max(a,b), B=plus?b:Math.min(a,b);
+    return {...c,de:"Rechne laut!",big:`${A} ${plus?"+":"−"} ${B} = ?`,sub:"式も答えもドイツ語で言おう",
+      ex:`${zahlen(A)} ${plus?"plus":"minus"} ${zahlen(B)} ist ${zahlen(r)}.`,ja:"plus / minus / ist",speak:"Rechne laut!"};
+  }
+  if(c.gen==="spell"){
+    const w=pick(WORDS);
+    return {...c,de:"Buchstabier das Wort!",big:w,sub:"パートナーは聞いて書き取ろう",ex:w.split("").map(x=>x==="ß"?"ß":x.toUpperCase()).join(" – "),
+      ja:"ä = A-Umlaut, ß = Eszett",speak:"Buchstabier das Wort!"};
+  }
+  return c;
+}
+
+/* ロールカード用 */
+const ROLE = {
+  name:["Anna Weber","Lukas Schmidt","Sophie Müller","Jonas Fischer","Lena Becker","Felix Wagner","Mia Hoffmann","Paul Schulz","Emma Koch","Leon Richter","Clara Neumann","Tim Braun"],
+  land:[["Deutschland","Berlin"],["Österreich","Wien"],["der Schweiz","Zürich"],["Deutschland","München"],["Deutschland","Hamburg"],["Österreich","Salzburg"],["Italien","Rom"],["Spanien","Madrid"],["Frankreich","Paris"],["Korea","Seoul"]],
+  wohnort:["Leipzig","Köln","Frankfurt","Dresden","Heidelberg","Bremen","Stuttgart","Tokio"],
+  sprachen:["Deutsch und Englisch","Deutsch, Englisch und Französisch","Deutsch und ein bisschen Japanisch","Italienisch, Deutsch und Englisch","Spanisch und Deutsch"],
+  beruf:["Studentin / Student","Kellnerin / Kellner","Lehrerin / Lehrer","Ärztin / Arzt","Köchin / Koch","Verkäuferin / Verkäufer","Programmiererin / Programmierer","Musikerin / Musiker"],
+  hobby:["Fußball spielen","kochen","lesen","tanzen","Gitarre spielen","schwimmen","Filme sehen","wandern","fotografieren"],
+  essen:["Pizza","Currywurst","Sushi","Käsekuchen","Brezeln","Salat","Schnitzel","Ramen"],
+  zeit:["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"]
+};
+function makeRole(){
+  const [land,stadt]=pick(ROLE.land);
+  return {name:pick(ROLE.name),alter:rnd(19,65),land,stadt,wohnort:pick(ROLE.wohnort),sprachen:pick(ROLE.sprachen),
+    beruf:pick(ROLE.beruf),hobby:pick(ROLE.hobby),essen:pick(ROLE.essen),frei:pick(ROLE.zeit)};
+}
+
+/* ============ 状態と描画 ============ */
+let mode="karten", selected=new Set(Object.keys(UNITS).map(Number)), deck=[], current=null, hintShown=false, drawn=0;
+const $=id=>document.getElementById(id);
+
+function buildChips(){
+  const box=$("chips"); box.innerHTML="";
+  const all=document.createElement("button");
+  all.className="chip"; all.textContent="すべて"; all.setAttribute("aria-pressed", selected.size===Object.keys(UNITS).length);
+  all.onclick=()=>{selected=new Set(Object.keys(UNITS).map(Number)); reshuffle(); buildChips();};
+  box.appendChild(all);
+  [1,2,3,4,5,6,7,8,0].forEach(u=>{
+    const b=document.createElement("button"); b.className="chip"; b.textContent=UNITS[u];
+    b.setAttribute("aria-pressed", selected.has(u) && selected.size!==Object.keys(UNITS).length);
+    b.onclick=()=>{
+      if(selected.size===Object.keys(UNITS).length){selected=new Set([u]);}
+      else if(selected.has(u)){selected.delete(u); if(!selected.size) selected=new Set(Object.keys(UNITS).map(Number));}
+      else selected.add(u);
+      reshuffle(); buildChips();
+    };
+    box.appendChild(b);
+  });
+}
+function reshuffle(){
+  deck=CARDS.filter(c=>selected.has(c.e));
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  drawn=0; next();
+}
+function esc(s){return String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+
+function next(){
+  hintShown=false;
+  if(mode==="rolle"){ current={role:makeRole()}; render(); return; }
+  if(!deck.length){ deck=CARDS.filter(c=>selected.has(c.e)); reshuffle(); return; }
+  current=generate(deck.pop()); drawn++; render();
+}
+function render(){
+  const card=$("card"); card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter");
+  $("btnHint").textContent="💡 ヒント";
+  if(mode==="rolle"){
+    const r=current.role;
+    card.innerHTML=`<div class="meta"><span class="badge type">Rollenkarte</span><span class="badge">E1–E8</span></div>
+      <div class="role"><div class="q" style="margin-bottom:0">Du bist jetzt …</div>
+      <dl>
+        <dt>Name</dt><dd>${r.name}</dd>
+        <dt>Alter</dt><dd>${r.alter} Jahre</dd>
+        <dt>Herkunft</dt><dd>${r.stadt} (${r.land})</dd>
+        <dt>Wohnort</dt><dd>${r.wohnort}</dd>
+        <dt>Sprachen</dt><dd>${r.sprachen}</dd>
+        <dt>Beruf</dt><dd>${r.beruf}</dd>
+        <dt>Hobby</dt><dd>${r.hobby}</dd>
+        <dt>Lieblingsessen</dt><dd>${r.essen}</dd>
+        <dt>Zeit am</dt><dd>${r.frei}</dd>
+      </dl></div>
+      <div class="hint" id="hint"><b>遊び方</b>この人になりきって、ペアで質問しあおう。画面は相手に見せないこと！<br>
+      <b style="margin-top:6px">使える質問</b><span class="ex">Wie heißt du? · Wie alt bist du? · Woher kommst du? · Wo wohnst du? · Welche Sprachen sprichst du? · Was bist du von Beruf? · Was machst du gern? · Was isst du gern? · Hast du am … Zeit?</span>
+      最後に相手をクラスに紹介：„Das ist … Er/Sie kommt aus …“</div>`;
+    $("count").textContent="毎回ランダムな人物が出ます";
+    $("deckInfo").textContent="🎭";
+    return;
+  }
+  const c=current;
+  card.innerHTML=`<div class="meta"><span class="badge type">${esc(c.t)}</span><span class="badge">${esc(UNITS[c.e])}</span></div>
+    <div class="q">${esc(c.de)}</div>
+    ${c.big?`<div class="big">${esc(c.big)}</div>`:""}
+    ${c.sub?`<div class="sub">${esc(c.sub)}</div>`:""}
+    <div class="hint" id="hint"><b>Beispiel</b><div class="ex">${esc(c.ex)}</div><b>Tipp</b>${esc(c.ja)}</div>`;
+  const total=CARDS.filter(x=>selected.has(x.e)).length;
+  $("count").textContent=`${drawn} / ${total} 枚目（全部出たら自動でシャッフル）`;
+  $("deckInfo").textContent=`${total}枚`;
+}
+$("btnHint").onclick=()=>{
+  const h=document.getElementById("hint"); if(!h) return;
+  hintShown=!hintShown; h.classList.toggle("show",hintShown);
+  $("btnHint").textContent=hintShown?"🙈 隠す":"💡 ヒント";
+};
+$("btnNext").onclick=next;
+
+/* 読み上げ（ブラウザ内蔵のドイツ語音声・無料） */
+function speak(text){
+  if(!("speechSynthesis" in window)){alert("このブラウザは読み上げに対応していません");return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text); u.lang="de-DE"; u.rate=.9;
+  const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("de")); if(v) u.voice=v;
+  speechSynthesis.speak(u);
+}
+$("btnSpeak").onclick=()=>{
+  if(mode==="rolle"){speak(`Ich heiße ${current.role.name}. Ich komme aus ${current.role.stadt}.`);return;}
+  const c=current; let t=c.speak||c.de;
+  if(hintShown) t=c.ex;           // ヒント表示中は例文を読み上げ
+  speak(t);
+};
+if("speechSynthesis" in window) speechSynthesis.onvoiceschanged=()=>{};
+
+document.querySelectorAll(".tab").forEach(tab=>tab.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t===tab));
+  mode=tab.dataset.mode; $("filterBox").style.display=mode==="rolle"?"none":"";
+  mode==="rolle"?next():reshuffle();
+});
+
+/* スワイプで次へ */
+let sx=null;
+$("card").addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});
+$("card").addEventListener("touchend",e=>{if(sx!==null&&sx-e.changedTouches[0].clientX>60)next();sx=null});
+
+buildChips(); reshuffle();
+</script>
+</body>
+</html>
