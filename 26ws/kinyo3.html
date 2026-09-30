@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20世紀スイス史 テーママップ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker"><span class="cross" aria-hidden="true"></span>Die Schweiz im 20. Jahrhundert</div>
+    <h1>20世紀スイス史 テーママップ</h1>
+    <p class="lead">日本の事例を手がかりに <strong>「では、スイスでは？」</strong> と問う31のテーマです。学生はドイツ語キーワードで資料を探し、答えを持ち寄ります。「答えの例」は教員用メモです（年・数字は授業前に要確認）。</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-view="cards">テーママップ</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="plan">2学期の配列案</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="qs">問いの一覧（整理版）</button>
+  </div>
+
+  <section id="cards" class="view">
+    <div class="filters" id="filters"></div>
+    <div id="cats"></div>
+    <div class="extra">
+      <h2>前回のリストからの追加候補</h2>
+      <p class="lead" style="font-size:14px">今回の問いには入っていないテーマです。余った回や学生発表に使えます。</p>
+      <div class="kw" id="extra" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <section id="plan" class="view hidden">
+    <div class="sem-grid" id="semesters"></div>
+  </section>
+
+  <section id="qs" class="view hidden">
+    <div class="intro">音声の文字起こしを、話した順のまま読みやすい日本語に整えたものです。</div>
+    <ol class="qlist" id="qlist"></ol>
+  </section>
+
+  <p class="note">カードの赤いラベルは、配列案で扱う回です（前＝前期、後＝後期）。印刷すると「答えの例」も含めて全カードが出力されます。</p>
+</div>
+
+<script>
+const CATS = [
+  { id: "krieg",        jp: "戦争と国際関係",   de: "Krieg und Weltpolitik" },
+  { id: "politik",      jp: "政治と国家",       de: "Politik und Staat" },
+  { id: "migration",    jp: "移民と外国人",     de: "Migration" },
+  { id: "gesellschaft", jp: "社会と人権",       de: "Gesellschaft und Menschenrechte" },
+  { id: "wirtschaft",   jp: "経済と科学技術",   de: "Wirtschaft und Wissenschaft" },
+  { id: "umwelt",       jp: "国土と環境",       de: "Land, Verkehr, Umwelt" },
+  { id: "kultur",       jp: "文化と国民意識",   de: "Kultur und Identität" }
+];
+
+// 話した順。id, cat, 見出し, ドイツ語, 日本の手がかり, 問い(整理版), 答えの例, キーワード
+const T = [
+  ["skandal","politik","政府のスキャンダル","Die Fichenaffäre","20世紀最大の政府スキャンダル",
+   "日本の20世紀史で最大の政府スキャンダルといえば、何が思い浮かぶでしょうか。では、スイスで連邦政府最大のスキャンダルとされているのは何でしょうか。",
+   "フィッシュ事件（1989年）。連邦警察が約90万件の監視カードを作っていた。発端はコップ法相の辞任（1989年）",
+   ["Fichenaffäre","Staatsschutz","Elisabeth Kopp"]],
+  ["jura","politik","州の帰属問題","Die Jurafrage","沖縄・北海道をめぐる問題",
+   "日本には沖縄や北海道をめぐる問題があります。スイスにも、ある地域がどの州に属するかをめぐる問題はあるのでしょうか。ジュラ州のケースがそれにあたるのでしょうか。",
+   "ジュラ問題。フランス語圏・カトリックの北ジュラがベルン州から分離し、1979年にジュラ州が誕生。ムーティエ市の帰属は2021年の住民投票でようやく決着",
+   ["Jurafrage","Kanton Jura","Moutier"]],
+  ["parteien","politik","政党と政権","Parteien und Konkordanz","自民党をめぐる問題",
+   "日本では自民党をめぐる問題が昔からよく言われます。スイスにも政党をめぐる問題はあるのでしょうか。",
+   "「魔法の公式」（1959〜2003年、主要4党で閣僚を2:2:2:1に配分）、1990年代以降のスイス国民党（SVP）の躍進",
+   ["Zauberformel","Konkordanz","SVP"]],
+  ["frauen","politik","女性の政治参加","Das Frauenstimmrecht","女性議員の増加",
+   "日本では女性の政治参加が少しずつ増えてきました。スイスでは女性の政治参加や女性参政権はどうなっているのでしょうか。",
+   "連邦レベルの女性参政権は1971年。アッペンツェル・インナーローデン州は1990年（連邦裁判所の判決による）",
+   ["Frauenstimmrecht 1971","Appenzell Innerrhoden"]],
+  ["sozial","politik","福祉と年金","Der Sozialstaat","年金「崩壊」論",
+   "日本では福祉や年金の「崩壊」がよく言われます。スイスの福祉国家・社会保障の体制はどうなっているのでしょうか。",
+   "老齢・遺族年金AHV（1948年）、障害保険IV（1960年）。年金改革は何度も国民投票にかけられてきた",
+   ["AHV","Sozialstaat","Rentenreform"]],
+  ["wk2","krieg","第二次世界大戦","Der Zweite Weltkrieg","戦争の記憶",
+   "日本では第二次世界大戦の記憶がさまざまに取り沙汰されています。スイスにとって第二次世界大戦はどのようなものだったのでしょうか。",
+   "武装中立、ギザン将軍と国家要塞（レドゥイ）、食料増産の「耕作戦」。1990年代にベルジエ委員会が歴史を見直した",
+   ["Aktivdienst","General Guisan","Réduit","Bergier-Kommission"]],
+  ["wk1","krieg","第一次世界大戦","Der Erste Weltkrieg","",
+   "スイスにとって第一次世界大戦はどのようなものだったのでしょうか。",
+   "ドイツ語圏とフランス語圏の対立（「溝」）、物資不足と生活苦、1918年のゼネスト（約25万人）",
+   ["Erster Weltkrieg Schweiz","Landesstreik 1918"]],
+  ["zwischen","krieg","戦間期","Die Zwischenkriegszeit","",
+   "スイスの戦間期はどのような時代だったのでしょうか。",
+   "世界恐慌、ファシズム的な「前線運動」、「精神的国土防衛」、1939年のランディ（全国博覧会）",
+   ["Weltwirtschaftskrise","Frontenbewegung","Geistige Landesverteidigung"]],
+  ["auslaender","migration","外国人問題","Die Überfremdungsdebatte","外国人の増加",
+   "日本では外国人が増え、外国人をめぐる問題も生じています。スイスでも、20世紀に有名な外国人問題はあったのでしょうか。",
+   "「外国人過多」論争。1970年のシュヴァルツェンバッハ発議（外国人を10%に制限、54%で否決）",
+   ["Überfremdung","Schwarzenbach-Initiative"]],
+  ["juden","krieg","ユダヤ人問題","Die Schweiz und die Juden","",
+   "同じように、スイスにユダヤ人問題はあるのでしょうか。どのような形で問題になっているのでしょうか。",
+   "戦中の難民拒否とJスタンプ（1938年）、1990年代の休眠口座問題とベルジエ委員会",
+   ["J-Stempel","Flüchtlingspolitik","nachrichtenlose Vermögen"]],
+  ["kalt","krieg","冷戦","Der Kalte Krieg","",
+   "スイスにとって冷戦とはどのようなものだったのでしょうか。東西ブロックの間で、スイスはどのような立ち位置にあったのでしょうか。",
+   "中立を掲げつつ西側寄り。1956年のハンガリー難民受け入れ、1969年に全戸配布された『民間防衛』、国内の監視（フィッシュ事件）",
+   ["Kalter Krieg","Ungarn 1956","Zivilverteidigungsbuch"]],
+  ["atom","krieg","核開発と原子力","Atombombe und Atomkraft","",
+   "スイスの核開発・原子力開発はどのようなものだったのでしょうか。",
+   "独自の核兵器計画（1988年に正式終了）、ルサンスの原子炉事故（1969年）、カイザーアウグストの建設地占拠（1975年）",
+   ["Schweizer Atombombe","Lucens 1969","Kaiseraugst"]],
+  ["terror","krieg","テロ","Terrorismus in der Schweiz","",
+   "スイスでテロ事件はあったのでしょうか。",
+   "1969年チューリヒ空港のエル・アル機襲撃、1970年スイス航空機ハイジャック（ヨルダンのザルカ）、1997年ルクソール事件",
+   ["Terrorismus Schweiz","Zerqa 1970","Luxor 1997"]],
+  ["migration","migration","移民と難民","Einwanderung und Asyl","日本の移民・難民問題",
+   "日本と同じように、スイスも移民問題に直面しているのでしょうか。移民や難民の受け入れをめぐって、どんなことがあったのでしょうか。",
+   "イタリア人出稼ぎ労働者と季節労働者制度。ハンガリー（1956）、チベット（1960年代）、バルカン（1990年代）の難民",
+   ["Saisonnierstatut","Italienische Immigration","Asylpolitik"]],
+  ["jugend","gesellschaft","若者の反乱・68年","Jugendbewegungen","学生運動・安田講堂",
+   "日本には1968年の学生運動・大学闘争（安田講堂事件など）があります。スイスでは若者の反乱や68年運動はどのようなものだったのでしょうか。",
+   "1968年チューリヒのグローブス暴動、1980年のオペラハウス暴動（「チューリヒが燃えている」）",
+   ["Globuskrawall","Opernhauskrawalle","Züri brännt"]],
+  ["drogen","gesellschaft","ドラッグ","Die Drogenpolitik","薬物問題",
+   "日本でも薬物の使用はときどき問題になります。スイスにドラッグ問題はあるのでしょうか。",
+   "チューリヒのプラッツシュピッツ（1992年閉鎖）、「4本柱」政策、ヘロインの医療的処方（1994年〜）",
+   ["Platzspitz","Vier-Säulen-Politik","Heroinabgabe"]],
+  ["queer","gesellschaft","性的マイノリティ","Homosexuelle Emanzipation","お笑いと性的マイノリティ",
+   "日本では同性愛者・性的マイノリティがお笑いの世界などで取り上げられてきました。スイスでは同性愛者・性的マイノリティをめぐる状況はどうなっているのでしょうか。",
+   "1942年の連邦刑法で同性愛を非犯罪化。パートナーシップ法（2005年国民投票）、同性婚（2021年国民投票）",
+   ["Homosexualität Schweiz","Partnerschaftsgesetz","Ehe für alle"]],
+  ["behinderung","gesellschaft","障害者","Menschen mit Behinderung","",
+   "スイスでは障害者はどのような政策のもとにあり、社会の中でどう位置づけられているのでしょうか。",
+   "障害保険IV（1960年）、障害者平等法（2004年）",
+   ["Invalidenversicherung","Behindertengleichstellung"]],
+  ["schule","gesellschaft","学校と教育","Schule und Bildung","受験戦争・高大接続",
+   "日本では受験戦争が長く問題になり、いまは高校と大学の接続が議論されています。スイスの学校教育、高校や大学はどうなっているのでしょうか。",
+   "若者の約3分の2が職業教育（デュアルシステム）へ。大学進学はマトゥーラで。学校制度は州ごとに違う",
+   ["Berufslehre","duales Bildungssystem","Matura"]],
+  ["stadtland","gesellschaft","都市と地方","Stadt und Land","地方創生・地域格差",
+   "日本では地方創生や都市と地方の格差が言われます。スイスでも都市と地方の違いや格差が社会問題になっているのでしょうか。",
+   "国民投票に現れる「都市と地方の溝」、言語圏の溝（レシュティの溝）、山村の過疎",
+   ["Stadt-Land-Graben","Röstigraben","Berggebiete"]],
+  ["industrie","wirtschaft","産業","Industrie und Wirtschaft","航空・時計のイメージ",
+   "スイスといえば航空や時計のイメージがあります。20世紀のスイスで有名な産業にはどんなものがあるのでしょうか。",
+   "時計（1970年代のクォーツ危機とスウォッチ）、バーゼルの化学・製薬、銀行、スイス航空（2001年に運航停止）",
+   ["Uhrenkrise","Swatch","Chemie Basel","Swissair Grounding"]],
+  ["tourismus","wirtschaft","観光","Tourismus","観光立国",
+   "スイスは観光地として有名な国です。スイス社会の中で、観光はどのように議論されているのでしょうか。",
+   "アルプス観光、1960年代のスキーブーム、マスツーリズムと環境への負荷",
+   ["Tourismus Schweiz","Wintersport","Massentourismus"]],
+  ["technik","wirtschaft","科学技術とETH","Wissenschaft und ETH","",
+   "情報技術や遺伝子技術などのテクノロジーは、スイス社会でどう論じられ、位置づけられているのでしょうか。アインシュタインが学んだ連邦工科大学（チューリヒとローザンヌ）に代表される「科学技術立国」としてのスイスとは、どのようなものでしょうか。",
+   "ETH（1855年創立）とEPFL、ETHのコンピュータERMETH（1956年）、CERNで生まれたWWW（1989年）、遺伝子組み換え作物のモラトリアム（2005年）",
+   ["ETH Zürich","EPFL","ERMETH","Gentechnik"]],
+  ["verkehr","umwelt","道路・鉄道・トンネル","Verkehr und Tunnel","新幹線・リニア",
+   "日本では道路やトンネル、新幹線、最近ではリニアが国土を支える重要なインフラです。スイスでは高速道路や鉄道、トンネルの建設はどのようなものだったのでしょうか。",
+   "国道網（1960年の国道法）、ゴッタルド道路トンネル（1980年）、NEATとゴッタルド基底トンネル（2016年、57km）、実現しなかったリニア計画「スイスメトロ」",
+   ["Autobahnbau","NEAT","Gotthard-Basistunnel","Swissmetro"]],
+  ["klima","umwelt","気候と環境","Klima und Umwelt","気候変動",
+   "日本でも気候変動の問題が盛んに論じられています。スイスでは気候変動や環境問題はどうでしょうか。",
+   "1980年代の「森の枯死」、氷河の後退",
+   ["Waldsterben","Gletscherschwund"]],
+  ["recycling","umwelt","資源とリサイクル","Rohstoffe und Recycling","",
+   "同じように、スイスにおける資源とリサイクルの問題はどうでしょうか。",
+   "1973年石油危機の「車のない日曜日」、PETボトル回収、ごみ袋の有料化",
+   ["autofreier Sonntag 1973","PET-Recycling","Sackgebühr"]],
+  ["katastrophen","umwelt","自然災害と大事故","Katastrophen und Unglücke","阪神・東日本大震災",
+   "日本では阪神・淡路大震災や東日本大震災、豪雨や猛暑などの災害が社会の記憶に残っています。スイスにも、歴史や社会の記憶に残るような自然災害や大事故はあるのでしょうか。",
+   "雪崩の冬（1951年・1999年）、マットマルク（1965年、88人死亡）、シュヴァイツァーハレ（1986年）、スイス航空111便（1998年）",
+   ["Lawinenwinter","Mattmark","Schweizerhalle"]],
+  ["seuchen","gesellschaft","疫病と人権","Seuchen und Zwangsmassnahmen","ハンセン病・優生保護法",
+   "日本ではハンセン病や優生保護法のように、病気や「優生」の名のもとに人権が脅かされた歴史があります。スイスにも、社会に傷跡を残したそうした疫病や人権侵害の事例はあるのでしょうか。",
+   "スペイン風邪（1918年）。「フェアディングキンダー」（里子として働かされた子ども）や強制収容（1981年まで）、イェニッシュの子どもの引き離し（1926〜1973年）、ヴォー州の不妊手術法（1928年）",
+   ["Spanische Grippe 1918","Verdingkinder","Kinder der Landstrasse","Zwangssterilisation"]],
+  ["expo","kultur","万博","Landesausstellungen","大阪万博",
+   "日本では万博や博覧会が開かれてきました。スイスにも万博はあったのでしょうか。どのように位置づけられているのでしょうか。",
+   "全国博覧会ランディ（1939年）、エクスポ64（ローザンヌ）、エクスポ02",
+   ["Landi 1939","Expo 64","Expo.02"]],
+  ["sport","kultur","国民的スポーツ","Nationalsport","野球・サッカー",
+   "日本では野球、最近ではサッカーが国民的スポーツです。スイスで伝統的なスポーツ、国民的スポーツといえば何でしょうか。",
+   "シュヴィンゲン（スイス相撲）、ホルヌッセン、スキー、1954年の自国開催サッカーW杯",
+   ["Schwingen","Hornussen","Skisport","WM 1954"]],
+  ["braeuche","kultur","伝統行事","Bräuche und Traditionen","",
+   "スイスの伝統行事にはどのようなものがあるのでしょうか。",
+   "バーゼルのファスナハト、チューリヒのゼクスエルーテン、アルプからの牛の帰還、8月1日の建国記念日",
+   ["Fasnacht","Sechseläuten","Alpabzug","1. August"]]
+];
+
+const EXTRA = ["スイスと国連（UNO-Beitritt 2002）","消費社会（Migros）","宇宙開発（Claude Nicollier）","働く女性（Frauenstreik 1991）","ミス・スイス（Miss Schweiz）"];
+
+// 配列案。1回に2テーマを組み合わせる回は配列で指定
+const PLAN = [
+  { name: "前期", title: "国家と戦争の20世紀", sub: "おおむね年代順。政治・戦争・移民", weeks: [
+    ["wk1"],["zwischen"],["wk2"],["juden"],["kalt"],["atom"],["sozial"],["frauen"],["parteien"],["auslaender"],["migration"],["jura"],["terror"],["skandal"],["まとめ"] ]},
+  { name: "後期", title: "社会と暮らしの20世紀", sub: "テーマ別。社会・経済・文化・環境", weeks: [
+    ["expo"],["braeuche","sport"],["industrie"],["tourismus"],["verkehr"],["technik"],["jugend"],["drogen"],["queer"],["behinderung"],["seuchen"],["schule"],["stadtland"],["katastrophen"],["klima","recycling"] ]}
+];
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const color = id => `var(--c-${id})`;
+const byId = Object.fromEntries(T.map(t => [t[0], t]));
+const catOf = id => CATS.find(c => c.id === id);
+
+// 配列案から各テーマの回を求める
+const weekOf = {};
+PLAN.forEach(s => s.weeks.forEach((w, i) => w.forEach(id => { if (byId[id]) weekOf[id] = `${s.name[0]}${i + 1}`; })));
+
+function renderCards(active) {
+  document.getElementById("cats").innerHTML = CATS.filter(c => !active || c.id === active).map(c => {
+    const rank = id => { const w = weekOf[id]; return w ? (w[0]==="前"?0:100) + parseInt(w.slice(1)) : 999; };
+    const cards = T.filter(t => t[1] === c.id).sort((a,b) => rank(a[0]) - rank(b[0])).map(t => `
+      <article class="card" style="--c:${color(c.id)}">
+        ${weekOf[t[0]] ? `<span class="week">${weekOf[t[0]].replace("前","前期 第").replace("後","後期 第")}回</span>` : ""}
+        <h3>${esc(t[2])}</h3>
+        <div class="de">${esc(t[3])}</div>
+        ${t[4] ? `<div class="jp"><b>日本では</b>${esc(t[4])}</div>` : ""}
+        <details><summary>答えの例</summary><p>${esc(t[6])}</p></details>
+        <div class="kw">${t[7].map(k => `<span>${esc(k)}</span>`).join("")}</div>
+      </article>`).join("");
+    return `<section class="cat" style="--c:${color(c.id)}">
+      <div class="cat-head"><h2>${c.jp}</h2><span class="de">${c.de}</span></div>
+      <div class="grid">${cards}</div></section>`;
+  }).join("");
+}
+
+function renderFilters() {
+  const f = document.getElementById("filters");
+  f.innerHTML = `<button class="chip" aria-pressed="true" data-cat="">すべて <span class="n">${T.length}</span></button>` +
+    CATS.map(c => `<button class="chip" aria-pressed="false" data-cat="${c.id}" style="--c:${color(c.id)}"><span class="dot"></span>${c.jp} <span class="n">${T.filter(t => t[1] === c.id).length}</span></button>`).join("");
+  f.addEventListener("click", e => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    f.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+    renderCards(b.dataset.cat);
+  });
+}
+
+function renderPlan() {
+  document.getElementById("semesters").innerHTML = PLAN.map(s => `
+    <div class="sem">
+      <h2>${s.name}：${s.title}</h2>
+      <p class="sub">${s.sub}</p>
+      <div class="timeline">${s.weeks.map((w, i) => {
+        if (!byId[w[0]]) return `<div class="step" data-w="${i + 1}"><div class="cat-label" style="color:var(--swiss)">まとめ</div><h3>学生発表とまとめ</h3></div>`;
+        const t = byId[w[0]], c = catOf(t[1]);
+        const title = w.map(id => esc(byId[id][2])).join(" ＋ ");
+        const de = w.map(id => esc(byId[id][3])).join(" / ");
+        return `<div class="step" data-w="${i + 1}" style="--c:${color(c.id)}">
+          <div class="cat-label">${c.jp}${w.length > 1 ? "　<span class=\"pair\">2テーマを1回で</span>" : ""}</div>
+          <h3>${title}</h3><div class="de" style="color:var(--muted);font-size:13px">${de}</div></div>`;
+      }).join("")}</div>
+    </div>`).join("");
+}
+
+function renderQs() {
+  document.getElementById("qlist").innerHTML = T.map(t =>
+    `<li style="--c:${color(t[1])}"><div class="t">${esc(t[2])}</div>${esc(t[5])}</li>`).join("");
+}
+
+document.getElementById("extra").innerHTML = EXTRA.map(e => `<span>${esc(e)}</span>`).join("");
+
+document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t === tab));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("hidden", v.id !== tab.dataset.view));
+}));
+
+renderFilters();
+renderCards("");
+renderPlan();
+renderQs();
+</script>
+</body>
+</html>
