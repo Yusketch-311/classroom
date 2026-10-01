@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20世紀スイス史 導入クイズ</title>
+<style>
+:root{
+  --red:#d52b1e; --red-soft:#fbeae8; --ink:#1d1d1f; --sub:#5b5b63; --line:#e4e4e8;
+  --bg:#f6f5f2; --card:#ffffff; --ok:#1f7a4d; --ok-soft:#e5f4ec; --ng:#b3261e; --ng-soft:#fbe9e7;
+  --talk:#fff6dd; --talk-line:#e8c55a; --de:#eef2f8; --de-line:#9fb3d1;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --ink:#f1f1f3; --sub:#a9a9b3; --line:#34343a; --bg:#151517; --card:#1f1f23;
+    --red-soft:#3a1c1a; --ok-soft:#173326; --ng-soft:#3a1c1a; --talk:#332b14; --talk-line:#8a6d1e;
+    --de:#1c2433; --de-line:#3d5277; --ok:#5fcf98; --ng:#ff8a80;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,system-ui,sans-serif;
+  line-height:1.75;font-size:18px}
+.wrap{max-width:880px;margin:0 auto;padding:24px 16px 64px}
+header.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.flag{width:40px;height:40px;background:var(--red);border-radius:6px;position:relative;flex:none}
+.flag:before,.flag:after{content:"";position:absolute;background:#fff;left:50%;top:50%;transform:translate(-50%,-50%)}
+.flag:before{width:24px;height:8px}.flag:after{width:8px;height:24px}
+header.top h1{font-size:20px;margin:0;line-height:1.3}
+header.top small{display:block;color:var(--sub);font-weight:normal;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.eras{display:flex;gap:4px;margin:0 0 14px}
+.era{flex:1;font-size:12px;text-align:center;padding:6px 2px;border-radius:8px;background:var(--card);border:1px solid var(--line);color:var(--sub)}
+.era.on{background:var(--red);border-color:var(--red);color:#fff;font-weight:bold}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:18px}
+.progress i{display:block;height:100%;background:var(--red);transition:width .3s}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--sub);margin-bottom:6px}
+.tag{display:inline-block;font-size:12px;padding:2px 10px;border-radius:999px;background:var(--red-soft);color:var(--red);font-weight:bold}
+.tag.extra{background:var(--de);color:var(--sub)}
+h2.q{font-size:24px;line-height:1.5;margin:8px 0 16px}
+.hint{font-size:14px;color:var(--sub);margin:-6px 0 16px}
+.hint b{font-family:Georgia,"Times New Roman",serif;color:var(--ink);font-weight:normal;font-style:italic}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;font:inherit;color:inherit;
+  background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;transition:.15s}
+.opt:hover:not([disabled]){border-color:var(--red)}
+.opt .k{flex:none;width:28px;height:28px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-weight:bold;font-size:14px;margin-top:1px}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)} .opt.ok .k{background:var(--ok);color:#fff}
+.opt.ng{border-color:var(--ng);background:var(--ng-soft)} .opt.ng .k{background:var(--ng);color:#fff}
+.opt[disabled]{cursor:default}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.btn{font:inherit;font-size:15px;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:bold}
+.btn:disabled{opacity:.4;cursor:default}
+.timer{font-variant-numeric:tabular-nums}
+.reveal{margin-top:22px;display:none}
+.reveal.show{display:block;animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.verdict{font-weight:bold;font-size:20px;margin-bottom:8px}
+.verdict.ok{color:var(--ok)} .verdict.ng{color:var(--ng)}
+.box{border-radius:12px;padding:14px 18px;margin-top:12px}
+.de{background:var(--de);border-left:4px solid var(--de-line)}
+.de .lbl,.talk .lbl{font-size:12px;font-weight:bold;letter-spacing:.05em;color:var(--sub);margin-bottom:4px}
+.de q{display:block;font-family:Georgia,"Times New Roman",serif;font-style:italic;quotes:"„" "“";font-size:17px;line-height:1.6}
+.de .ja{font-size:14px;color:var(--sub);margin-top:4px}
+.talk{background:var(--talk);border-left:4px solid var(--talk-line)}
+.talk p{margin:0;font-weight:bold}
+.src{font-size:12px;color:var(--sub);margin-top:10px}
+.nav{display:flex;justify-content:space-between;margin-top:22px;gap:8px}
+/* start & end */
+.lead{font-size:17px}
+ol.steps{padding-left:0;list-style:none;counter-reset:s;display:grid;gap:10px;margin:18px 0}
+ol.steps li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;background:var(--bg);border-radius:12px;padding:12px 14px}
+ol.steps li:before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font-weight:bold;display:grid;place-items:center;font-size:14px;margin-top:1px}
+.mode{display:flex;gap:16px;flex-wrap:wrap;font-size:15px;margin:10px 0 20px;color:var(--sub)}
+.mode label{display:flex;gap:6px;align-items:center;cursor:pointer}
+/* sort */
+.sortlist{display:grid;gap:8px}
+.sitem{display:flex;gap:12px;align-items:center;text-align:left;width:100%;font:inherit;color:inherit;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.sitem .n{flex:none;width:28px;height:28px;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;font-weight:bold;font-size:14px}
+.sitem.picked{border-color:var(--red)} .sitem.picked .n{background:var(--red);border:none;color:#fff}
+.sitem.ok{border-color:var(--ok);background:var(--ok-soft)} .sitem.ng{border-color:var(--ng);background:var(--ng-soft)}
+.sitem .yr{margin-left:auto;font-weight:bold;color:var(--sub);display:none}
+.sitem.done .yr{display:block}
+/* timeline */
+.tl{position:relative;margin:16px 0 0;padding-left:22px;border-left:3px solid var(--red)}
+.tl div{position:relative;margin:0 0 10px;font-size:15px}
+.tl div:before{content:"";position:absolute;left:-30px;top:8px;width:13px;height:13px;border-radius:50%;background:var(--card);border:3px solid var(--red)}
+.tl b{display:inline-block;min-width:64px}
+.score{font-size:44px;font-weight:bold;color:var(--red);line-height:1}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-top:10px}
+.term{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:14px}
+.term b{font-family:Georgia,"Times New Roman",serif;font-weight:normal;font-style:italic;font-size:16px;display:block}
+.bigq{display:grid;gap:10px;margin-top:10px}
+.bigq div{background:var(--talk);border-left:4px solid var(--talk-line);border-radius:10px;padding:12px 16px;font-weight:bold}
+h3{margin:28px 0 6px;font-size:18px}
+a{color:var(--red)}
+@media (max-width:560px){
+  body{font-size:16px} .card{padding:20px 16px} h2.q{font-size:20px}
+  .era{font-size:10px}
+}
+@media print{.tools,.nav,.btn{display:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="flag" aria-hidden="true"></div>
+    <h1>20世紀スイス史を振り返る<small>導入クイズ ― 考えて、話し合って、ドイツ語テキストへ</small></h1>
+  </header>
+  <div id="app"></div>
+</div>
+
+<script>
+const ERAS = ["導入：スイスってどんな国？","1914–1945 世界大戦の時代","1945–1989 冷戦期","1989– 冷戦後"];
+
+const Q = [
+// ---------- 導入 ----------
+{era:0, q:"スイスの連邦議会と連邦政府が置かれている都市はどこ？",
+ hint:"Bundesstadt", opts:["チューリッヒ","ジュネーヴ","ベルン","バーゼル"], a:2,
+ exp:"正解はベルン。1848年に近代的な連邦国家が成立した際、連邦議会は新たに選ばれた「連邦都市（Bundesstadt）」ベルンで初めて開かれました。実はスイスの憲法には「首都」の規定がなく、ベルンは公式には Hauptstadt ではなく Bundesstadt と呼ばれます。",
+ de:"Die Bundesversammlung trat am 6. November 1848 erstmals in der neu gewählten Bundesstadt Bern zusammen.",
+ ja:"連邦議会は1848年11月6日、新たに選ばれた連邦都市ベルンで初めて開かれた。",
+ talk:"最大の都市チューリッヒでも国際都市ジュネーヴでもなく、ベルンなのはなぜだろう？「首都」と呼ばない理由も想像してみよう。", src:"page"},
+
+{era:0, q:"スイスの「国語（Landessprachen）」はいくつある？",
+ hint:"Landessprachen", opts:["1つ（ドイツ語）","2つ","3つ","4つ"], a:3,
+ exp:"正解は4つ：ドイツ語・フランス語・イタリア語・ロマンシュ語（Rätoromanisch）。ロマンシュ語が4番目の国語として認められたのは1938年。ナチス・ドイツの脅威が高まる中、スイスらしさを強調する「精神的国土防衛（Geistige Landesverteidigung）」の流れの中での出来事でした。",
+ de:"1938 wurde Rätoromanisch als vierte Landessprache anerkannt.",
+ ja:"1938年、ロマンシュ語が4番目の国語として認められた。",
+ talk:"戦争の脅威が迫る時期に、話者がごく少ない言語をわざわざ「国語」に加えたのはなぜだろう？ 言語と国のまとまりの関係を考えてみよう。", src:"pdf1"},
+
+{era:0, q:"スイス外交の基本原則「中立（Neutralität）」は、どんな経験から生まれたとされている？",
+ hint:"Neutralität", opts:["三十年戦争（1618–48）に加わらなかった経験","第一次世界大戦で被害を受けた経験","ナポレオン軍に占領された経験","国際連合の設立に関わった経験"], a:0,
+ exp:"17世紀、宗教的・社会的な緊張を抱えていたスイスの諸邦は、ヨーロッパ中を巻き込んだ三十年戦争に参加しませんでした。この経験から「中立」が外交上の基本方針として育っていきます。20世紀スイス史を読むうえで、最も重要なキーワードの一つです。",
+ de:"Aus dieser Erfahrung heraus entwickelte sich die außenpolitische Maxime der Neutralität.",
+ ja:"この経験から、外交上の基本原則としての中立が発展した。",
+ talk:"「中立」とは何もしないこと？ それとも積極的な選択？ 予想を出し合ってみよう。", src:"page"},
+
+// ---------- 1914–1945 ----------
+{era:1, q:"第一次世界大戦（1914–18）中、戦場にならなかったスイスの国内で強まった対立は？",
+ hint:"Spannungen", opts:["ドイツ語圏とフランス語圏の住民の対立","カトリックとプロテスタントの武力衝突","スイスとリヒテンシュタインの国境紛争","山岳地域と湖畔地域の水争い"], a:0,
+ exp:"スイスは中立を守り、ウルリッヒ・ヴィレ将軍のもとで軍を動員して国境を守りました。しかし国内では、ドイツ語圏はドイツに、フランス語圏はフランスに共感しがちで、言語圏の間に深い溝が生まれました。",
+ de:"Spannungen zwischen deutsch- und französischsprachiger Bevölkerung",
+ ja:"ドイツ語系住民とフランス語系住民の間の緊張",
+ talk:"「話す言葉が違う」ことは、戦争のとき国のまとまりにどう影響する？ 日本でこの感覚が想像しにくいのはなぜ？", src:"pdf1"},
+
+{era:1, q:"1918年11月、25万人以上の労働者が参加してスイス全土に広がった出来事は？",
+ hint:"Landesstreik", opts:["全国ゼネスト（Landesstreik）","革命による新政府の樹立","女性参政権を求める大行進","国際連盟加盟を祝う国民祭典"], a:0,
+ exp:"戦争中の物価高や生活苦を背景に、労働者たちは全国ゼネスト（Landesstreik）を起こしました。連邦政府（Bundesrat）は軍を投入し、ストは中止に追い込まれます。同じ時期にはスペイン風邪も流行していました。このときの左右の対立は、その後のスイス政治に長く影を落とします。",
+ de:"Landesstreik (November 1918) – mehr als 250 000 Arbeiter",
+ ja:"全国ゼネスト（1918年11月）― 25万人以上の労働者",
+ talk:"同じ頃、ロシアやドイツでは革命が起きた。スイスでは革命にならなかったのはなぜだと思う？", src:"pdf1"},
+
+{era:1, q:"1920年、スイスは国際連盟（Völkerbund）に加盟した。その本部が置かれた都市は？",
+ hint:"Völkerbund", opts:["パリ","ジュネーヴ","ハーグ","ウィーン"], a:1,
+ exp:"国際連盟の本部はスイスのジュネーヴ。加盟は国民投票で僅差で承認されました。スイスには、経済制裁には参加するが軍事制裁の義務は負わない「差異的中立（differenzielle Neutralität）」が認められました。ジュネーヴが「国際都市」となる出発点です。",
+ de:"1920 trat die Schweiz dem Völkerbund bei, der Sitz in Genf hatte.",
+ ja:"1920年、スイスはジュネーヴに本部を置く国際連盟に加盟した。",
+ talk:"中立国が国際機関に加わることには、どんなメリットと矛盾がある？", src:"page"},
+
+{era:1, q:"二つの世界大戦と1929年の世界恐慌で明らかになった、スイス経済の特徴は？",
+ hint:"Abhängigkeit", opts:["輸入と輸出に大きく依存していること","食料もエネルギーも完全に自給できること","豊富な地下資源に支えられていること","国家がすべてを管理する計画経済であること"], a:0,
+ exp:"小さな国土で資源の乏しいスイスは、貿易なしには成り立ちません。世界恐慌では輸出が約3分の1も落ち込み、1936年には失業者が約9万3千人に。長年の主力だった繊維産業は二度と回復しませんでした。",
+ de:"Wirtschaftlich zeigte sich in den Kriegen die Abhängigkeit der Schweiz von Einfuhren und Ausfuhren.",
+ ja:"経済面では、戦争によってスイスが輸入と輸出に依存していることが明らかになった。",
+ talk:"資源の少ない小国が豊かになるには何が必要？ 日本と似ている点・違う点は？", src:"page"},
+
+{era:1, q:"激しく対立していた市民（保守・自由主義）政党と左派。1930年代に両者が歩み寄ったきっかけは？",
+ hint:"Schulterschluss", opts:["外国（ナチス・ドイツなど）からの脅威","景気がすぐに回復したこと","スポーツの国際大会での優勝","王政の復活をめぐる議論"], a:0,
+ exp:"外からの脅威を前に、政治勢力は「団結」に向かいます。1935年には社会民主党が武装による国土防衛を支持。そして1943年、初めて社会民主党員（エルンスト・ノプス）が連邦政府の7人の閣僚（Bundesrat）に選ばれ、「国民的団結（nationaler Schulterschluss）」が決定的になりました。",
+ de:"Die Wahl des ersten Sozialdemokraten in den Bundesrat 1943 besiegelte den nationalen Schulterschluss.",
+ ja:"1943年、初の社会民主党員が連邦閣僚に選ばれたことで、国民的な団結が確かなものになった。",
+ talk:"外の脅威は国内の分断を和らげる？ それとも、別の危うさを生むこともある？", src:"page"},
+
+{era:1, q:"第二次世界大戦中、スイスが受け入れた民間人の難民はおよそ何人？",
+ hint:"Flüchtlingspolitik", opts:["約2,000人","約1万人","18万人以上","100万人以上"], a:2,
+ exp:"スイスは18万人以上の民間人を受け入れました。しかし一方で、1942年8月には「人種上の理由のみによる難民」は難民と認めないとして国境を閉ざし、推定2万人のユダヤ人難民が国境で追い返されました。また1940年のフランス降伏後、軍はアンリ・ギザン将軍のもとアルプスの山岳要塞（Réduit）にこもる戦略をとりました。",
+ de:"Flüchtlinge „nur aus Rassegründen“ – Grenzschließung im August 1942",
+ ja:"「人種上の理由のみ」の難民 ― 1942年8月の国境閉鎖",
+ talk:"「戦争に巻き込まれなかった国」は、戦争と無関係だったと言える？ 中立と人道はどう両立できる？", src:"pdf1"},
+
+// ---------- 1945–1989 ----------
+{era:2, q:"冷戦期（1945–89）のスイスの立ち位置として、正しいものはどれ？",
+ hint:"Kalter Krieg", opts:["どちらの陣営にも属さない厳格な中立。ただし経済・政治・文化的には西側に属すると感じていた","NATO（北大西洋条約機構）に加盟した","ワルシャワ条約機構に加盟した","国連に加盟し、東西の仲介役を担った"], a:0,
+ exp:"スイスは東西両陣営の間で厳格な中立政策をとりました。それでも経済・政治・文化の面では、自分たちを「西側」の一員だと感じていたのです。なお、国連加盟はずっと後のことです（このあと出題）。",
+ de:"…eine strikte Neutralitätspolitik zwischen den Blöcken, obwohl sie sich wirtschaftlich, politisch und kulturell dem Westen zugehörig fühlte.",
+ ja:"…ブロック間で厳格な中立政策をとった。経済的・政治的・文化的には西側に属していると感じていたにもかかわらず。",
+ talk:"「心は西側、立場は中立」――これは矛盾？ それとも小国の現実的な知恵？", src:"page"},
+
+{era:2, q:"20世紀最後の四半世紀、スイスで働く人のうち、サービス業（第三次産業）で働く人の割合は？",
+ hint:"Dienstleistungssektor", opts:["約4分の1","約半分","約4分の3","ほぼ全員"], a:2,
+ exp:"戦後すぐの強みは工業でしたが、20世紀後半にスイスはサービス中心の経済へと転換し、就業者の4分の3がサービス業で働くようになりました。生活水準や社会保障も大きく向上しました。「小さく開かれた経済」として、外国市場へのアクセスは今も欠かせません。",
+ de:"…eine Volkswirtschaft, in welcher der Dienstleistungssektor drei Viertel der Werktätigen beschäftigte.",
+ ja:"…サービス部門が就業者の4分の3を雇用する経済。",
+ talk:"「スイスといえば？」で思い浮かぶもの（時計、チョコレート、銀行、観光…）は、どの産業に入る？", src:"page"},
+
+{era:2, q:"スイスで女性が国政（連邦レベル）の選挙権・投票権を得たのは何年？",
+ hint:"Frauenstimmrecht", opts:["1919年","1945年","1971年","1990年"], a:2,
+ exp:"正解は1971年。男性有権者による国民投票で決まりました（日本は1945年に法制化）。州レベルでは、最後のアッペンツェル・インナーローデン準州が1990年、連邦裁判所の判決によってようやく導入しました。直接民主制のもとでは、権利の拡大にも「投票権をすでに持つ人たち」の賛成が必要だったのです。",
+ de:"Einführung des Frauenstimmrechts auf Bundesebene (1971)",
+ ja:"連邦レベルでの女性参政権の導入（1971年）",
+ talk:"国民が直接決める「直接民主制」は、少数者や投票権をまだ持たない人の権利にとって有利？ 不利？", src:"extra"},
+
+// ---------- 1989– ----------
+{era:3, q:"1992年、スイスの国民と州（Volk und Stände）が国民投票で否決したのは？",
+ hint:"EWR", opts:["欧州経済領域（EWR）への参加","国連への加盟","新しい連邦憲法","スイスフランの廃止"], a:0,
+ exp:"EWR参加は否決。その後スイスは、EU加盟ではなく分野ごとの「二国間協定（bilaterale Abkommen）」でEUと協力する道を選びました（シェンゲン協定にも参加）。一方、EUは12か国から27か国へと拡大していきます。",
+ de:"Statt auf einer Mitgliedschaft in der EU beruht die Zusammenarbeit der Schweiz mit ihren Nachbarstaaten auf bilateralen Abkommen.",
+ ja:"EU加盟ではなく、二国間協定にもとづいて近隣諸国と協力している。",
+ talk:"ヨーロッパの真ん中にあり経済的にも結びつきが強いのに、EUに入らないのはなぜ？「中立」「直接民主制」「主権」をヒントに。", src:"pdf3"},
+
+{era:3, q:"国際連盟には1920年に加盟したスイス。では、国際連合（UNO）に加盟したのは何年？",
+ hint:"UNO", opts:["1945年","1971年","1992年","2002年"], a:3,
+ exp:"なんと2002年。冷戦終結後、スイスは厳格な中立政策を「慎重に緩め」、国際的な取り組みに参加するようになりました。国連加盟は国民投票で僅差で承認されました。",
+ de:"Im Jahr 2002 stimmte die Bevölkerung dem Beitritt zur UNO zu.",
+ ja:"2002年、国民は国連加盟に賛成した。",
+ talk:"国際連盟には早く入ったのに、国連にはなぜこんなに時間がかかった？「中立」の意味は時代とともにどう変わった？", src:"page"},
+
+{era:3, q:"ヨーロッパ政策をめぐる論争の中で急成長し、21世紀初めに「群を抜いて最大の政党」となったのは？",
+ hint:"SVP", opts:["スイス国民党（SVP）","社会民主党（SP）","緑の党","自由民主党（FDP）"], a:0,
+ exp:"国家保守主義（nationalkonservativ）のスイス国民党（SVP）。EUとの距離や移民、主権をめぐる議論の中で支持を広げ、2003年には連邦閣僚の2つ目の席を獲得しました。",
+ de:"…zum schnellen Aufstieg der nationalkonservativen Schweizerischen Volkspartei (SVP) …, die zu Beginn des 21. Jahrhunderts die mit Abstand stärkste Partei wurde.",
+ ja:"…国家保守主義のスイス国民党（SVP）の急速な台頭。同党は21世紀初めに群を抜いて最大の政党となった。",
+ talk:"グローバル化が進むと、なぜ「自国を守る」主張が支持を集めることがあるのだろう？ 他の国でも似た現象はある？", src:"page"},
+
+// ---------- 並べ替え ----------
+{era:3, type:"sort", q:"まとめ：20世紀スイス史の出来事を、古い順にタップして並べよう。",
+ items:[["全国ゼネスト（Landesstreik）",1918],["国際連盟に加盟",1920],["初の社会民主党員が連邦閣僚に",1943],["女性参政権（連邦レベル）",1971],["EWR参加を国民投票で否決",1992],["国連に加盟",2002]],
+ talk:"この年表の中で「スイスらしさ」がいちばん表れている出来事はどれ？ 理由とともに一つ選んでみよう。"}
+];
+
+const SRC = {
+ page:'出典：<a href="https://www.aboutswitzerland.eda.admin.ch/de/geschichte-der-schweiz" target="_blank" rel="noopener">aboutswitzerland「Geschichte der Schweiz」</a>',
+ pdf1:'出典：aboutswitzerland 同ページ掲載資料「Die Schweiz in der Zeit der Weltkriege (1914–1945)」',
+ pdf3:'出典：aboutswitzerland 同ページ掲載資料「Die Schweiz seit 1989」',
+ extra:'※ページ本文外の補足知識（一般的な歴史事実）'
+};
+
+const TERMS = [
+ ["Bundesstadt","連邦都市（ベルン）"],["Landessprachen","国語（4つ）"],["Neutralität","中立"],
+ ["Landesstreik","全国ゼネスト（1918）"],["Völkerbund","国際連盟"],["Weltwirtschaftskrise","世界恐慌"],
+ ["Bundesrat","連邦閣僚会議（7人の内閣）"],["Schulterschluss","団結・結束"],["Geistige Landesverteidigung","精神的国土防衛"],
+ ["Réduit","アルプスの山岳要塞"],["Kalter Krieg","冷戦"],["Dienstleistungssektor","サービス部門"],
+ ["Frauenstimmrecht","女性参政権"],["Volk und Stände","国民と州（二重多数）"],["bilaterale Abkommen","二国間協定"],
+ ["UNO","国際連合"]
+];
+
+let i = -1, score = 0, answered = [], timerId = null;
+let opts = {timer:true, shuffle:false};
+const app = document.getElementById('app');
+const total = Q.length;
+
+function esc(s){return s}
+function start(){
+  app.innerHTML = `
+  <div class="card">
+    <p class="lead">スイスは「中立」「多言語」「直接民主制」の国。でも、20世紀のスイスはずっと平和で穏やかだったのでしょうか？
+    これからドイツ語のテキストを読みながら学ぶ前に、クイズで<strong>全体像をつかみ、疑問を持つ</strong>ところから始めましょう。</p>
+    <ol class="steps">
+      <li><span><strong>ひとりで予想</strong>（30秒）：知らなくてOK。直感で選んでみよう。</span></li>
+      <li><span><strong>となりの人と相談</strong>：なぜそう思った？ 根拠を一言ずつ。</span></li>
+      <li><span><strong>答え合わせ</strong>：解説とドイツ語の原文（キーワード）をチェック。</span></li>
+      <li><span><strong>話し合いのタネ</strong>：正解よりも大事な「問い」について意見を交わそう。</span></li>
+    </ol>
+    <div class="mode">
+      <label><input type="checkbox" id="optTimer" ${opts.timer?'checked':''}> 考える時間タイマー（30秒）を表示</label>
+      <label><input type="checkbox" id="optShuffle" ${opts.shuffle?'checked':''}> 選択肢の順番をシャッフル</label>
+    </div>
+    <p style="font-size:14px;color:var(--sub);margin:0 0 18px">全${total}問 ／ 導入・1914–1945・1945–1989・1989– の4パート</p>
+    <button class="btn primary" onclick="begin()">はじめる</button>
+  </div>`;
+}
+function begin(){
+  opts.timer = document.getElementById('optTimer').checked;
+  opts.shuffle = document.getElementById('optShuffle').checked;
+  i = 0; score = 0; answered = [];
+  Q.forEach(q=>{ q.order = q.opts ? q.opts.map((_,k)=>k) : null;
+    if(opts.shuffle && q.order) q.order.sort(()=>Math.random()-.5); });
+  render();
+}
+function header(q){
+  const eras = ERAS.map((e,k)=>`<div class="era ${k===q.era?'on':''}">${e}</div>`).join('');
+  return `<div class="eras">${eras}</div>
+  <div class="progress"><i style="width:${(i)/total*100}%"></i></div>`;
+}
+function render(){
+  clearInterval(timerId);
+  const q = Q[i];
+  if(q.type==='sort') return renderSort(q);
+  const letters = "ABCD";
+  const optsHtml = q.order.map((k,pos)=>`<button class="opt" data-k="${k}" onclick="choose(${k})"><span class="k">${letters[pos]}</span><span>${q.opts[k]}</span></button>`).join('');
+  app.innerHTML = header(q) + `
+  <div class="card">
+    <div class="meta"><span>Q${i+1} / ${total}</span><span class="tag ${q.src==='extra'?'extra':''}">${q.src==='extra'?'補足問題':ERAS[q.era].split(' ')[0]}</span></div>
+    <h2 class="q">${q.q}</h2>
+    <div class="hint">ドイツ語キーワード：<b>${q.hint}</b></div>
+    <div class="opts">${optsHtml}</div>
+    ${opts.timer?`<div class="tools"><button class="btn" id="tbtn" onclick="startTimer()">⏱ 考える時間 <span class="timer" id="tval">30</span>秒</button></div>`:''}
+    <div class="reveal" id="rev">
+      <div class="verdict" id="verdict"></div>
+      <div>${q.exp}</div>
+      <div class="box de"><div class="lbl">DEUTSCH ― 原文・キーワード</div><q>${q.de}</q><div class="ja">${q.ja}</div></div>
+      <div class="box talk"><div class="lbl">話し合いのタネ</div><p>${q.talk}</p></div>
+      <div class="src">${SRC[q.src]}</div>
+    </div>
+    <div class="nav">
+      <button class="btn" onclick="prev()" ${i===0?'disabled':''}>← 前へ</button>
+      <button class="btn primary" id="next" onclick="next()" style="visibility:hidden">${i===total-1?'まとめへ':'次へ →'}</button>
+    </div>
+  </div>`;
+  if(answered[i]!==undefined) choose(answered[i], true);
+}
+function startTimer(){
+  let t = 30; const v = document.getElementById('tval'), b = document.getElementById('tbtn');
+  b.disabled = true; clearInterval(timerId);
+  timerId = setInterval(()=>{ t--; if(v) v.textContent = t;
+    if(t<=0){clearInterval(timerId); if(b){b.innerHTML='⏱ 時間です！ となりの人と相談しよう';}} },1000);
+}
+function choose(k, silent){
+  const q = Q[i]; clearInterval(timerId);
+  if(answered[i]===undefined){ answered[i]=k; if(k===q.a) score++; }
+  document.querySelectorAll('.opt').forEach(b=>{
+    const bk = +b.dataset.k; b.disabled = true;
+    if(bk===q.a) b.classList.add('ok'); else if(bk===answered[i]) b.classList.add('ng');
+  });
+  const v = document.getElementById('verdict');
+  const ok = answered[i]===q.a;
+  v.textContent = ok ? '◯ 正解！' : '× 残念！ 正解は「'+q.opts[q.a]+'」';
+  v.className = 'verdict ' + (ok?'ok':'ng');
+  document.getElementById('rev').classList.add('show');
+  document.getElementById('next').style.visibility='visible';
+  const tb=document.getElementById('tbtn'); if(tb) tb.parentNode.style.display='none';
+}
+function renderSort(q){
+  if(!q.shuffled){ q.shuffled = q.items.map((_,k)=>k).sort(()=>Math.random()-.5); }
+  q.picked = q.picked || [];
+  const list = q.shuffled.map(k=>{
+    const p = q.picked.indexOf(k);
+    return `<button class="sitem ${p>=0?'picked':''}" data-k="${k}" onclick="pick(${k})"><span class="n">${p>=0?p+1:''}</span><span>${q.items[k][0]}</span><span class="yr">${q.items[k][1]}年</span></button>`;
+  }).join('');
+  app.innerHTML = header(q) + `
+  <div class="card">
+    <div class="meta"><span>Q${i+1} / ${total}</span><span class="tag">ふりかえり</span></div>
+    <h2 class="q">${q.q}</h2>
+    <div class="sortlist">${list}</div>
+    <div class="tools">
+      <button class="btn" onclick="resetSort()">やり直す</button>
+      <button class="btn primary" id="check" onclick="checkSort()" ${q.picked.length<q.items.length?'disabled':''}>答え合わせ</button>
+    </div>
+    <div class="reveal" id="rev">
+      <div class="verdict" id="verdict"></div>
+      <div class="box talk"><div class="lbl">話し合いのタネ</div><p>${q.talk}</p></div>
+    </div>
+    <div class="nav">
+      <button class="btn" onclick="prev()">← 前へ</button>
+      <button class="btn primary" id="next" onclick="next()" style="visibility:hidden">まとめへ</button>
+    </div>
+  </div>`;
+  if(q.checked) checkSort(true);
+}
+function pick(k){ const q=Q[i]; if(q.checked) return;
+  const p=q.picked.indexOf(k); if(p>=0) q.picked.splice(p,1); else q.picked.push(k); renderSort(q); }
+function resetSort(){ const q=Q[i]; if(q.checked) return; q.picked=[]; renderSort(q); }
+function checkSort(again){
+  const q=Q[i]; let allOk=true;
+  document.querySelectorAll('.sitem').forEach(b=>{
+    const k=+b.dataset.k, pos=q.picked.indexOf(k);
+    const ok = pos===k; if(!ok) allOk=false;   // items are already in chronological order
+    b.classList.add(ok?'ok':'ng','done'); b.disabled=true;
+  });
+  if(!q.checked){ q.checked=true; q.allOk=allOk; if(allOk) score++; }
+  const v=document.getElementById('verdict');
+  v.textContent = q.allOk ? '◯ 完璧！ 年代順に並びました' : '△ 惜しい！ 緑が正しい位置、赤は位置がずれています（右端に年を表示）';
+  v.className='verdict '+(q.allOk?'ok':'ng');
+  document.getElementById('rev').classList.add('show');
+  document.getElementById('next').style.visibility='visible';
+  document.getElementById('check').disabled=true;
+}
+function next(){ if(i<total-1){i++;render();window.scrollTo(0,0);} else end(); }
+function prev(){ if(i>0){i--;render();window.scrollTo(0,0);} }
+function end(){
+  clearInterval(timerId);
+  const tl = [[1914,"第一次世界大戦（スイスは中立・動員）"],[1918,"全国ゼネスト（Landesstreik）"],[1920,"国際連盟に加盟（本部ジュネーヴ）"],[1929,"世界恐慌 → 長い不況"],[1938,"ロマンシュ語が4番目の国語に"],[1939,"第二次世界大戦（総動員・Réduit）"],[1943,"初の社会民主党員が連邦閣僚に"],["1945–89","冷戦：厳格な中立／経済成長／サービス経済化"],[1971,"女性参政権（連邦レベル）"],[1992,"EWR参加を否決 → 二国間協定の道へ"],[2002,"国連に加盟"]];
+  app.innerHTML = `
+  <div class="card">
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+      <div class="score">${score} / ${total}</div><div style="color:var(--sub)">正解数 ― でも大事なのは、ここから生まれた「問い」です。</div>
+    </div>
+
+    <h3>20世紀スイス ざっくり年表</h3>
+    <div class="tl">${tl.map(t=>`<div><b>${t[0]}</b> ${t[1]}</div>`).join('')}</div>
+
+    <h3>この授業で追いかけたい4つの大きな問い</h3>
+    <div class="bigq">
+      <div>① スイスの「中立」は、20世紀を通じてどう変わってきたのか？（三十年戦争 → 国際連盟 → 冷戦 → 国連）</div>
+      <div>② 言語も宗教も異なる人々は、危機の時代にどうやって「ひとつの国」としてまとまったのか？</div>
+      <div>③ 直接民主制は、スイスの歴史の歩み（女性参政権・EU・国連）にどんな影響を与えたのか？</div>
+      <div>④ 「戦争に巻き込まれなかった国」の歴史を、私たちはどう評価すればよいのか？</div>
+    </div>
+
+    <h3>ドイツ語ミニ用語集 ― テキストを読む前に</h3>
+    <div class="grid2">${TERMS.map(t=>`<div class="term"><b>${t[0]}</b>${t[1]}</div>`).join('')}</div>
+
+    <h3>出典</h3>
+    <p style="font-size:14px;color:var(--sub);margin:0">
+      Schweizerische Eidgenossenschaft / EDA, <a href="https://www.aboutswitzerland.eda.admin.ch/de/geschichte-der-schweiz" target="_blank" rel="noopener">„Geschichte der Schweiz“</a>（aboutswitzerland）および同ページ掲載PDF「Die Schweiz in der Zeit der Weltkriege (1914–1945)」「Die Schweiz seit 1989」。女性参政権の問題はページ外の補足です。
+    </p>
+    <div class="nav">
+      <button class="btn" onclick="i=total-1;render()">← 最後の問題へ</button>
+      <button class="btn primary" onclick="Q.forEach(q=>{delete q.picked;delete q.checked;delete q.shuffled});start()">もう一度</button>
+    </div>
+  </div>`;
+  window.scrollTo(0,0);
+}
+start();
+</script>
+</body>
+</html>
