@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ことばの地図</title>
+<style>
+  :root {
+    --ink: #1f1f1d; --sub: #6b6a65; --line: #e3e1da; --bg: #f7f6f2;
+    --accent: #1f5f9e; --accent-dk: #134f8c; --warm: #c8621c;
+    --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", "Meiryo", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: var(--font); background: var(--bg); color: var(--ink); display: flex; flex-direction: column; }
+
+  /* ---------- 操作バー ---------- */
+  #bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 14px; background: #fff; border-bottom: 1px solid var(--line); font-size: 13px;
+  }
+  #bar.hidden { display: none; }
+  .brand { font-weight: 700; letter-spacing: .04em; margin-right: 4px; }
+  select, button {
+    font-family: inherit; font-size: 13px; padding: 6px 10px; border-radius: 7px;
+    border: 1px solid #d3d0c7; background: #fff; color: var(--ink); cursor: pointer;
+  }
+  button:hover { background: #f1efe9; }
+  .seg { display: inline-flex; border: 1px solid #d3d0c7; border-radius: 8px; overflow: hidden; }
+  .seg button { border: none; border-radius: 0; border-right: 1px solid #d3d0c7; padding: 6px 12px; }
+  .seg button:last-child { border-right: none; }
+  .seg button.on { background: var(--ink); color: #fff; }
+  .tog.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .sp { flex: 1; }
+  .demo-tools { display: none; gap: 6px; }
+  body.demo .demo-tools { display: inline-flex; }
+  body.demo .demo-tools button { background: #fff6d6; border-color: #e7cf7a; }
+  .teacher-only { display: none !important; }
+  body.can-edit .teacher-only { display: inline-flex !important; }
+  .who { color: var(--sub); font-size: 12px; }
+
+  /* ---------- 問い ---------- */
+  #qline {
+    padding: 14px 28px 4px; font-size: clamp(16px, 1.6vw, 26px); line-height: 1.55; color: #3a3a37;
+    display: flex; gap: 14px; align-items: baseline;
+  }
+  #qline .ttl { flex-shrink: 0; font-size: .72em; font-weight: 700; color: var(--accent); letter-spacing: .05em; }
+  #qtext { outline: none; border-radius: 4px; }
+  body.can-edit #qtext:hover { background: #fff; cursor: text; }
+
+  /* ---------- 地図 ---------- */
+  #stage { position: relative; flex: 1; overflow: hidden; touch-action: none; }
+
+  .word {
+    position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1.15;
+    padding: .08em .28em; border-radius: .25em;
+    transform: translate(-50%, -50%);
+    transition: left .55s cubic-bezier(.2,.8,.2,1), top .55s cubic-bezier(.2,.8,.2,1), font-size .45s, color .45s, opacity .35s, background .2s;
+    user-select: none; -webkit-user-select: none; cursor: default;
+    animation: pop .5s ease;
+  }
+  @keyframes pop { from { opacity: 0; transform: translate(-50%, -40%) scale(.85); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  body.can-edit .word { cursor: grab; }
+  .word.dragging { transition: none; cursor: grabbing; z-index: 10; background: rgba(255,255,255,.85); box-shadow: 0 3px 14px rgba(0,0,0,.12); }
+  .word .dup { font-size: .45em; color: var(--sub); margin-left: .15em; vertical-align: super; font-weight: 400; }
+  .word .vc { font-size: .42em; color: var(--accent); margin-left: .2em; vertical-align: super; font-weight: 700; display: none; }
+  body.show-counts .word .vc { display: inline; }
+  .word.pinned::after { content: ""; position: absolute; left: 50%; bottom: -.12em; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: rgba(31,95,158,.35); }
+
+  body.zero-mode .word { opacity: .14; }
+  body.zero-mode .word.zero { opacity: 1; color: var(--warm) !important; }
+  body.spot .word { opacity: .14; }
+  body.spot .word.spotlit { opacity: 1; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,.12); z-index: 5; }
+
+  #empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #b4b2aa; font-size: 22px; text-align: center; line-height: 1.9; pointer-events: none; }
+
+  #stats { position: absolute; right: 16px; bottom: 12px; font-size: 14px; color: var(--sub); background: rgba(255,255,255,.8); padding: 4px 12px; border-radius: 20px; }
+  #phase-label { position: absolute; left: 16px; bottom: 12px; font-size: 14px; font-weight: 700; color: #fff; background: var(--accent); padding: 4px 14px; border-radius: 20px; }
+  #phase-label:empty { display: none; }
+
+
+  .toast { position: fixed; bottom: 54px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 18px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+  .toast.show { opacity: 1; }
+  .help { position: absolute; left: 16px; top: 10px; font-size: 11px; color: #aaa69c; }
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <span class="brand">ことばの地図</span>
+  <select id="sel" class="teacher-only" title="回を選ぶ"></select>
+  <span class="seg teacher-only" id="phases">
+    <button data-p="idle">準備</button>
+    <button data-p="place">① 置く</button>
+    <button data-p="ask">② 問う</button>
+    <button data-p="closed">締切</button>
+  </span>
+  <button class="tog" id="t-zero" title="？が付かなかったことばだけを照らす">？ゼロを照らす</button>
+  <button class="tog" id="t-count" title="？の数を表示">数</button>
+  <button id="b-relayout" class="teacher-only" title="手で動かした配置を戻して並べ直す">並べ直す</button>
+  <button id="b-png" title="いまの地図を画像で保存">画像保存</button>
+  <button id="b-csv" title="ことばと？の数をCSVで保存">CSV</button>
+  <span class="demo-tools">
+    <button id="d-seed">サンプル投入</button>
+    <button id="d-rain">？を降らせる</button>
+    <button id="d-reset">リセット</button>
+  </span>
+  <span class="sp"></span>
+  <span class="who" id="who"></span>
+  <button id="b-login">教員ログイン</button>
+  <button id="b-hide" title="バーを隠す（H キーで切替）">隠す</button>
+</div>
+
+<div id="qline"><span class="ttl" id="sttl"></span><span id="qtext"></span></div>
+
+<div id="stage">
+  <div id="layer"></div>
+  <div id="empty"></div>
+  <span id="phase-label"></span>
+  <span id="stats"></span>
+  <span class="help teacher-only" id="help">ドラッグで移動／クリックで注目／右クリックで非表示</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// ===== 共通部分（以前の kotoba.js の中身。send.html と board.html の両方に同じものが入っています） =====
+// ことばの地図 — 共通設定とデータ層
+// send.html（学生用：MoodleにURLを置く）と board.html（スクリーン用）から読み込まれます。
+// URLの末尾に ?demo を付けると、Firebaseを使わずこのブラウザ内だけで動くデモになります。
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkzsfU81X3hoF32nlg58zHeHJcVXhAPG0",
+  authDomain: "classroom-stt.firebaseapp.com",
+  databaseURL: "https://classroom-stt-default-rtdb.firebaseio.com",
+  projectId: "classroom-stt",
+  storageBucket: "classroom-stt.firebasestorage.app",
+  messagingSenderId: "74071031952",
+  appId: "1:74071031952:web:dc22ed40bea81c88661815"
+};
+
+// 教員のアカウントID（board.html にGoogleでログインすると画面に表示されます）。
+// database.rules.json の TEACHER_UID と同じ値にしてください。
+const TEACHER_UID = "";
+
+const COURSE = "先端テクノロジーと社会";
+const MAX_LEN = 15;    // 目安（「15字程度」と表示）
+const HARD_LEN = 25;   // これを超えると送れない（database.rules.json と同じ値）
+
+const SESSIONS = [
+  { id: "w01", title: "第1回 導入",
+    question: "最近、「これはすごく便利だけど、同時に何かが変わったり（自分の感覚や習慣、人との関わり方、など）しているかも」と感じたテクノロジーの体験はありますか？" },
+  { id: "w02", title: "第2回 ニューロエンハンスメント", question: "" },
+  { id: "w03", title: "第3回 ビッグデータ", question: "" },
+  { id: "w04", title: "第4回 人工知能", question: "" },
+  { id: "w05", title: "第5回 ロボット", question: "" },
+  { id: "w06", title: "第6回 原子力", question: "" },
+  { id: "w07", title: "第7回 気候工学", question: "" },
+  { id: "w08", title: "第8回 合成生物学", question: "" },
+  { id: "w09", title: "第9回 ソーシャルメディア", question: "" },
+  { id: "w10", title: "第10回 バーチャルリアリティ", question: "" },
+  { id: "w11", title: "第11回 ブレイン・マシン・インターフェース", question: "" },
+  { id: "w12", title: "第12回 補論 老いと社会", question: "" },
+  { id: "test", title: "動作テスト", question: "テスト用の問いです。" },
+];
+
+const isDemo = new URLSearchParams(location.search).has("demo");
+
+// 表記ゆれをまとめるためのキー（全角/半角・大文字小文字・前後の空白を統一）
+function normalize(text) {
+  return String(text).normalize("NFKC").trim().replace(/\s+/g, " ");
+}
+function wordKey(text) {
+  return encodeURIComponent(normalize(text).toLowerCase()).replace(/\./g, "%2E");
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ------------------------------------------------------------------ */
+/* データ層：Firebase版とデモ版で同じ使い方ができるようにしています      */
+/* ------------------------------------------------------------------ */
+
+async function connect({ role = "student" } = {}) {
+  return isDemo ? connectDemo(role) : connectFirebase(role);
+}
+
+async function connectFirebase(role) {
+  const V = "12.11.0";
+  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+  const dbm = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`);
+  const am = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+
+  const app = initializeApp(firebaseConfig);
+  const db = dbm.getDatabase(app);
+  const auth = am.getAuth(app);
+
+  const authListeners = new Set();
+  let user = null;
+  am.onAuthStateChanged(auth, u => { user = u; authListeners.forEach(cb => cb(api.authInfo())); });
+
+  if (role === "student") {
+    await am.signInAnonymously(auth);
+    await new Promise(res => { const off = am.onAuthStateChanged(auth, u => { if (u) { off(); res(); } }); });
+  } else {
+    await new Promise(res => { const off = am.onAuthStateChanged(auth, () => { off(); res(); }); });
+  }
+
+  const api = {
+    demo: false,
+    get uid() { return user ? user.uid : null; },
+    authInfo() {
+      return {
+        uid: user ? user.uid : null,
+        teacher: !!(user && !user.isAnonymous),
+        name: user ? (user.displayName || user.email || "") : "",
+      };
+    },
+    onAuth(cb) { authListeners.add(cb); cb(api.authInfo()); return () => authListeners.delete(cb); },
+    async signIn() { await am.signInWithPopup(auth, new am.GoogleAuthProvider()); },
+    async signOut() { await am.signOut(auth); },
+    onValue(path, cb, onErr) { return dbm.onValue(dbm.ref(db, path), s => cb(s.val()), e => onErr && onErr(e)); },
+    set(path, val) { return dbm.set(dbm.ref(db, path), val); },
+    update(path, obj) { return dbm.update(dbm.ref(db, path), obj); },
+    remove(path) { return dbm.remove(dbm.ref(db, path)); },
+  };
+  return api;
+}
+
+function connectDemo(role) {
+  const KEY = "kotoba-demo-v1";
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(tree)); } catch {} };
+  let tree = load();
+  const listeners = new Set();
+
+  const parts = p => p.split("/").filter(Boolean);
+  const get = p => parts(p).reduce((o, k) => (o == null ? undefined : o[k]), tree);
+  const clone = v => (v === undefined ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => listeners.forEach(l => l.cb(clone(get(l.path))));
+
+  function write(p, val) {
+    const ks = parts(p);
+    let o = tree;
+    for (let i = 0; i < ks.length - 1; i++) {
+      if (o[ks[i]] == null || typeof o[ks[i]] !== "object") o[ks[i]] = {};
+      o = o[ks[i]];
+    }
+    const last = ks[ks.length - 1];
+    if (val === null || val === undefined) delete o[last]; else o[last] = clone(val);
+  }
+
+  window.addEventListener("storage", e => { if (e.key === KEY) { tree = load(); notify(); } });
+
+  // 学生役はタブごとに別人として扱う
+  let uid;
+  if (role === "student") {
+    try { uid = sessionStorage.getItem("kotoba-demo-uid"); } catch {}
+    if (!uid) { uid = "demo-" + Math.random().toString(36).slice(2, 10); try { sessionStorage.setItem("kotoba-demo-uid", uid); } catch {} }
+  } else uid = "teacher";
+
+  const info = () => ({ uid, teacher: role !== "student", name: "デモ" });
+  const api = {
+    demo: true,
+    get uid() { return uid; },
+    authInfo: info,
+    onAuth(cb) { cb(info()); return () => {}; },
+    async signIn() {}, async signOut() {},
+    onValue(path, cb) { const l = { path, cb }; listeners.add(l); cb(clone(get(path))); return () => listeners.delete(l); },
+    async set(path, val) { write(path, val); save(); notify(); },
+    async update(path, obj) { for (const k in obj) write(path + "/" + k, obj[k]); save(); notify(); },
+    async remove(path) { write(path, null); save(); notify(); },
+  };
+  return api;
+}
+
+// 端末ごとに一定の順でシャッフル（並び順による偏りを避ける）
+function seededShuffle(arr, seedStr) {
+  let h = 2166136261;
+  for (const c of String(seedStr)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  const rnd = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; };
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+// 投稿を「同じことば」ごとにまとめる
+function groupWords(words, hidden = {}) {
+  const groups = new Map();
+  const list = Object.entries(words || {}).map(([uid, w]) => ({ uid, ...w })).filter(w => w && w.text);
+  list.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  for (const w of list) {
+    const key = wordKey(w.text);
+    if (hidden && hidden[key]) continue;
+    if (!groups.has(key)) groups.set(key, { key, text: normalize(w.text), ts: w.ts || 0, n: 0, uids: [] });
+    const g = groups.get(key);
+    g.n++; g.uids.push(w.uid);
+  }
+  return [...groups.values()];
+}
+// ===== 共通部分ここまで =====
+
+const $ = id => document.getElementById(id);
+const stage = $("stage"), layer = $("layer");
+const PHASE_LABEL = { idle: "", place: "① ことばを置く", ask: "② 気になることばに ？", closed: "締切" };
+
+function toast(msg, ms = 2400) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), ms); }
+
+if (isDemo) document.body.classList.add("demo");
+
+/* ---------- 状態 ---------- */
+let sid = null, session = {}, offSession = null;
+const els = new Map();       // key -> element
+const prevPos = new Map();   // key -> {x,y}（px、自動配置の位置を保つ）
+let groups = [];
+let maxVotes = 0;
+let spotKey = null;
+
+
+/* ---------- 表示設定（このブラウザだけ） ---------- */
+const prefs = (() => { try { return JSON.parse(localStorage.getItem("kotoba-board-prefs")) || {}; } catch { return {}; } })();
+const savePrefs = () => { try { localStorage.setItem("kotoba-board-prefs", JSON.stringify(prefs)); } catch {} };
+function bindToggle(id, cls, key) {
+  const b = $(id);
+  const apply = () => { document.body.classList.toggle(cls, !!prefs[key]); b.classList.toggle("on", !!prefs[key]); };
+  b.addEventListener("click", () => { prefs[key] = !prefs[key]; savePrefs(); apply(); });
+  apply();
+}
+bindToggle("t-zero", "zero-mode", "zero");
+bindToggle("t-count", "show-counts", "count");
+
+function setBarHidden(h) { $("bar").classList.toggle("hidden", h); setTimeout(scheduleLayout, 30); }
+$("b-hide").onclick = () => { setBarHidden(true); toast("H キーでバーを再表示"); };
+document.addEventListener("keydown", e => {
+  if (e.target.isContentEditable || e.target.tagName === "INPUT") return;
+  if (e.key === "h" || e.key === "H") setBarHidden(!$("bar").classList.contains("hidden"));
+  if (e.key === "Escape") clearSpot();
+});
+
+/* ---------- 接続 ---------- */
+let api;
+try { api = await connect({ role: "board" }); }
+catch (e) { $("empty").textContent = "接続できませんでした：" + (e.message || e); throw e; }
+
+let canEdit = false;
+api.onAuth(info => {
+  canEdit = !!info.teacher;
+  document.body.classList.toggle("can-edit", canEdit);
+  $("b-login").textContent = api.demo ? "デモ" : (info.teacher ? "ログアウト" : "教員ログイン");
+  $("b-login").disabled = api.demo;
+  $("who").textContent = info.teacher && !api.demo ? info.name : "";
+  if (info.teacher && !api.demo && TEACHER_UID && info.uid !== TEACHER_UID) toast("このアカウントは教員として登録されていません", 4000);
+  if (info.teacher && !api.demo && !TEACHER_UID) console.log("あなたのUID（kotoba.js と database.rules.json に設定）:", info.uid);
+  $("qtext").contentEditable = canEdit ? "true" : "false";
+});
+$("b-login").onclick = async () => {
+  try {
+    if (api.authInfo().teacher) await api.signOut();
+    else {
+      await api.signIn();
+      const u = api.authInfo().uid;
+      if (!TEACHER_UID) { try { await navigator.clipboard.writeText(u); } catch {} toast("UIDをコピーしました：" + u, 6000); }
+    }
+  } catch (e) { toast("ログインできませんでした：" + (e.code || e.message)); }
+};
+
+/* ---------- 回の選択 ---------- */
+SESSIONS.forEach(s => $("sel").insertAdjacentHTML("beforeend", `<option value="${s.id}">${escapeHtml(s.title)}</option>`));
+$("sel").onchange = async () => {
+  const id = $("sel").value;
+  const s = SESSIONS.find(x => x.id === id);
+  try {
+    if (!session.meta || !session.meta.title || sid !== id) {
+      // 初めて開く回なら初期設定を書き込む
+      await api.update(`sessions/${id}/meta`, { title: s.title, question: (await peekQuestion(id)) ?? s.question, phase: (await peekPhase(id)) ?? "idle" });
+    }
+    await api.set("current", id);
+  } catch (e) { denied(e); }
+};
+function peekOnce(path) { return new Promise(res => { let off; off = api.onValue(path, v => { res(v); setTimeout(() => off && off()); }); }); }
+const peekQuestion = id => peekOnce(`sessions/${id}/meta/question`);
+const peekPhase = id => peekOnce(`sessions/${id}/meta/phase`);
+
+/* ---------- フェーズ ---------- */
+$("phases").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b || !sid) return;
+  try {
+    await api.set(`sessions/${sid}/meta/phase`, b.dataset.p);
+  } catch (e) { denied(e); }
+});
+
+/* ---------- 問いの編集 ---------- */
+$("qtext").addEventListener("blur", async () => {
+  if (!canEdit || !sid) return;
+  const q = $("qtext").textContent.trim();
+  if (q !== (session.meta?.question || "")) { try { await api.set(`sessions/${sid}/meta/question`, q); toast("問いを更新しました"); } catch (e) { denied(e); } }
+});
+$("qtext").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } });
+
+function denied(e) {
+  console.error(e);
+  toast(String(e && (e.code || e.message)).includes("PERMISSION") ? "権限がありません（教員ログインと設定を確認）" : "保存できませんでした");
+}
+
+/* ---------- 描画 ---------- */
+
+function votesFor(key) { const v = session.votes && session.votes[key]; return v ? Object.keys(v).length : 0; }
+
+function renderAll() {
+  const meta = session.meta || {};
+  const phase = meta.phase || "idle";
+  $("sttl").textContent = meta.title || (sid ? "" : "回が選ばれていません");
+  if (document.activeElement !== $("qtext")) $("qtext").textContent = meta.question || "";
+  document.querySelectorAll("#phases button").forEach(b => b.classList.toggle("on", b.dataset.p === phase));
+  $("phase-label").textContent = PHASE_LABEL[phase] || "";
+
+  groups = groupWords(session.words, session.hidden);
+  const live = new Set(groups.map(g => g.key));
+  for (const [k, el] of els) if (!live.has(k)) { el.remove(); els.delete(k); prevPos.delete(k); }
+
+  maxVotes = 0;
+  let totalVotes = 0;
+  for (const g of groups) { g.v = votesFor(g.key); maxVotes = Math.max(maxVotes, g.v); totalVotes += g.v; }
+
+  for (const g of groups) {
+    let el = els.get(g.key);
+    if (!el) {
+      el = document.createElement("span");
+      el.className = "word"; el.dataset.key = g.key;
+      layer.appendChild(el); els.set(g.key, el);
+      bindWord(el);
+    }
+    el.innerHTML = `${escapeHtml(g.text)}${g.n > 1 ? `<span class="dup">×${g.n}</span>` : ""}<span class="vc">${g.v ? "？" + g.v : ""}</span>`;
+    el.classList.toggle("zero", g.v === 0);
+    el.classList.toggle("pinned", !!(session.positions && session.positions[g.key]));
+    el.classList.toggle("spotlit", g.key === spotKey);
+    el.style.fontSize = fontSize(g) + "px";
+    el.style.color = colorFor(g);
+    el.style.fontWeight = g.v >= Math.max(3, maxVotes * .5) ? 700 : 500;
+  }
+
+  const nPeople = Object.keys(session.words || {}).length;
+  $("stats").textContent = sid ? `ことば ${groups.length}　参加 ${nPeople}人　？ ${totalVotes}` : "";
+  $("empty").innerHTML = !sid ? "回を選んでください" : groups.length ? "" :
+    (phase === "place" ? "ことばを待っています…" : "まだことばがありません");
+  scheduleLayout();
+}
+
+function scale() { return Math.max(.6, Math.min(stage.clientWidth / 1280, stage.clientHeight / 640)); }
+function fontSize(g) {
+  const s = scale();
+  const n = groups.length;
+  const base = n > 50 ? 19 : n > 30 ? 22 : 26;
+  return Math.round(Math.min(base + 11 * Math.sqrt(g.v) + (g.n - 1) * 2, 92) * s);
+}
+function colorFor(g) {
+  if (!maxVotes || !g.v) return "#5e5d58";
+  const t = g.v / maxVotes;              // 0..1
+  const a = [94, 93, 88], b = [19, 79, 140];
+  const c = a.map((x, i) => Math.round(x + (b[i] - x) * Math.min(1, .35 + t * .65)));
+  return `rgb(${c.join(",")})`;
+}
+
+/* ---------- 配置（重ならないように渦巻き状に置く） ---------- */
+let layoutTimer = null;
+function scheduleLayout() { clearTimeout(layoutTimer); layoutTimer = setTimeout(layout, 60); }
+window.addEventListener("resize", () => { prevPos.clear(); renderAll(); });
+
+function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
+
+function layout() {
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const pad = 6, margin = 10;
+  const placed = [];
+  const fits = r => r.x0 >= margin && r.y0 >= margin && r.x1 <= W - margin && r.y1 <= H - margin;
+  const hits = r => placed.some(p => r.x0 < p.x1 + pad && r.x1 > p.x0 - pad && r.y0 < p.y1 + pad && r.y1 > p.y0 - pad);
+  const rectAt = (x, y, w, h) => ({ x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2 });
+
+  const items = groups.map(g => ({ g, el: els.get(g.key) })).filter(i => i.el);
+  items.forEach(i => { i.w = i.el.offsetWidth; i.h = i.el.offsetHeight; });
+
+  // 1) 手で置いたもの
+  const pos = session.positions || {};
+  for (const i of items) {
+    const p = pos[i.g.key];
+    if (p) { i.x = p.x * W; i.y = p.y * H; placed.push(rectAt(i.x, i.y, i.w, i.h)); i.done = true; }
+  }
+  // 2) ？の多い順に、前の位置を保てるなら保つ。だめなら渦巻きで探す
+  const rest = items.filter(i => !i.done && !(i.el.classList.contains("dragging")));
+  rest.sort((a, b) => b.g.v - a.g.v || a.g.ts - b.g.ts);
+  for (const i of rest) {
+    const prev = prevPos.get(i.g.key);
+    if (prev) { const r = rectAt(prev.x, prev.y, i.w, i.h); if (fits(r) && !hits(r)) { i.x = prev.x; i.y = prev.y; placed.push(r); continue; } }
+    const a0 = hash(i.g.key) * Math.PI * 2;
+    const cx = W / 2, cy = H / 2, ax = W / H;
+    let ok = false;
+    for (let t = 0; t < 3000; t++) {
+      const ang = a0 + t * 0.32, rad = 2.2 * t * 0.32 * 2;
+      const x = cx + Math.cos(ang) * rad * Math.sqrt(ax), y = cy + Math.sin(ang) * rad / Math.sqrt(ax);
+      const r = rectAt(x, y, i.w, i.h);
+      if (fits(r) && !hits(r)) { i.x = x; i.y = y; placed.push(r); ok = true; break; }
+    }
+    if (!ok) { i.x = margin + i.w / 2 + hash(i.g.key + "x") * (W - i.w - 2 * margin); i.y = margin + i.h / 2 + hash(i.g.key + "y") * (H - i.h - 2 * margin); }
+    prevPos.set(i.g.key, { x: i.x, y: i.y });
+  }
+  for (const i of items) if (i.x != null && !i.el.classList.contains("dragging")) { i.el.style.left = i.x + "px"; i.el.style.top = i.y + "px"; }
+  layout.items = items;
+}
+
+/* ---------- 操作：ドラッグ・注目・非表示 ---------- */
+function bindWord(el) {
+  let sx, sy, ox, oy, moved = false, down = false;
+  el.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    down = true; moved = false; sx = e.clientX; sy = e.clientY;
+    ox = parseFloat(el.style.left) || 0; oy = parseFloat(el.style.top) || 0;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", e => {
+    if (!down || !canEdit) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!moved && Math.hypot(dx, dy) < 5) return;
+    moved = true; el.classList.add("dragging");
+    el.style.left = ox + dx + "px"; el.style.top = oy + dy + "px";
+  });
+  el.addEventListener("pointerup", async e => {
+    if (!down) return; down = false;
+    const key = el.dataset.key;
+    if (!moved) { toggleSpot(key); return; }
+    el.classList.remove("dragging");
+    const W = stage.clientWidth, H = stage.clientHeight;
+    const x = Math.min(.99, Math.max(.01, parseFloat(el.style.left) / W));
+    const y = Math.min(.99, Math.max(.01, parseFloat(el.style.top) / H));
+    prevPos.set(key, { x: x * W, y: y * H });
+    try { await api.set(`sessions/${sid}/positions/${key}`, { x: +x.toFixed(4), y: +y.toFixed(4) }); } catch (err) { denied(err); }
+  });
+  el.addEventListener("contextmenu", async e => {
+    e.preventDefault();
+    if (!canEdit) return;
+    const text = el.textContent.replace(/[×？]\d+/g, "");
+    if (!confirm(`「${text}」を非表示にしますか？（学生の画面からも消えます）`)) return;
+    try { await api.set(`sessions/${sid}/hidden/${el.dataset.key}`, true); } catch (err) { denied(err); }
+  });
+}
+function toggleSpot(key) {
+  spotKey = spotKey === key ? null : key;
+  document.body.classList.toggle("spot", !!spotKey);
+  els.forEach((el, k) => el.classList.toggle("spotlit", k === spotKey));
+}
+function clearSpot() { spotKey = null; document.body.classList.remove("spot"); els.forEach(el => el.classList.remove("spotlit")); }
+stage.addEventListener("pointerdown", e => { if (e.target === stage || e.target === layer) clearSpot(); });
+
+$("b-relayout").onclick = async () => {
+  if (!sid) return;
+  if (session.positions && !confirm("手で動かした配置をすべて戻して並べ直しますか？")) return;
+  prevPos.clear();
+  try { await api.remove(`sessions/${sid}/positions`); } catch (e) { denied(e); }
+  renderAll();
+};
+
+
+/* ---------- 保存 ---------- */
+$("b-png").onclick = () => {
+  layout();
+  const W = stage.clientWidth, H = stage.clientHeight, k = 2;
+  const head = 70;
+  const cv = document.createElement("canvas"); cv.width = W * k; cv.height = (H + head) * k;
+  const c = cv.getContext("2d"); c.scale(k, k);
+  c.fillStyle = "#f7f6f2"; c.fillRect(0, 0, W, H + head);
+  const font = getComputedStyle(document.body).fontFamily;
+  const meta = session.meta || {};
+  c.fillStyle = "#1f5f9e"; c.font = `700 15px ${font}`; c.fillText(`${COURSE}　${meta.title || ""}`, 24, 30);
+  c.fillStyle = "#3a3a37"; c.font = `400 14px ${font}`; c.fillText((meta.question || "").slice(0, 90), 24, 54);
+  c.save(); c.translate(0, head);
+  c.textAlign = "center"; c.textBaseline = "middle";
+  for (const i of layout.items || []) {
+    const fs = parseFloat(i.el.style.fontSize);
+    const zeroDim = prefs.zero && i.g.v !== 0;
+    c.globalAlpha = zeroDim ? .2 : 1;
+    c.fillStyle = prefs.zero && i.g.v === 0 ? "#c8621c" : colorFor(i.g);
+    c.font = `${i.el.style.fontWeight || 500} ${fs}px ${font}`;
+    const label = i.g.text + (prefs.count && i.g.v ? ` ？${i.g.v}` : "");
+    c.fillText(label, parseFloat(i.el.style.left), parseFloat(i.el.style.top));
+  }
+  c.restore(); c.globalAlpha = 1;
+  c.textAlign = "right"; c.fillStyle = "#8a887f"; c.font = `400 12px ${font}`;
+  c.fillText(new Date().toLocaleDateString("ja-JP"), W - 20, H + head - 16);
+  const a = document.createElement("a");
+  a.download = `ことばの地図_${(meta.title || sid || "").replace(/\s+/g, "_")}.png`;
+  a.href = cv.toDataURL("image/png"); a.click();
+};
+
+$("b-csv").onclick = () => {
+  const rows = [["ことば", "同じことばの人数", "？の数", "最初の投稿時刻"]];
+  [...groups].sort((a, b) => b.v - a.v).forEach(g => rows.push([g.text, g.n, g.v, new Date(g.ts).toLocaleString("ja-JP")]));
+  const csv = "﻿" + rows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.download = `ことばの地図_${sid}.csv`;
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.click();
+};
+
+/* ---------- デモ用 ---------- */
+const SAMPLE = ["道を覚えない", "既読", "スマホの地図", "迷子にならない", "倍速視聴", "レコメンド", "漢字が書けない", "電子マネー", "写真が多すぎる",
+  "ショート動画", "位置情報共有", "翻訳アプリ", "生成AI", "待ち時間", "退屈しない", "記憶", "手紙", "電話が怖い", "偶然の出会い", "集中力",
+  "夜更かし", "通知", "比べてしまう", "つながり疲れ", "現金", "季節感", "手書き", "本屋", "声", "時間", "身体", "雑談", "待つこと",
+  "AI要約", "推し活", "自動改札", "セルフレジ", "店員さんとの会話", "既読", "迷子にならない", "孤独", "生成AI"];
+$("d-seed").onclick = async () => {
+  if (!sid) { $("sel").value = "w01"; await $("sel").onchange(); }
+  const upd = {}; const now = Date.now();
+  SAMPLE.forEach((t, i) => { upd[`demo-s${i}`] = { text: t, ts: now + i * 10 }; });
+  await api.update(`sessions/${sid}/words`, upd);
+};
+$("d-rain").onclick = async () => {
+  if (!sid) return;
+  if ((session.meta?.phase) !== "ask") await api.set(`sessions/${sid}/meta/phase`, "ask");
+  const keys = groups.map(g => g.key);
+  if (!keys.length) { toast("先にサンプルを投入してください"); return; }
+  const weight = keys.map(k => Math.pow(hash(k + "w"), 3));   // 一部に人気が集まる
+  let n = 0;
+  const timer = setInterval(async () => {
+    const upd = {};
+    for (let j = 0; j < 4; j++) {
+      const voter = "demo-v" + Math.floor(Math.random() * 60);
+      let r = Math.random() * weight.reduce((a, b) => a + b, 0), idx = 0;
+      while (r > weight[idx]) { r -= weight[idx]; idx++; }
+      upd[`${keys[Math.min(idx, keys.length - 1)]}/${voter}`] = true;
+    }
+    await api.update(`sessions/${sid}/votes`, upd);
+    if (++n > 40) clearInterval(timer);
+  }, 150);
+};
+$("d-reset").onclick = async () => {
+  if (!sid) return;
+  for (const p of ["words", "votes", "positions", "hidden"]) await api.remove(`sessions/${sid}/${p}`);
+  await api.set(`sessions/${sid}/meta/phase`, "idle");
+  prevPos.clear(); clearSpot();
+};
+
+/* ---------- データ購読 ---------- */
+api.onValue("current", v => {
+  sid = v || null;
+  if (offSession) offSession();
+  session = {};
+  $("sel").value = sid || "";
+  if (sid) offSession = api.onValue(`sessions/${sid}`, v => { session = v || {}; renderAll(); });
+  renderAll();
+});
+
+// デモでは最初から第1回を開く
+if (api.demo) {
+  const cur = await peekOnce("current");
+  if (!cur) { $("sel").value = "w01"; await $("sel").onchange(); }
+}
+</script>
+</body>
+</html>
