@@ -33,11 +33,11 @@
   .tog.on { background: var(--accent); color: #fff; border-color: var(--accent); }
   .sp { flex: 1; }
   .demo-tools { display: none; gap: 6px; }
-  body.demo .demo-tools { display: inline-flex; }
-  body.demo .demo-tools button { background: #fff6d6; border-color: #e7cf7a; }
+  body.demo .demo-tools, body.can-edit.test-tools .demo-tools { display: inline-flex; }
+  body.demo .demo-tools button, body.test-tools .demo-tools button { background: #fff6d6; border-color: #e7cf7a; }
   .teacher-only { display: none !important; }
   body.can-edit .teacher-only { display: inline-flex !important; }
-  .who { color: var(--sub); font-size: 12px; }
+  .who { color: var(--sub); font-size: 12px; user-select: all; -webkit-user-select: all; }
 
   /* ---------- 問い ---------- */
   #qline {
@@ -349,7 +349,7 @@ api.onAuth(info => {
   document.body.classList.toggle("can-edit", canEdit);
   $("b-login").textContent = api.demo ? "デモ" : (info.teacher ? "ログアウト" : "教員ログイン");
   $("b-login").disabled = api.demo;
-  $("who").textContent = info.teacher && !api.demo ? info.name : "";
+  $("who").textContent = info.teacher && !api.demo ? (TEACHER_UID ? info.name : `${info.name}　UID: ${info.uid}`) : "";
   if (info.teacher && !api.demo && TEACHER_UID && info.uid !== TEACHER_UID) toast("このアカウントは教員として登録されていません", 4000);
   if (info.teacher && !api.demo && !TEACHER_UID) console.log("あなたのUID（kotoba.js と database.rules.json に設定）:", info.uid);
   $("qtext").contentEditable = canEdit ? "true" : "false";
@@ -410,6 +410,8 @@ function votesFor(key) { const v = session.votes && session.votes[key]; return v
 function renderAll() {
   const meta = session.meta || {};
   const phase = meta.phase || "idle";
+  // 「動作テスト」の回では、本番でもサンプル投入などの試験用ボタンを出す
+  document.body.classList.toggle("test-tools", sid === "test");
   $("sttl").textContent = meta.title || (sid ? "" : "回が選ばれていません");
   if (document.activeElement !== $("qtext")) $("qtext").textContent = meta.question || "";
   document.querySelectorAll("#phases button").forEach(b => b.classList.toggle("on", b.dataset.p === phase));
@@ -606,12 +608,14 @@ const SAMPLE = ["道を覚えない", "既読", "スマホの地図", "迷子に
   "夜更かし", "通知", "比べてしまう", "つながり疲れ", "現金", "季節感", "手書き", "本屋", "声", "時間", "身体", "雑談", "待つこと",
   "AI要約", "推し活", "自動改札", "セルフレジ", "店員さんとの会話", "既読", "迷子にならない", "孤独", "生成AI"];
 $("d-seed").onclick = async () => {
+  if (!api.demo && sid !== "test") return;   // 本番では「動作テスト」の回だけ
   if (!sid) { $("sel").value = "w01"; await $("sel").onchange(); }
   const upd = {}; const now = Date.now();
   SAMPLE.forEach((t, i) => { upd[`demo-s${i}`] = { text: t, ts: now + i * 10 }; });
   await api.update(`sessions/${sid}/words`, upd);
 };
 $("d-rain").onclick = async () => {
+  if (!api.demo && sid !== "test") return;   // 本番では「動作テスト」の回だけ
   if (!sid) return;
   if ((session.meta?.phase) !== "ask") await api.set(`sessions/${sid}/meta/phase`, "ask");
   const keys = groups.map(g => g.key);
@@ -631,6 +635,7 @@ $("d-rain").onclick = async () => {
   }, 150);
 };
 $("d-reset").onclick = async () => {
+  if (!api.demo && sid !== "test") return;   // 本番では「動作テスト」の回だけ
   if (!sid) return;
   for (const p of ["words", "votes", "positions", "hidden"]) await api.remove(`sessions/${sid}/${p}`);
   await api.set(`sessions/${sid}/meta/phase`, "idle");
