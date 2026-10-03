@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thema des Tages – Vol. 2</title>
+<title>Thema des Tages – Vol. 2 Leicht</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -146,6 +146,17 @@
     font-weight: 300;
     font-style: italic;
   }
+
+  .card-hilfe {
+    font-size: 14px;
+    color: var(--ink);
+    background: #e3e9f8;
+    border-left: 3px solid var(--accent);
+    padding: 8px 14px;
+    border-radius: 2px;
+    text-align: left;
+  }
+  .card-hilfe:empty { display: none; }
 
   .card-hint {
     font-size: 12px;
@@ -325,7 +336,7 @@
 <body>
 
 <header>
-  <h1>Thema des Tages <span class="vol">Vol. 2</span></h1>
+  <h1>Thema des Tages <span class="vol">Vol. 2 · Leicht</span></h1>
   <p>Sprechen Sie 2 Minuten auf Deutsch</p>
 </header>
 
@@ -336,6 +347,7 @@
     <div class="card-category" id="cardCategory">Kategorie</div>
     <div class="card-thema" id="cardThema">カードをクリック</div>
     <div class="card-sub" id="cardSub"></div>
+    <div class="card-hilfe" id="cardHilfe"></div>
     <div class="card-hint">クリックで新しいテーマ ↻</div>
   </div>
 </div>
@@ -366,58 +378,59 @@
 <footer>Drücken Sie die Karte für ein neues Thema</footer>
 
 <script>
-// ── TOPICS – Vol. 2 ──
+// ── TOPICS – Vol. 2 (leicht / A1–A2) ──
 const topics = [
-  // 日常・生活習慣
-  { category: "Alltag", thema: "Wie sieht Ihr typischer Morgen aus?", sub: "いつもの朝のルーティン" },
-  { category: "Alltag", thema: "Was machen Sie, wenn Sie gestresst sind?", sub: "ストレスを感じたときにすること" },
-  { category: "Alltag", thema: "Wie organisieren Sie Ihren Tag?", sub: "１日をどうやって整理しているか" },
-  { category: "Alltag", thema: "Schlafen Sie früh oder spät? Warum?", sub: "早起き派？夜型派？" },
-  { category: "Alltag", thema: "Was ist Ihr Lieblingsteil des Tages?", sub: "一日の中で一番好きな時間帯" },
+  // 日常
+  { category: "Alltag", thema: "Wann stehen Sie auf?", sub: "何時に起きますか", hilfe: "Ich stehe um … Uhr auf." },
+  { category: "Alltag", thema: "Was essen Sie zum Frühstück?", sub: "朝ごはんに何を食べますか", hilfe: "Ich esse … / Ich trinke …" },
+  { category: "Alltag", thema: "Was machen Sie am Wochenende?", sub: "週末に何をしますか", hilfe: "Am Wochenende … ich …" },
+  { category: "Alltag", thema: "Was machen Sie gern in Ihrer Freizeit?", sub: "自由な時間にすること", hilfe: "Ich … gern." },
+  { category: "Alltag", thema: "Wie kommen Sie zur Uni?", sub: "大学への行き方", hilfe: "Ich fahre mit dem Zug / mit dem Bus …" },
 
-  // 人間関係・コミュニケーション
-  { category: "Beziehungen", thema: "Beschreiben Sie Ihren besten Freund.", sub: "親友について話す" },
-  { category: "Beziehungen", thema: "Wie halten Sie Kontakt zu Familie und Freunden?", sub: "家族や友達との連絡手段" },
-  { category: "Beziehungen", thema: "Was ist für Sie eine gute Freundschaft?", sub: "良い友情とはどういうものか" },
-  { category: "Beziehungen", thema: "Haben Sie schon mal jemandem geholfen? Wie?", sub: "誰かを助けた経験" },
+  // 家族・友達
+  { category: "Familie & Freunde", thema: "Erzählen Sie von Ihrer Familie.", sub: "家族について", hilfe: "Ich habe … / Mein Vater ist …" },
+  { category: "Familie & Freunde", thema: "Wer ist Ihr bester Freund oder Ihre beste Freundin?", sub: "親友について", hilfe: "Er / Sie heißt … Er / Sie ist …" },
+  { category: "Familie & Freunde", thema: "Was machen Sie gern mit Freunden?", sub: "友達と一緒にすること", hilfe: "Wir … gern zusammen." },
+  { category: "Familie & Freunde", thema: "Haben Sie ein Haustier?", sub: "ペットを飼っていますか", hilfe: "Ja, ich habe … / Nein, aber ich möchte …" },
 
-  // 学習・語学
-  { category: "Sprachen & Lernen", thema: "Warum lernen Sie Deutsch?", sub: "なぜドイツ語を学んでいるのか" },
-  { category: "Sprachen & Lernen", thema: "Was ist für Sie am Deutschlernen am schwersten?", sub: "ドイツ語学習で一番難しいこと" },
-  { category: "Sprachen & Lernen", thema: "Wie lernen Sie am liebsten neue Vokabeln?", sub: "自分に合った単語の覚え方" },
-  { category: "Sprachen & Lernen", thema: "Haben Sie schon mal etwas auf Deutsch geschrieben? Was?", sub: "ドイツ語で書いた経験" },
-  { category: "Sprachen & Lernen", thema: "Was möchten Sie als nächstes lernen?", sub: "次に学びたいこと" },
+  // 学習・言語
+  { category: "Sprachen & Lernen", thema: "Wie finden Sie Deutsch?", sub: "ドイツ語をどう思いますか", hilfe: "Deutsch ist … / Ich finde Deutsch …" },
+  { category: "Sprachen & Lernen", thema: "Was ist Ihr Lieblingsfach?", sub: "好きな科目", hilfe: "Mein Lieblingsfach ist …" },
+  { category: "Sprachen & Lernen", thema: "Welche Sprachen sprechen Sie?", sub: "話せる言語", hilfe: "Ich spreche … und ein bisschen …" },
+  { category: "Sprachen & Lernen", thema: "Welche deutschen Wörter mögen Sie?", sub: "好きなドイツ語の単語", hilfe: "Ich mag das Wort … Es bedeutet …" },
 
-  // 留学・海外生活
-  { category: "Auslandserfahrung", thema: "Warum möchten Sie ins Ausland gehen?", sub: "なぜ留学・海外生活をしたいのか" },
-  { category: "Auslandserfahrung", thema: "Welche Stadt in Deutschland würden Sie gern besuchen?", sub: "行きたいドイツの都市" },
-  { category: "Auslandserfahrung", thema: "Was packen Sie in Ihren Koffer für eine längere Reise?", sub: "長旅に持っていくもの" },
-  { category: "Auslandserfahrung", thema: "Worauf würden Sie sich im Ausland freuen?", sub: "海外で楽しみにしていること" },
-  { category: "Auslandserfahrung", thema: "Was würden Sie im Ausland vermissen?", sub: "海外でさみしく思いそうなこと" },
-  { category: "Auslandserfahrung", thema: "Wie würden Sie sich vorstellen, wenn Sie jemanden neu kennenlernen?", sub: "初対面の人への自己紹介" },
+  // 食べ物
+  { category: "Essen & Trinken", thema: "Was ist Ihr Lieblingsessen?", sub: "好きな食べ物", hilfe: "Mein Lieblingsessen ist …" },
+  { category: "Essen & Trinken", thema: "Kochen Sie gern? Was kochen Sie?", sub: "料理は好きですか", hilfe: "Ja, ich koche gern … / Nein, ich …" },
+  { category: "Essen & Trinken", thema: "Was trinken Sie gern?", sub: "好きな飲み物", hilfe: "Ich trinke gern …" },
+  { category: "Essen & Trinken", thema: "Was essen Sie nicht gern?", sub: "苦手な食べ物", hilfe: "Ich esse nicht gern …" },
 
-  // 仕事・将来
-  { category: "Zukunft & Beruf", thema: "Was möchten Sie nach dem Studium machen?", sub: "卒業後にやりたいこと" },
-  { category: "Zukunft & Beruf", thema: "Welchen Beruf finden Sie interessant und warum?", sub: "興味のある仕事とその理由" },
-  { category: "Zukunft & Beruf", thema: "Was sind Ihre Stärken? Was können Sie gut?", sub: "自分の強み・得意なこと" },
-  { category: "Zukunft & Beruf", thema: "Wie stellen Sie sich Ihr Leben in 10 Jahren vor?", sub: "10年後の自分の生活" },
+  // 住まい
+  { category: "Wohnen", thema: "Wo wohnen Sie?", sub: "どこに住んでいますか", hilfe: "Ich wohne in … / Ich wohne allein / bei meiner Familie." },
+  { category: "Wohnen", thema: "Beschreiben Sie Ihr Zimmer.", sub: "自分の部屋について", hilfe: "In meinem Zimmer gibt es …" },
+  { category: "Wohnen", thema: "Was gibt es in Ihrer Stadt?", sub: "あなたの町にあるもの", hilfe: "In meiner Stadt gibt es …" },
 
-  // 自然・環境・社会
-  { category: "Gesellschaft", thema: "Was tun Sie für die Umwelt?", sub: "環境のために自分がしていること" },
-  { category: "Gesellschaft", thema: "Welche Jahreszeit gefällt Ihnen am besten und warum?", sub: "好きな季節とその理由" },
-  { category: "Gesellschaft", thema: "Was ist in Japan gerade ein großes Thema?", sub: "日本で今話題になっていること" },
-  { category: "Gesellschaft", thema: "Wie nutzen Sie soziale Medien?", sub: "SNSとの付き合い方" },
+  // 旅行
+  { category: "Reisen", thema: "Wohin möchten Sie reisen?", sub: "行きたい場所", hilfe: "Ich möchte nach … reisen." },
+  { category: "Reisen", thema: "Welche Städte in Deutschland kennen Sie?", sub: "知っているドイツの都市", hilfe: "Ich kenne … / … ist bekannt für …" },
+  { category: "Reisen", thema: "Was nehmen Sie auf eine Reise mit?", sub: "旅行に持っていくもの", hilfe: "Ich nehme … mit." },
+  { category: "Reisen", thema: "Was ist in Japan schön für Touristen?", sub: "観光客におすすめの場所", hilfe: "… ist schön. Dort kann man …" },
 
-  // テクノロジー・デジタル
-  { category: "Technologie", thema: "Welche App nutzen Sie täglich? Warum?", sub: "毎日使っているアプリ" },
-  { category: "Technologie", thema: "Könnten Sie ohne Smartphone leben? Warum (nicht)?", sub: "スマホなしで生活できるか" },
-  { category: "Technologie", thema: "Was denken Sie über künstliche Intelligenz?", sub: "AI（人工知能）についての意見" },
+  // 季節・天気
+  { category: "Wetter & Jahreszeiten", thema: "Welche Jahreszeit mögen Sie?", sub: "好きな季節", hilfe: "Ich mag den Frühling / Sommer / Herbst / Winter." },
+  { category: "Wetter & Jahreszeiten", thema: "Wie ist das Wetter heute?", sub: "今日の天気", hilfe: "Heute ist es … / Es regnet."},
+  { category: "Wetter & Jahreszeiten", thema: "Was machen Sie im Sommer?", sub: "夏にすること", hilfe: "Im Sommer … ich …" },
 
-  // 旅行・場所
-  { category: "Reisen", thema: "Beschreiben Sie eine unvergessliche Reise.", sub: "忘れられない旅行の思い出" },
-  { category: "Reisen", thema: "Wohin möchten Sie unbedingt reisen? Warum?", sub: "ぜひ行きたい場所とその理由" },
-  { category: "Reisen", thema: "Reisen Sie lieber allein oder mit anderen?", sub: "一人旅 vs みんなで旅行" },
-  { category: "Reisen", thema: "Was empfehlen Sie Touristen in Japan?", sub: "外国人観光客へのおすすめ" },
+  // メディア・趣味
+  { category: "Medien & Hobbys", thema: "Welche App benutzen Sie oft?", sub: "よく使うアプリ", hilfe: "Ich benutze oft … Die App ist …" },
+  { category: "Medien & Hobbys", thema: "Welche Musik hören Sie gern?", sub: "好きな音楽", hilfe: "Ich höre gern … Mein Lieblingssänger ist …" },
+  { category: "Medien & Hobbys", thema: "Sehen Sie gern Filme oder Serien?", sub: "映画やドラマは好きですか", hilfe: "Ich sehe gern … / Mein Lieblingsfilm ist …" },
+  { category: "Medien & Hobbys", thema: "Machen Sie Sport?", sub: "スポーツをしますか", hilfe: "Ja, ich spiele … / Nein, aber ich …" },
+
+  // 将来
+  { category: "Zukunft", thema: "Was möchten Sie später werden?", sub: "将来なりたいもの", hilfe: "Ich möchte … werden." },
+  { category: "Zukunft", thema: "Was möchten Sie dieses Jahr machen?", sub: "今年やりたいこと", hilfe: "Dieses Jahr möchte ich …" },
+  { category: "Zukunft", thema: "Was können Sie gut?", sub: "得意なこと", hilfe: "Ich kann gut …" },
 ];
 
 let usedIndices = [];
@@ -441,6 +454,7 @@ function newCard() {
     document.getElementById('cardCategory').textContent = t.category;
     document.getElementById('cardThema').textContent = t.thema;
     document.getElementById('cardSub').textContent = t.sub;
+    document.getElementById('cardHilfe').textContent = 'Tipp: ' + t.hilfe;
     area.classList.remove('flipping');
   }, 175);
 }
