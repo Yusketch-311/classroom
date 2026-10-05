@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作文を送る｜ドイツ語ライティング</title>
+<style>
+  :root {
+    --ink: #1f1f1d; --sub: #6b6a65; --line: #e3e1da; --bg: #f7f6f2; --card: #fff;
+    --accent: #1f5f9e; --accent-soft: #e6eef7; --ok: #2f7d4f; --err: #b3392f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", "Meiryo", sans-serif;
+    background: var(--bg); color: var(--ink);
+    min-height: 100vh; padding: 20px 16px 56px; max-width: 760px; margin: 0 auto;
+    -webkit-text-size-adjust: 100%;
+  }
+  .course { font-size: 12px; color: var(--sub); letter-spacing: .06em; }
+  .title { font-size: 17px; font-weight: 600; margin-top: 2px; }
+  .prompt {
+    margin: 14px 0 18px; padding: 12px 14px; background: var(--card); border: 1px solid var(--line);
+    border-left: 4px solid var(--accent); border-radius: 8px; font-size: 15px; line-height: 1.7; white-space: pre-wrap;
+  }
+  .prompt:empty { display: none; }
+  .step { display: inline-block; font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; }
+  .lead { font-size: 15px; line-height: 1.7; margin-bottom: 12px; }
+  .lead small { display: block; font-size: 12.5px; color: var(--sub); margin-top: 4px; }
+
+  textarea {
+    width: 100%; min-height: 220px; resize: vertical; font-size: 18px; line-height: 1.8;
+    font-family: "Helvetica Neue", Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    padding: 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); outline: none;
+  }
+  textarea:focus { border-color: var(--accent); }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .counter { font-size: 12.5px; color: var(--sub); }
+  button.primary { font-size: 16px; font-weight: 600; font-family: inherit; padding: 11px 26px; border: none; border-radius: 10px; background: var(--accent); color: #fff; cursor: pointer; }
+  button.primary:disabled { background: #b9c4cf; }
+  .status { min-height: 22px; margin-top: 8px; font-size: 13px; }
+  .status.ok { color: var(--ok); } .status.err { color: var(--err); }
+
+  /* ウムラウトの入力方法 */
+  details.help { margin-top: 18px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; line-height: 1.75; }
+  details.help summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+  .help table { border-collapse: collapse; margin: 8px 0 4px; width: 100%; }
+  .help th, .help td { border-top: 1px solid var(--line); padding: 5px 6px; text-align: left; vertical-align: top; }
+  .help th { white-space: nowrap; font-weight: 600; width: 7.5em; }
+  .help kbd { font-family: inherit; font-size: 12px; background: #f1efe9; border: 1px solid #d6d3ca; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+  .help .note { color: var(--sub); font-size: 12.5px; }
+
+  /* 読む */
+  .entry { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .entry.mine { border-color: var(--accent); }
+  .entry .no { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+  .entry .no .me { margin-left: 6px; color: #fff; background: var(--accent); border-radius: 10px; padding: 1px 8px; font-weight: 600; }
+  .entry .txt { font-family: "Helvetica Neue", Arial, "Hiragino Sans", sans-serif; font-size: 17px; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .entry .cm { margin-top: 10px; padding: 8px 12px; background: #f4f8fc; border-radius: 8px; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+  .entry .cm::before { content: "コメント："; font-weight: 700; color: var(--accent); }
+  mark.hl { background: #fff1a8; color: inherit; border-radius: 3px; padding: 0 1px; }
+  .fix del { color: var(--err); text-decoration: line-through; text-decoration-thickness: 2px; }
+  .fix ins { color: var(--ok); text-decoration: none; font-weight: 600; background: #e8f4ec; border-radius: 3px; padding: 0 3px; margin-left: 2px; }
+
+  .center { text-align: center; padding: 44px 8px; color: var(--sub); line-height: 1.9; font-size: 15px; }
+  .center .big { font-size: 34px; display: block; margin-bottom: 6px; }
+  .demo-badge { position: fixed; top: 8px; right: 8px; font-size: 11px; background: #f3d36b; color: #4a3b00; padding: 2px 8px; border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<p class="course" id="course"></p>
+<h1 class="title" id="title">読み込み中…</h1>
+<div class="prompt" id="prompt"></div>
+
+<main id="app"><div class="center">接続しています…</div></main>
+
+<script type="module">
+// ===== 共通部分（データ層。講義用 send/board と同じ Firebase を使い、保存場所だけ writing/ に分けています） =====
+const firebaseConfig = {
+  apiKey: "AIzaSyBkzsfU81X3hoF32nlg58zHeHJcVXhAPG0",
+  authDomain: "classroom-stt.firebaseapp.com",
+  databaseURL: "https://classroom-stt-default-rtdb.firebaseio.com",
+  projectId: "classroom-stt",
+  storageBucket: "classroom-stt.firebasestorage.app",
+  messagingSenderId: "74071031952",
+  appId: "1:74071031952:web:dc22ed40bea81c88661815"
+};
+
+const isDemo = new URLSearchParams(location.search).has("demo");
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function connect({ role = "student" } = {}) {
+  return isDemo ? connectDemo(role) : connectFirebase(role);
+}
+
+async function connectFirebase(role) {
+  const V = "12.11.0";
+  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+  const dbm = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`);
+  const am = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+
+  const app = initializeApp(firebaseConfig);
+  const db = dbm.getDatabase(app);
+  const auth = am.getAuth(app);
+
+  const authListeners = new Set();
+  let user = null;
+  am.onAuthStateChanged(auth, u => { user = u; authListeners.forEach(cb => cb(api.authInfo())); });
+
+  if (role === "student") {
+    await am.signInAnonymously(auth);
+    await new Promise(res => { const off = am.onAuthStateChanged(auth, u => { if (u) { off(); res(); } }); });
+  } else {
+    await new Promise(res => { const off = am.onAuthStateChanged(auth, () => { off(); res(); }); });
+  }
+
+  const api = {
+    demo: false,
+    get uid() { return user ? user.uid : null; },
+    authInfo() {
+      return {
+        uid: user ? user.uid : null,
+        teacher: !!(user && !user.isAnonymous),
+        name: user ? (user.displayName || user.email || "") : "",
+      };
+    },
+    onAuth(cb) { authListeners.add(cb); cb(api.authInfo()); return () => authListeners.delete(cb); },
+    async signIn() { await am.signInWithPopup(auth, new am.GoogleAuthProvider()); },
+    async signOut() { await am.signOut(auth); },
+    onValue(path, cb, onErr) { return dbm.onValue(dbm.ref(db, path), s => cb(s.val()), e => onErr && onErr(e)); },
+    set(path, val) { return dbm.set(dbm.ref(db, path), val); },
+    update(path, obj) { return dbm.update(dbm.ref(db, path), obj); },
+    remove(path) { return dbm.remove(dbm.ref(db, path)); },
+  };
+  return api;
+}
+
+function connectDemo(role) {
+  const KEY = "kotoba-deutsch-demo-v1";
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(tree)); } catch {} };
+  let tree = load();
+  const listeners = new Set();
+
+  const parts = p => p.split("/").filter(Boolean);
+  const get = p => parts(p).reduce((o, k) => (o == null ? undefined : o[k]), tree);
+  const clone = v => (v === undefined ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => listeners.forEach(l => l.cb(clone(get(l.path))));
+
+  function write(p, val) {
+    const ks = parts(p);
+    let o = tree;
+    for (let i = 0; i < ks.length - 1; i++) {
+      if (o[ks[i]] == null || typeof o[ks[i]] !== "object") o[ks[i]] = {};
+      o = o[ks[i]];
+    }
+    const last = ks[ks.length - 1];
+    if (val === null || val === undefined) delete o[last]; else o[last] = clone(val);
+  }
+
+  window.addEventListener("storage", e => { if (e.key === KEY) { tree = load(); notify(); } });
+
+  // 学生役はタブごとに別人として扱う
+  let uid;
+  if (role === "student") {
+    try { uid = sessionStorage.getItem("kotoba-deutsch-demo-uid"); } catch {}
+    if (!uid) { uid = "demo-" + Math.random().toString(36).slice(2, 10); try { sessionStorage.setItem("kotoba-deutsch-demo-uid", uid); } catch {} }
+  } else uid = "teacher";
+
+  const info = () => ({ uid, teacher: role !== "student", name: "デモ" });
+  const api = {
+    demo: true,
+    get uid() { return uid; },
+    authInfo: info,
+    onAuth(cb) { cb(info()); return () => {}; },
+    async signIn() {}, async signOut() {},
+    onValue(path, cb) { const l = { path, cb }; listeners.add(l); cb(clone(get(path))); return () => listeners.delete(l); },
+    async set(path, val) { write(path, val); save(); notify(); },
+    async update(path, obj) { for (const k in obj) write(path + "/" + k, obj[k]); save(); notify(); },
+    async remove(path) { write(path, null); save(); notify(); },
+  };
+  return api;
+}
+
+// ===== 共通部分ここまで =====
+
+// ===== 添削の表示（学生用・スクリーン用で共通） =====
+// marks: { id: { s: 開始位置, e: 終了位置, t: "hl"（マーカー）| "fix"（修正）, fix: 修正後の語句 } }
+function renderAnnotated(text, marks) {
+  text = String(text || "");
+  const list = Object.entries(marks || {}).map(([id, m]) => ({ id, ...m }))
+    .filter(m => m && m.e > m.s && m.s >= 0 && m.e <= text.length)
+    .sort((a, b) => a.s - b.s);
+  const plain = (a, b) => (a < b ? `<span data-o="${a}">${escapeHtml(text.slice(a, b))}</span>` : "");
+  let out = "", pos = 0;
+  for (const m of list) {
+    if (m.s < pos) continue;
+    out += plain(pos, m.s);
+    const orig = `<span data-o="${m.s}">${escapeHtml(text.slice(m.s, m.e))}</span>`;
+    if (m.t === "fix") out += `<span class="mk fix" data-id="${escapeHtml(m.id)}"><del>${orig}</del><ins>${escapeHtml(m.fix || "")}</ins></span>`;
+    else out += `<mark class="mk hl" data-id="${escapeHtml(m.id)}">${orig}</mark>`;
+    pos = m.e;
+  }
+  return out + plain(pos, text.length);
+}
+function wordCount(t) { return (String(t).trim().match(/\S+/g) || []).length; }
+// 提出順に並べ、通し番号を振る（書き直しても番号は変わらない）
+function orderedTexts(texts, hidden) {
+  return Object.entries(texts || {})
+    .filter(([uid, t]) => t && t.text && !(hidden && hidden[uid]))
+    .map(([uid, t]) => ({ uid, ...t }))
+    .sort((a, b) => (a.first || a.ts || 0) - (b.first || b.ts || 0))
+    .map((t, i) => ({ ...t, no: i + 1 }));
+}
+// ===== 添削の表示ここまで =====
+
+
+const COURSE = "ドイツ語ライティング";
+const MAX_LEN = 1500;
+const BASE = "writing";
+
+const $ = id => document.getElementById(id);
+$("course").textContent = COURSE;
+if (isDemo) document.body.insertAdjacentHTML("beforeend", '<span class="demo-badge">デモ</span>');
+
+let api, sid = null, meta = {}, texts = {}, notes = {}, hidden = {};
+let unsub = [];
+let lastPhase = null;
+const DRAFT_KEY = () => `kotoba-deutsch-draft-${sid}`;
+const loadDraft = () => { try { return localStorage.getItem(DRAFT_KEY()) || ""; } catch { return ""; } };
+const saveDraft = v => { try { localStorage.setItem(DRAFT_KEY(), v); } catch {} };
+
+try { api = await connect({ role: "student" }); }
+catch (e) {
+  $("app").innerHTML = `<div class="center">接続できませんでした。<br>ページを読み込み直してください。<br><small>${escapeHtml(e.message || e)}</small></div>`;
+  throw e;
+}
+
+const HELP = `
+<details class="help" id="help" open>
+  <summary>ä ö ü ß の入力方法</summary>
+  <table>
+    <tr><th>Mac</th><td><kbd>option</kbd>＋<kbd>u</kbd> を押してから <kbd>a</kbd> / <kbd>o</kbd> / <kbd>u</kbd> → ä ö ü<br>
+      大文字は最後に <kbd>shift</kbd>＋<kbd>A</kbd> など → Ä Ö Ü<br><kbd>option</kbd>＋<kbd>s</kbd> → ß
+      <div class="note">（英字入力モードで。うまくいかないときは、キーを長押しすると候補が出ることもあります）</div></td></tr>
+    <tr><th>Windows</th><td><kbd>Alt</kbd> を押したまま、テンキーで数字を入力して離す<br>
+      ä <kbd>0228</kbd>　ö <kbd>0246</kbd>　ü <kbd>0252</kbd>　ß <kbd>0223</kbd><br>
+      Ä <kbd>0196</kbd>　Ö <kbd>0214</kbd>　Ü <kbd>0220</kbd>
+      <div class="note">（テンキーがないPCでは、「設定」→「時刻と言語」→「言語と地域」でドイツ語キーボードを追加する方法もあります）</div></td></tr>
+    <tr><th>スマホ・<br>タブレット</th><td><kbd>a</kbd> <kbd>o</kbd> <kbd>u</kbd> <kbd>s</kbd> のキーを長押しすると、ä ö ü ß が選べます。</td></tr>
+    <tr><th>どうしても<br>入力できないとき</th><td>ae, oe, ue, ss と書いても構いません（例：Mädchen → Maedchen）。</td></tr>
+  </table>
+</details>`;
+
+function render() {
+  $("title").textContent = meta.title || "ドイツ語ライティング";
+  $("prompt").textContent = meta.prompt || "";
+  const phase = sid ? (meta.phase || "idle") : "none";
+  if (phase === "write") { if (lastPhase !== "write") renderWrite(); else refreshMine(); }
+  else if (phase === "read" || phase === "closed") renderRead(phase);
+  else $("app").innerHTML = `<div class="center"><span class="big">✎</span>合図があったら、この画面が自動で切り替わります。</div>${HELP}`;
+  lastPhase = phase;
+}
+
+function renderWrite() {
+  $("app").innerHTML = `
+    <span class="step">① 書いて送る</span>
+    <p class="lead">ドイツ語で書いて「送る」を押してください。
+      <small>名前は表示されません。この段階のあいだは、何度でも書き直して送り直せます（最後に送ったものが残ります）。</small></p>
+    <textarea id="tx" lang="de" spellcheck="false" autocorrect="off" autocapitalize="sentences" maxlength="${MAX_LEN}" placeholder="Hier schreiben ..."></textarea>
+    <div class="row">
+      <span class="counter" id="cnt"></span>
+      <button class="primary" id="send">送る</button>
+    </div>
+    <div class="status" id="st"></div>
+    ${HELP}
+  `;
+  const tx = $("tx");
+  const mine = texts[api.uid];
+  tx.value = loadDraft() || (mine ? mine.text : "");
+  const upd = () => { $("cnt").textContent = `${wordCount(tx.value)} Wörter ・ ${tx.value.length} 文字`; saveDraft(tx.value); };
+  tx.addEventListener("input", upd); upd();
+  $("send").addEventListener("click", send);
+  refreshMine();
+}
+function refreshMine() {
+  const st = $("st"); if (!st || st.dataset.busy) return;
+  const mine = texts[api.uid];
+  if (mine && !st.textContent) { st.className = "status ok"; st.textContent = "送信済みです（書き直して送り直すこともできます）"; }
+}
+
+async function send() {
+  const tx = $("tx"), btn = $("send"), st = $("st");
+  const text = tx.value.replace(/\s+$/g, "").replace(/^\s+/g, "");
+  if (!text) { st.className = "status err"; st.textContent = "作文を入力してください"; return; }
+  if (text.length > MAX_LEN) { st.className = "status err"; st.textContent = `長すぎます（${MAX_LEN}文字まで）`; return; }
+  btn.disabled = true; st.dataset.busy = "1";
+  const prev = texts[api.uid];
+  try {
+    await api.set(`${BASE}/sessions/${sid}/texts/${api.uid}`, { text, ts: Date.now(), first: (prev && prev.first) || Date.now() });
+    st.className = "status ok"; st.textContent = "送りました。スクリーンに表示されます";
+  } catch (e) {
+    st.className = "status err"; st.textContent = "送れませんでした（受付が終わったかもしれません）";
+  }
+  btn.disabled = false; delete st.dataset.busy;
+}
+
+function renderRead(phase) {
+  const list = orderedTexts(texts, hidden);
+  $("app").innerHTML = `
+    <span class="step">${phase === "read" ? "② みんなの作文を読む" : "締め切りました"}</span>
+    <p class="lead">スクリーンと同じ番号で並んでいます。<span style="background:#fff1a8">黄色</span>は「考えてみよう」、<span style="color:#b3392f;text-decoration:line-through">赤</span>→<span style="color:#2f7d4f;font-weight:600">緑</span>は修正の例です。</p>
+    ${list.length ? list.map(t => {
+      const n = notes[t.uid] || {};
+      return `<div class="entry${t.uid === api.uid ? " mine" : ""}">
+        <div class="no">#${t.no}${t.uid === api.uid ? '<span class="me">あなた</span>' : ""}</div>
+        <div class="txt" lang="de">${renderAnnotated(t.text, n.marks)}</div>
+        ${n.comment ? `<div class="cm">${escapeHtml(n.comment)}</div>` : ""}
+      </div>`;
+    }).join("") : `<div class="center">まだ作文がありません</div>`}
+  `;
+}
+
+// 購読開始
+api.onValue(`${BASE}/current`, v => {
+  if (v === sid) return;
+  sid = v;
+  unsub.forEach(f => f()); unsub = [];
+  meta = {}; texts = {}; notes = {}; hidden = {}; lastPhase = null;
+  if (!sid) { render(); return; }
+  const b = `${BASE}/sessions/${sid}`;
+  unsub.push(api.onValue(`${b}/meta`, v => { meta = v || {}; render(); }));
+  unsub.push(api.onValue(`${b}/texts`, v => { texts = v || {}; if ((meta.phase || "") !== "write") render(); else refreshMine(); }));
+  unsub.push(api.onValue(`${b}/notes`, v => { notes = v || {}; if ((meta.phase || "") !== "write") render(); }));
+  unsub.push(api.onValue(`${b}/hidden`, v => { hidden = v || {}; if ((meta.phase || "") !== "write") render(); }));
+});
+</script>
+</body>
+</html>

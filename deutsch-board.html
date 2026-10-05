@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作文ボード｜ドイツ語ライティング</title>
+<style>
+  :root {
+    --ink: #1f1f1d; --sub: #6b6a65; --line: #e3e1da; --bg: #f7f6f2;
+    --accent: #1f5f9e; --ok: #2f7d4f; --err: #b3392f;
+    --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", "Meiryo", sans-serif;
+    --de: "Helvetica Neue", Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: var(--font); background: var(--bg); color: var(--ink); display: flex; flex-direction: column; overflow: hidden; }
+
+  #bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 14px; background: #fff; border-bottom: 1px solid var(--line); font-size: 13px; }
+  #bar.hidden { display: none; }
+  .brand { font-weight: 700; letter-spacing: .04em; }
+  select, button { font-family: inherit; font-size: 13px; padding: 6px 10px; border-radius: 7px; border: 1px solid #d3d0c7; background: #fff; color: var(--ink); cursor: pointer; }
+  button:hover { background: #f1efe9; }
+  .seg { display: inline-flex; border: 1px solid #d3d0c7; border-radius: 8px; overflow: hidden; }
+  .seg button { border: none; border-radius: 0; border-right: 1px solid #d3d0c7; padding: 6px 12px; }
+  .seg button:last-child { border-right: none; }
+  .seg button.on { background: var(--ink); color: #fff; }
+  .sp { flex: 1; }
+  .who { color: var(--sub); font-size: 12px; }
+  .teacher-only { display: none !important; }
+  body.can-edit .teacher-only { display: inline-flex !important; }
+  .test-tools { display: none; gap: 6px; }
+  body.demo .test-tools, body.can-edit.testing .test-tools { display: inline-flex; }
+  .test-tools button { background: #fff6d6; border-color: #e7cf7a; }
+
+  #pline { padding: 12px 26px 6px; font-size: clamp(15px, 1.5vw, 24px); line-height: 1.55; color: #3a3a37; display: flex; gap: 14px; align-items: baseline; }
+  #pline .ttl { flex-shrink: 0; font-size: .72em; font-weight: 700; color: var(--accent); }
+  #ptext { outline: none; border-radius: 4px; min-width: 6em; display: inline-block; white-space: pre-wrap; }
+  body.can-edit #ptext:hover { background: #fff; cursor: text; }
+  body.can-edit #ptext:empty::before { content: "（ここをクリックして課題文を入力）"; color: #b4b2aa; }
+
+  /* 一覧 */
+  #grid { flex: 1; overflow: auto; padding: 10px 22px 60px; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; align-content: start; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 14px; cursor: pointer; transition: box-shadow .15s, transform .15s; animation: pop .4s ease; }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); transform: translateY(-1px); }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .card .hd { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .card .no { font-weight: 700; color: var(--accent); font-size: 15px; }
+  .card .meta { font-size: 11.5px; color: var(--sub); }
+  .card .txt { font-family: var(--de); font-size: 16.5px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 13.6em; overflow: hidden; position: relative; }
+  .card .txt.long::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2.2em; background: linear-gradient(transparent, #fff); }
+  .card.done { border-color: #b9d3ea; }
+  #empty { grid-column: 1 / -1; text-align: center; color: #b4b2aa; font-size: 22px; padding: 80px 0; }
+  #stats { position: fixed; right: 16px; bottom: 12px; font-size: 14px; color: var(--sub); background: rgba(255,255,255,.9); padding: 4px 12px; border-radius: 20px; }
+  #phase-label { position: fixed; left: 16px; bottom: 12px; font-size: 14px; font-weight: 700; color: #fff; background: var(--accent); padding: 4px 14px; border-radius: 20px; }
+  #phase-label:empty { display: none; }
+
+  /* 添削表示 */
+  mark.hl { background: #fff1a8; color: inherit; border-radius: 3px; padding: 0 1px; }
+  .fix del { color: var(--err); text-decoration: line-through; text-decoration-thickness: 2px; }
+  .fix ins { color: var(--ok); text-decoration: none; font-weight: 600; background: #e8f4ec; border-radius: 3px; padding: 0 3px; margin-left: 2px; }
+
+  /* 拡大表示 */
+  #focus { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; z-index: 30; }
+  #focus.show { display: flex; }
+  #focus .fbar { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: #fff; font-size: 13px; }
+  #focus .fno { font-size: 20px; font-weight: 700; color: var(--accent); margin-right: 6px; }
+  #focus .fbody { flex: 1; overflow: auto; padding: 28px 6vw 40px; }
+  #ftext { font-family: var(--de); font-size: clamp(24px, 2.6vw, 44px); line-height: 2.05; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 1400px; margin: 0 auto; }
+  body.can-edit #ftext { cursor: text; }
+  body.can-edit #ftext .mk { cursor: pointer; }
+  #fcomment { display: block; width: 100%; max-width: 1400px; margin: 26px auto 0; min-height: 3.2em; font-family: var(--font); font-size: clamp(16px, 1.4vw, 24px); line-height: 1.6; padding: 10px 14px; border: 1px dashed #c8c5bb; border-radius: 10px; background: #f4f8fc; color: var(--ink); resize: vertical; outline: none; }
+  #fcomment:read-only { border-color: transparent; }
+  #fcomment:read-only:placeholder-shown { display: none; }
+  .fhelp { max-width: 1400px; margin: 10px auto 0; font-size: 12px; color: #a8a59c; }
+
+  /* 選択したときの小さな道具箱 */
+  #tool { position: fixed; z-index: 40; display: none; background: #fff; border: 1px solid #d3d0c7; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.14); padding: 8px; gap: 6px; align-items: center; }
+  #tool.show { display: flex; }
+  #tool input { font-family: var(--de); font-size: 16px; padding: 6px 8px; border: 1px solid #d3d0c7; border-radius: 6px; width: 220px; outline: none; }
+  #tool input:focus { border-color: var(--accent); }
+  #tool .b-hl { background: #fff1a8; border-color: #e6d36a; }
+  #tool .b-fix { background: #e8f4ec; border-color: #a9d3b8; color: var(--ok); font-weight: 600; }
+  #mkmenu { position: fixed; z-index: 40; display: none; background: #fff; border: 1px solid #d3d0c7; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.14); padding: 6px; }
+  #mkmenu.show { display: block; }
+
+  .toast { position: fixed; bottom: 54px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 18px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <span class="brand">作文ボード</span>
+  <select id="sel" class="teacher-only"></select>
+  <span class="seg teacher-only" id="phases">
+    <button data-p="idle">準備</button>
+    <button data-p="write">① 書く</button>
+    <button data-p="read">② 読む</button>
+    <button data-p="closed">締切</button>
+  </span>
+  <button id="b-save" title="作文と添削をテキストで保存">テキスト保存</button>
+  <span class="test-tools">
+    <button id="d-seed">サンプル投入</button>
+    <button id="d-reset">リセット</button>
+  </span>
+  <span class="sp"></span>
+  <span class="who" id="who"></span>
+  <button id="b-login">教員ログイン</button>
+  <button id="b-hide" title="バーを隠す（H キーで切替）">隠す</button>
+</div>
+
+<div id="pline"><span class="ttl" id="sttl"></span><span id="ptext"></span></div>
+
+<div id="grid"><div id="empty"></div></div>
+<span id="phase-label"></span>
+<span id="stats"></span>
+
+<div id="focus">
+  <div class="fbar">
+    <span class="fno" id="fno"></span>
+    <button id="f-prev">← 前</button>
+    <button id="f-next">次 →</button>
+    <span class="sp"></span>
+    <button id="f-hide" class="teacher-only">この作文を非表示</button>
+    <button id="f-close">一覧に戻る（Esc）</button>
+  </div>
+  <div class="fbody">
+    <div id="ftext" lang="de"></div>
+    <textarea id="fcomment" placeholder="コメント（クリックして入力。学生の画面にも表示されます）"></textarea>
+    <p class="fhelp teacher-only" id="fhelp">語句をドラッグで選ぶと、マーカーや修正を付けられます。付けた印をクリックすると消せます。</p>
+  </div>
+</div>
+
+<div id="tool">
+  <input id="t-fix" lang="de" placeholder="直した表現（空欄ならマーカーのみ）">
+  <button class="b-fix" id="t-dofix">修正</button>
+  <button class="b-hl" id="t-dohl">マーカー</button>
+</div>
+<div id="mkmenu"><button id="m-del">この印を消す</button></div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// ===== 共通部分（データ層。講義用 send/board と同じ Firebase を使い、保存場所だけ writing/ に分けています） =====
+const firebaseConfig = {
+  apiKey: "AIzaSyBkzsfU81X3hoF32nlg58zHeHJcVXhAPG0",
+  authDomain: "classroom-stt.firebaseapp.com",
+  databaseURL: "https://classroom-stt-default-rtdb.firebaseio.com",
+  projectId: "classroom-stt",
+  storageBucket: "classroom-stt.firebasestorage.app",
+  messagingSenderId: "74071031952",
+  appId: "1:74071031952:web:dc22ed40bea81c88661815"
+};
+
+const isDemo = new URLSearchParams(location.search).has("demo");
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function connect({ role = "student" } = {}) {
+  return isDemo ? connectDemo(role) : connectFirebase(role);
+}
+
+async function connectFirebase(role) {
+  const V = "12.11.0";
+  const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+  const dbm = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`);
+  const am = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+
+  const app = initializeApp(firebaseConfig);
+  const db = dbm.getDatabase(app);
+  const auth = am.getAuth(app);
+
+  const authListeners = new Set();
+  let user = null;
+  am.onAuthStateChanged(auth, u => { user = u; authListeners.forEach(cb => cb(api.authInfo())); });
+
+  if (role === "student") {
+    await am.signInAnonymously(auth);
+    await new Promise(res => { const off = am.onAuthStateChanged(auth, u => { if (u) { off(); res(); } }); });
+  } else {
+    await new Promise(res => { const off = am.onAuthStateChanged(auth, () => { off(); res(); }); });
+  }
+
+  const api = {
+    demo: false,
+    get uid() { return user ? user.uid : null; },
+    authInfo() {
+      return {
+        uid: user ? user.uid : null,
+        teacher: !!(user && !user.isAnonymous),
+        name: user ? (user.displayName || user.email || "") : "",
+      };
+    },
+    onAuth(cb) { authListeners.add(cb); cb(api.authInfo()); return () => authListeners.delete(cb); },
+    async signIn() { await am.signInWithPopup(auth, new am.GoogleAuthProvider()); },
+    async signOut() { await am.signOut(auth); },
+    onValue(path, cb, onErr) { return dbm.onValue(dbm.ref(db, path), s => cb(s.val()), e => onErr && onErr(e)); },
+    set(path, val) { return dbm.set(dbm.ref(db, path), val); },
+    update(path, obj) { return dbm.update(dbm.ref(db, path), obj); },
+    remove(path) { return dbm.remove(dbm.ref(db, path)); },
+  };
+  return api;
+}
+
+function connectDemo(role) {
+  const KEY = "kotoba-deutsch-demo-v1";
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(tree)); } catch {} };
+  let tree = load();
+  const listeners = new Set();
+
+  const parts = p => p.split("/").filter(Boolean);
+  const get = p => parts(p).reduce((o, k) => (o == null ? undefined : o[k]), tree);
+  const clone = v => (v === undefined ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => listeners.forEach(l => l.cb(clone(get(l.path))));
+
+  function write(p, val) {
+    const ks = parts(p);
+    let o = tree;
+    for (let i = 0; i < ks.length - 1; i++) {
+      if (o[ks[i]] == null || typeof o[ks[i]] !== "object") o[ks[i]] = {};
+      o = o[ks[i]];
+    }
+    const last = ks[ks.length - 1];
+    if (val === null || val === undefined) delete o[last]; else o[last] = clone(val);
+  }
+
+  window.addEventListener("storage", e => { if (e.key === KEY) { tree = load(); notify(); } });
+
+  // 学生役はタブごとに別人として扱う
+  let uid;
+  if (role === "student") {
+    try { uid = sessionStorage.getItem("kotoba-deutsch-demo-uid"); } catch {}
+    if (!uid) { uid = "demo-" + Math.random().toString(36).slice(2, 10); try { sessionStorage.setItem("kotoba-deutsch-demo-uid", uid); } catch {} }
+  } else uid = "teacher";
+
+  const info = () => ({ uid, teacher: role !== "student", name: "デモ" });
+  const api = {
+    demo: true,
+    get uid() { return uid; },
+    authInfo: info,
+    onAuth(cb) { cb(info()); return () => {}; },
+    async signIn() {}, async signOut() {},
+    onValue(path, cb) { const l = { path, cb }; listeners.add(l); cb(clone(get(path))); return () => listeners.delete(l); },
+    async set(path, val) { write(path, val); save(); notify(); },
+    async update(path, obj) { for (const k in obj) write(path + "/" + k, obj[k]); save(); notify(); },
+    async remove(path) { write(path, null); save(); notify(); },
+  };
+  return api;
+}
+
+// ===== 共通部分ここまで =====
+
+// ===== 添削の表示（学生用・スクリーン用で共通） =====
+// marks: { id: { s: 開始位置, e: 終了位置, t: "hl"（マーカー）| "fix"（修正）, fix: 修正後の語句 } }
+function renderAnnotated(text, marks) {
+  text = String(text || "");
+  const list = Object.entries(marks || {}).map(([id, m]) => ({ id, ...m }))
+    .filter(m => m && m.e > m.s && m.s >= 0 && m.e <= text.length)
+    .sort((a, b) => a.s - b.s);
+  const plain = (a, b) => (a < b ? `<span data-o="${a}">${escapeHtml(text.slice(a, b))}</span>` : "");
+  let out = "", pos = 0;
+  for (const m of list) {
+    if (m.s < pos) continue;
+    out += plain(pos, m.s);
+    const orig = `<span data-o="${m.s}">${escapeHtml(text.slice(m.s, m.e))}</span>`;
+    if (m.t === "fix") out += `<span class="mk fix" data-id="${escapeHtml(m.id)}"><del>${orig}</del><ins>${escapeHtml(m.fix || "")}</ins></span>`;
+    else out += `<mark class="mk hl" data-id="${escapeHtml(m.id)}">${orig}</mark>`;
+    pos = m.e;
+  }
+  return out + plain(pos, text.length);
+}
+function wordCount(t) { return (String(t).trim().match(/\S+/g) || []).length; }
+// 提出順に並べ、通し番号を振る（書き直しても番号は変わらない）
+function orderedTexts(texts, hidden) {
+  return Object.entries(texts || {})
+    .filter(([uid, t]) => t && t.text && !(hidden && hidden[uid]))
+    .map(([uid, t]) => ({ uid, ...t }))
+    .sort((a, b) => (a.first || a.ts || 0) - (b.first || b.ts || 0))
+    .map((t, i) => ({ ...t, no: i + 1 }));
+}
+// ===== 添削の表示ここまで =====
+
+
+const COURSE = "ドイツ語ライティング";
+const BASE = "writing";
+// 回の一覧（名前は自由に変えられます）
+const SESSIONS = [
+  ...Array.from({ length: 15 }, (_, i) => ({ id: `d${String(i + 1).padStart(2, "0")}`, title: `第${i + 1}回` })),
+  { id: "test", title: "動作テスト" },
+];
+const PHASE_LABEL = { idle: "", write: "① 書いて送る", read: "② みんなで読む", closed: "締切" };
+
+const $ = id => document.getElementById(id);
+function toast(m, ms = 2400) { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), ms); }
+if (isDemo) document.body.classList.add("demo");
+
+let api, sid = null, session = {}, offSession = null, canEdit = false;
+let list = [], focusIdx = -1, selRange = null, menuMark = null;
+
+try { api = await connect({ role: "board" }); }
+catch (e) { $("empty").textContent = "接続できませんでした：" + (e.message || e); throw e; }
+
+function denied(e) { console.error(e); toast(String(e && (e.code || e.message)).includes("PERMISSION") ? "権限がありません（教員ログインを確認）" : "保存できませんでした"); }
+
+/* ---------- ログイン ---------- */
+api.onAuth(info => {
+  canEdit = !!info.teacher;
+  document.body.classList.toggle("can-edit", canEdit);
+  $("b-login").textContent = api.demo ? "デモ" : (info.teacher ? "ログアウト" : "教員ログイン");
+  $("b-login").disabled = api.demo;
+  $("who").textContent = info.teacher && !api.demo ? info.name : "";
+  $("ptext").contentEditable = canEdit ? "true" : "false";
+  $("fcomment").readOnly = !canEdit;
+});
+$("b-login").onclick = async () => {
+  try { if (api.authInfo().teacher) await api.signOut(); else await api.signIn(); }
+  catch (e) { toast("ログインできませんでした：" + (e.code || e.message)); }
+};
+
+/* ---------- バー ---------- */
+function setBarHidden(h) { $("bar").classList.toggle("hidden", h); }
+$("b-hide").onclick = () => { setBarHidden(true); toast("H キーでバーを再表示"); };
+document.addEventListener("keydown", e => {
+  if (e.target.isContentEditable || ["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+  if (e.key === "h" || e.key === "H") setBarHidden(!$("bar").classList.contains("hidden"));
+  if ($("focus").classList.contains("show")) {
+    if (e.key === "Escape") closeFocus();
+    if (e.key === "ArrowRight") step(1);
+    if (e.key === "ArrowLeft") step(-1);
+  }
+});
+
+/* ---------- 回とフェーズ ---------- */
+SESSIONS.forEach(s => $("sel").insertAdjacentHTML("beforeend", `<option value="${s.id}">${escapeHtml(s.title)}</option>`));
+function peekOnce(path) { return new Promise(res => { let off; off = api.onValue(path, v => { res(v); setTimeout(() => off && off()); }); }); }
+$("sel").onchange = async () => {
+  const id = $("sel").value, s = SESSIONS.find(x => x.id === id);
+  try {
+    const m = (await peekOnce(`${BASE}/sessions/${id}/meta`)) || {};
+    await api.update(`${BASE}/sessions/${id}/meta`, { title: m.title || s.title, prompt: m.prompt || "", phase: m.phase || "idle" });
+    await api.set(`${BASE}/current`, id);
+  } catch (e) { denied(e); }
+};
+$("phases").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b || !sid) return;
+  try { await api.set(`${BASE}/sessions/${sid}/meta/phase`, b.dataset.p); } catch (err) { denied(err); }
+});
+$("ptext").addEventListener("blur", async () => {
+  if (!canEdit || !sid) return;
+  const q = $("ptext").innerText.trim();
+  if (q !== (session.meta?.prompt || "")) { try { await api.set(`${BASE}/sessions/${sid}/meta/prompt`, q); toast("課題文を更新しました"); } catch (e) { denied(e); } }
+});
+$("ptext").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.target.blur(); } });
+
+/* ---------- 描画 ---------- */
+function renderAll() {
+  const meta = session.meta || {};
+  const phase = meta.phase || "idle";
+  $("sttl").textContent = meta.title || (sid ? "" : "回が選ばれていません");
+  if (document.activeElement !== $("ptext")) $("ptext").textContent = meta.prompt || "";
+  document.querySelectorAll("#phases button").forEach(b => b.classList.toggle("on", b.dataset.p === phase));
+  $("phase-label").textContent = PHASE_LABEL[phase] || "";
+  document.body.classList.toggle("testing", sid === "test");
+
+  list = orderedTexts(session.texts, session.hidden);
+  const notes = session.notes || {};
+  const grid = $("grid");
+  grid.querySelectorAll(".card").forEach(c => c.remove());
+  $("empty").style.display = list.length ? "none" : "";
+  $("empty").textContent = !sid ? "回を選んでください" : (phase === "write" ? "作文を待っています…" : "まだ作文がありません");
+  list.forEach((t, i) => {
+    const n = notes[t.uid] || {};
+    const nm = Object.keys(n.marks || {}).length;
+    const card = document.createElement("div");
+    card.className = "card" + (nm || n.comment ? " done" : "");
+    card.innerHTML = `<div class="hd"><span class="no">#${t.no}</span><span class="meta">${wordCount(t.text)} Wörter${nm ? `　添削 ${nm}` : ""}</span></div>
+      <div class="txt" lang="de">${renderAnnotated(t.text, n.marks)}</div>`;
+    card.onclick = () => openFocus(i);
+    grid.appendChild(card);
+    const tx = card.querySelector(".txt");
+    if (tx.scrollHeight > tx.clientHeight + 2) tx.classList.add("long");
+  });
+  $("stats").textContent = sid ? `提出 ${list.length}` : "";
+  if ($("focus").classList.contains("show")) renderFocus();
+}
+
+/* ---------- 拡大表示と添削 ---------- */
+function openFocus(i) { focusIdx = i; $("focus").classList.add("show"); renderFocus(); }
+function closeFocus() { $("focus").classList.remove("show"); hideTools(); focusIdx = -1; }
+function step(d) { if (!list.length) return; focusIdx = (focusIdx + d + list.length) % list.length; hideTools(); renderFocus(); }
+$("f-prev").onclick = () => step(-1);
+$("f-next").onclick = () => step(1);
+$("f-close").onclick = closeFocus;
+
+function current() { return list[focusIdx]; }
+function renderFocus() {
+  const t = current();
+  if (!t) { closeFocus(); return; }
+  const n = (session.notes || {})[t.uid] || {};
+  $("fno").textContent = `#${t.no} / ${list.length}`;
+  $("ftext").innerHTML = renderAnnotated(t.text, n.marks);
+  if (document.activeElement !== $("fcomment")) $("fcomment").value = n.comment || "";
+}
+
+// 選択範囲を、元の作文の文字位置に直す
+function offsetOf(node, off) {
+  const el = node.nodeType === 3 ? node.parentElement : node;
+  const o = el && el.closest("[data-o]");
+  if (o && $("ftext").contains(o)) return +o.dataset.o + (node.nodeType === 3 ? off : 0);
+  return null;
+}
+$("ftext").addEventListener("mouseup", e => {
+  if (!canEdit) return;
+  setTimeout(() => {
+    const s = window.getSelection();
+    if (!s || s.isCollapsed || !s.rangeCount) return;
+    const r = s.getRangeAt(0);
+    let a = offsetOf(r.startContainer, r.startOffset), b = offsetOf(r.endContainer, r.endOffset);
+    if (a == null || b == null) { toast("修正の部分をまたがない範囲で選んでください"); return; }
+    if (a > b) [a, b] = [b, a];
+    const text = current().text;
+    while (a < b && /\s/.test(text[a])) a++;
+    while (b > a && /\s/.test(text[b - 1])) b--;
+    if (b <= a) return;
+    selRange = { s: a, e: b };
+    const rect = r.getBoundingClientRect();
+    const tool = $("tool");
+    $("t-fix").value = "";
+    tool.classList.add("show");
+    tool.style.left = Math.max(8, Math.min(window.innerWidth - tool.offsetWidth - 8, rect.left)) + "px";
+    tool.style.top = (rect.bottom + 8 + tool.offsetHeight > window.innerHeight ? rect.top - tool.offsetHeight - 8 : rect.bottom + 8) + "px";
+    $("t-fix").focus();
+  }, 0);
+});
+function hideTools() { $("tool").classList.remove("show"); $("mkmenu").classList.remove("show"); selRange = null; menuMark = null; }
+document.addEventListener("mousedown", e => {
+  if (!e.target.closest("#tool") && !e.target.closest("#mkmenu")) { $("tool").classList.remove("show"); $("mkmenu").classList.remove("show"); }
+});
+
+async function addMark(type) {
+  const t = current(); if (!t || !selRange) return;
+  const fix = $("t-fix").value.trim();
+  if (type === "fix" && !fix) type = "hl";
+  const marks = { ...(((session.notes || {})[t.uid] || {}).marks || {}) };
+  for (const [id, m] of Object.entries(marks)) if (m.s < selRange.e && selRange.s < m.e) delete marks[id];   // 重なる印は置き換え
+  const id = "m" + Date.now().toString(36);
+  marks[id] = { s: selRange.s, e: selRange.e, t: type, ...(type === "fix" ? { fix } : {}) };
+  hideTools(); window.getSelection().removeAllRanges();
+  try { await api.set(`${BASE}/sessions/${sid}/notes/${t.uid}/marks`, marks); } catch (e) { denied(e); }
+}
+$("t-dofix").onclick = () => addMark("fix");
+$("t-dohl").onclick = () => addMark("hl");
+$("t-fix").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) addMark("fix"); if (e.key === "Escape") hideTools(); });
+
+$("ftext").addEventListener("click", e => {
+  if (!canEdit) return;
+  const mk = e.target.closest(".mk"); if (!mk) return;
+  const s = window.getSelection(); if (s && !s.isCollapsed) return;
+  menuMark = mk.dataset.id;
+  const r = mk.getBoundingClientRect(), m = $("mkmenu");
+  m.classList.add("show"); m.style.left = r.left + "px"; m.style.top = (r.bottom + 6) + "px";
+});
+$("m-del").onclick = async () => {
+  const t = current(); if (!t || !menuMark) return;
+  const id = menuMark; hideTools();
+  try { await api.remove(`${BASE}/sessions/${sid}/notes/${t.uid}/marks/${id}`); } catch (e) { denied(e); }
+};
+$("fcomment").addEventListener("blur", async () => {
+  const t = current(); if (!canEdit || !t) return;
+  const v = $("fcomment").value.trim();
+  if (v === (((session.notes || {})[t.uid] || {}).comment || "")) return;
+  try { await api.set(`${BASE}/sessions/${sid}/notes/${t.uid}/comment`, v || null); } catch (e) { denied(e); }
+});
+$("f-hide").onclick = async () => {
+  const t = current(); if (!t) return;
+  if (!confirm(`#${t.no} を非表示にしますか？（学生の画面からも消えます）`)) return;
+  try { await api.set(`${BASE}/sessions/${sid}/hidden/${t.uid}`, true); } catch (e) { denied(e); }
+};
+
+/* ---------- テキスト保存 ---------- */
+$("b-save").onclick = () => {
+  const meta = session.meta || {}, notes = session.notes || {};
+  const lines = [`${COURSE}　${meta.title || ""}　${new Date().toLocaleDateString("ja-JP")}`, `課題：${meta.prompt || ""}`, ""];
+  for (const t of list) {
+    const n = notes[t.uid] || {};
+    const marks = Object.values(n.marks || {}).sort((a, b) => a.s - b.s);
+    lines.push(`#${t.no}`, t.text);
+    for (const m of marks) lines.push(m.t === "fix" ? `  ・${t.text.slice(m.s, m.e)} → ${m.fix}` : `  ・［要検討］${t.text.slice(m.s, m.e)}`);
+    if (n.comment) lines.push(`  コメント：${n.comment}`);
+    lines.push("");
+  }
+  const a = document.createElement("a");
+  a.download = `作文_${(meta.title || sid || "").replace(/\s+/g, "_")}.txt`;
+  a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain" })); a.click();
+};
+
+/* ---------- 動作テスト用 ---------- */
+const SAMPLE = [
+  "Ich heiße Ken und ich bin Student. Ich wohne in Tokyo seit drei Jahren. Am Wochenende ich spiele gern Fußball mit meine Freunde.",
+  "Letzte Sommer bin ich nach Deutschland gefahren. Das Wetter war sehr schön und das Essen hat mir gut geschmeckt. Besonders die Brezel war lecker.",
+  "Mein Hobby ist Musik hören. Ich höre jeden Tag Musik, wenn ich mit dem Zug zur Uni fahre. Ich mag besonders Jazz, weil es ist entspannend.",
+  "In meiner Familie gibt es vier Personen: mein Vater, meine Mutter, meine Schwester und ich. Meine Schwester ist zwei Jahre jünger als mich.",
+  "Gestern habe ich in der Bibliothek gelernt. Danach ich habe mit einem Freund Kaffee getrunken. Wir haben über unsere Pläne für die Ferien gesprochen.",
+  "Ich möchte in Zukunft in Deutschland studieren. Deshalb lerne ich jeden Tag Deutsch, aber die Grammatik ist manchmal sehr schwierig für mich.\n\nIch denke, dass Sprachen lernen macht Spaß, weil man neue Menschen kennenlernen kann.",
+  "Mein Lieblingsessen ist Ramen. Ich esse es mindestens einmal in der Woche. Meine Mutter kocht auch sehr gut, aber Ramen kann sie nicht machen.",
+  "Heute ist das Wetter schlecht. Es regnet seit heute Morgen und ich habe keinen Regenschirm. Ich hoffe, dass morgen die Sonne scheint.",
+];
+$("d-seed").onclick = async () => {
+  if (!api.demo && sid !== "test") return;
+  if (!sid) { $("sel").value = "test"; await $("sel").onchange(); }
+  const upd = {}, now = Date.now();
+  SAMPLE.forEach((t, i) => { upd[`demo-s${i}`] = { text: t, ts: now + i, first: now + i }; });
+  try {
+    await api.update(`${BASE}/sessions/${sid}/texts`, upd);
+    if (!session.meta?.prompt) await api.set(`${BASE}/sessions/${sid}/meta/prompt`, "Schreiben Sie 3–5 Sätze über sich selbst.");
+  } catch (e) { denied(e); }
+};
+$("d-reset").onclick = async () => {
+  if (!api.demo && sid !== "test") return;
+  try {
+    for (const p of ["texts", "notes", "hidden"]) await api.remove(`${BASE}/sessions/${sid}/${p}`);
+    await api.set(`${BASE}/sessions/${sid}/meta/phase`, "idle");
+    closeFocus();
+  } catch (e) { denied(e); }
+};
+
+/* ---------- 購読開始 ---------- */
+let started = false;
+api.onValue(`${BASE}/current`, v => {
+  if (started && (v || null) === sid) return;   // 回が変わったときだけ切り替える
+  started = true;
+  sid = v || null;
+  if (offSession) offSession();
+  session = {};
+  $("sel").value = sid || "";
+  closeFocus();
+  if (sid) offSession = api.onValue(`${BASE}/sessions/${sid}`, v => { session = v || {}; renderAll(); });
+  renderAll();
+});
+if (api.demo) {
+  const cur = await peekOnce(`${BASE}/current`);
+  if (!cur) { $("sel").value = "test"; await $("sel").onchange(); }
+}
+</script>
+</body>
+</html>
