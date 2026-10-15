@@ -285,10 +285,18 @@ function orderedTexts(texts, hidden) {
 
 const COURSE = "ドイツ語ライティング";
 const BASE = "writing";
-// 回の一覧（名前は自由に変えられます）
+// クラスと回数（名前や回数は自由に変えられます。key は保存場所の名前なので、使い始めたら変えないでください）
+const CLASSES = [
+  { key: "a", name: "初級", count: 28 },
+  { key: "b", name: "中級", count: 14 },
+  { key: "c", name: "上級", count: 14 },
+];
+// 回の一覧（クラスごとに別の保存場所になるので、クラスどうしで混ざりません）
 const SESSIONS = [
-  ...Array.from({ length: 15 }, (_, i) => ({ id: `d${String(i + 1).padStart(2, "0")}`, title: `第${i + 1}回` })),
-  { id: "test", title: "動作テスト" },
+  ...CLASSES.flatMap(c => Array.from({ length: c.count }, (_, i) => ({
+    id: `${c.key}${String(i + 1).padStart(2, "0")}`, title: `${c.name} 第${i + 1}回`, group: c.name,
+  }))),
+  { id: "test", title: "動作テスト", group: "その他" },
 ];
 const PHASE_LABEL = { idle: "", write: "① 書いて送る", read: "② みんなで読む", closed: "締切" };
 
@@ -333,7 +341,11 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- 回とフェーズ ---------- */
-SESSIONS.forEach(s => $("sel").insertAdjacentHTML("beforeend", `<option value="${s.id}">${escapeHtml(s.title)}</option>`));
+$("sel").insertAdjacentHTML("beforeend", `<option value="" disabled>回を選ぶ…</option>`);
+[...new Set(SESSIONS.map(s => s.group))].forEach(g => {
+  const opts = SESSIONS.filter(s => s.group === g).map(s => `<option value="${s.id}">${escapeHtml(s.title)}</option>`).join("");
+  $("sel").insertAdjacentHTML("beforeend", `<optgroup label="${escapeHtml(g)}">${opts}</optgroup>`);
+});
 function peekOnce(path) { return new Promise(res => { let off; off = api.onValue(path, v => { res(v); setTimeout(() => off && off()); }); }); }
 $("sel").onchange = async () => {
   const id = $("sel").value, s = SESSIONS.find(x => x.id === id);
