@@ -57,6 +57,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
   <div class="tabs">
     <button class="tab on" data-tab="gacha">曲ガチャ</button>
     <button class="tab" data-tab="odai">記憶のお題</button>
+    <button class="tab" data-tab="all">曲一覧</button>
     <button class="tab" data-tab="list">歌えるリスト <span id="cnt"></span></button>
   </div>
 
@@ -95,6 +96,15 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
     <div class="box row">
       <input id="freeTitle" placeholder="思い出した曲名" style="flex:1;min-width:140px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit">
       <button class="btn ok small" id="addFree" style="padding:10px 14px">リストに追加</button>
+    </div>
+  </section>
+
+  <!-- 一覧 -->
+  <section id="tab-all" class="hidden">
+    <div class="box">
+      <div class="chips" id="allCats" style="margin-top:0"></div>
+      <p class="stat" style="text-align:left;margin:10px 0 0">年代順に並んでいます。気になった曲は「＋」でリストへ。</p>
+      <ul class="list" id="allList"></ul>
     </div>
   </section>
 
@@ -177,7 +187,7 @@ CAN YOU CELEBRATE?|安室奈美恵|1997|pop
 HOWEVER|GLAY|1997|pop
 ひだまりの詩|Le Couple|1997|pop
 White Love|SPEED|1997|pop
-HONEY|L'Arc～en～Ciel|1998|pop
+HONEY|L'Arc～en～Ciel|1998|vkei
 夜空ノムコウ|SMAP|1998|pop
 There will be love there -愛のある場所-|the brilliant green|1998|pop
 First Love|宇多田ヒカル|1999|pop
@@ -238,7 +248,7 @@ Troublemaker|嵐|2010|pop
 フライングゲット|AKB48|2011|pop
 家族になろうよ|福山雅治|2011|pop
 つけまつける|きゃりーぱみゅぱみゅ|2012|pop
-女々しくて|ゴールデンボンバー|2012|pop
+女々しくて|ゴールデンボンバー|2012|vkei
 ヒカリへ|miwa|2012|pop
 恋するフォーチュンクッキー|AKB48|2013|pop
 RPG|SEKAI NO OWARI|2013|pop
@@ -318,16 +328,177 @@ unravel|TK from 凛として時雨（東京喰種）|2014|anime
 砂の惑星|ハチ|2017|vocalo
 ロキ|みきとP|2018|vocalo
 劣等上等|Giga|2019|vocalo
-旅立ちの日に|合唱曲|0|school
-COSMOS|合唱曲（ミマス）|0|school
-翼をください|合唱曲・赤い鳥|0|school
-大地讃頌|合唱曲|0|school
-マイバラード|合唱曲|0|school
-怪獣のバラード|合唱曲|0|school
-BELIEVE|合唱曲（杉本竜一）|0|school
-時の旅人|合唱曲|0|school
-手紙 ～拝啓 十五の君へ～|アンジェラ・アキ|2008|school
-`.trim().split('\n').map((l,i)=>{const [t,a,y,c]=l.split('|');return {id:i,t,a,y:+y,c}});
+Hello, Again ～昔からある場所～|MY LITTLE LOVER|1995|pop
+TOMORROW|岡本真夜|1995|pop
+Time goes by|Every Little Thing|1998|pop
+長い間|Kiroro|1998|pop
+サウダージ|ポルノグラフィティ|2000|pop
+アゲハ蝶|ポルノグラフィティ|2001|pop
+secret base ～君がくれたもの～|ZONE|2001|pop
+おさかな天国|柴矢裕美|2002|pop
+ハナミズキ|一青窈|2004|pop
+奏(かなで)|スキマスイッチ|2004|pop
+全力少年|スキマスイッチ|2005|pop
+Story|AI|2005|pop
+愛唄|GReeeeN|2007|pop
+CHE.R.RY|YUI|2007|pop
+ありがとう|いきものがかり|2010|pop
+完全感覚Dreamer|ONE OK ROCK|2010|pop
+ヒロイン|back number|2015|pop
+群青|YOASOBI|2020|pop
+水平線|back number|2020|pop
+怪物|YOASOBI|2021|pop
+シンデレラボーイ|Saucy Dog|2021|pop
+Habit|SEKAI NO OWARI|2022|pop
+Overdose|なとり|2022|pop
+唱|Ado|2023|pop
+美しい鰭|スピッツ|2023|pop
+魂のルフラン|高橋洋子（新世紀エヴァンゲリオン劇場版）|1997|anime
+Catch You Catch Me|グミ（カードキャプターさくら）|1998|anime
+プラチナ|坂本真綾（カードキャプターさくら）|1999|anime
+ハム太郎とっとこうた|ハムちゃんず（とっとこハム太郎）|2000|anime
+READY STEADY GO|L'Arc～en～Ciel（鋼の錬金術師）|2004|anime
+GO!!!|FLOW（NARUTO）|2004|anime
+アスタリスク|ORANGE RANGE（BLEACH）|2005|anime
+God knows...|涼宮ハルヒ(平野綾)（涼宮ハルヒの憂鬱）|2006|anime
+もってけ!セーラーふく|泉こなた ほか（らき☆すた）|2007|anime
+曇天|DOES（銀魂）|2008|anime
+Again|YUI（鋼の錬金術師 FULLMETAL ALCHEMIST）|2009|anime
+Don't say "lazy"|放課後ティータイム（けいおん!）|2009|anime
+ふわふわ時間|放課後ティータイム（けいおん!）|2009|anime
+サムライハート (Some Like It Hot!!)|SPYAIR（銀魂）|2011|anime
+マジLOVE1000%|ST☆RISH（うたの☆プリンスさまっ♪）|2011|anime
+なんでもないや|RADWIMPS（君の名は。）|2016|anime
+ようこそジャパリパークへ|どうぶつビスケッツ×PPP（けものフレンズ）|2017|anime
+心臓を捧げよ!|Linked Horizon（進撃の巨人）|2017|anime
+ピースサイン|米津玄師（僕のヒーローアカデミア）|2017|anime
+打上花火|DAOKO×米津玄師（打ち上げ花火、下から見るか?横から見るか?）|2017|anime
+ドラえもん|星野源（映画ドラえもん）|2018|anime
+インフェルノ|Mrs. GREEN APPLE（炎炎ノ消防隊）|2019|anime
+廻廻奇譚|Eve（呪術廻戦）|2020|anime
+ミックスナッツ|Official髭男dism（SPY×FAMILY）|2022|anime
+祝福|YOASOBI（機動戦士ガンダム 水星の魔女）|2022|anime
+星座になれたら|結束バンド（ぼっち・ざ・ろっく!）|2022|anime
+ギターと孤独と蒼い惑星|結束バンド（ぼっち・ざ・ろっく!）|2022|anime
+青のすみか|キタニタツヤ（呪術廻戦）|2023|anime
+勇者|YOASOBI（葬送のフリーレン）|2023|anime
+オトノケ|Creepy Nuts（ダンダダン）|2024|anime
+JUST ONE MORE KISS|BUCK-TICK|1988|vkei
+紅|X JAPAN|1989|vkei
+ENDLESS RAIN|X JAPAN|1989|vkei
+Rusty Nail|X JAPAN|1994|vkei
+ROSIER|LUNA SEA|1994|vkei
+Forever Love|X JAPAN|1996|vkei
+flower|L'Arc～en～Ciel|1996|vkei
+BELOVED|GLAY|1996|vkei
+少年|黒夢|1997|vkei
+虹|L'Arc～en～Ciel|1997|vkei
+すみれ September Love|SHAZNA|1997|vkei
+未来航路|La'cryma Christi|1997|vkei
+誘惑|GLAY|1998|vkei
+STORM|LUNA SEA|1998|vkei
+I for You|LUNA SEA|1998|vkei
+ピンク スパイダー|hide with Spread Beaver|1998|vkei
+ROCKET DIVE|hide with Spread Beaver|1998|vkei
+月下の夜想曲|MALICE MIZER|1998|vkei
+ロマンス|PENICILLIN|1998|vkei
+Driver's High|L'Arc～en～Ciel|1999|vkei
+アクロの丘|Dir en grey|1999|vkei
+Vanilla|Gackt|1999|vkei
+君に逢いたくて|Gackt|2002|vkei
+月光花|Janne Da Arc|2004|vkei
+the WORLD|ナイトメア|2006|vkei
+Filth in the beauty|the GazettE|2006|vkei
+モノクロのキス|シド|2008|vkei
+嘘|シド|2009|vkei
+乱舞のメロディ|シド|2010|vkei
+VALENTI|BoA|2002|kpop
+メリクリ|BoA|2004|kpop
+どうして君を好きになってしまったんだろう?|東方神起|2008|kpop
+HARU HARU|BIGBANG|2008|kpop
+ガラガラ GO!!|BIGBANG|2009|kpop
+ミスター|KARA|2010|kpop
+ジャンピン|KARA|2010|kpop
+GENIE|少女時代|2010|kpop
+Gee|少女時代|2011|kpop
+MR.TAXI|少女時代|2011|kpop
+Why? (Keep Your Head Down)|東方神起|2011|kpop
+Bo Peep Bo Peep|T-ARA|2011|kpop
+I AM THE BEST|2NE1|2011|kpop
+FANTASTIC BABY|BIGBANG|2012|kpop
+江南スタイル|PSY|2012|kpop
+TT|TWICE|2016|kpop
+DNA|BTS|2017|kpop
+Likey|TWICE|2017|kpop
+DDU-DU DDU-DU|BLACKPINK|2018|kpop
+What is Love?|TWICE|2018|kpop
+好きと言わせたい|IZ*ONE|2018|kpop
+CALL CALL CALL!|SEVENTEEN|2018|kpop
+Fancy|TWICE|2019|kpop
+Lights|BTS|2019|kpop
+Dynamite|BTS|2020|kpop
+How You Like That|BLACKPINK|2020|kpop
+WANNABE|ITZY|2020|kpop
+God's Menu|Stray Kids|2020|kpop
+Butter|BTS|2021|kpop
+Next Level|aespa|2021|kpop
+LOVE DIVE|IVE|2022|kpop
+ANTIFRAGILE|LE SSERAFIM|2022|kpop
+Hype Boy|NewJeans|2022|kpop
+Ditto|NewJeans|2022|kpop
+Queencard|(G)I-DLE|2023|kpop
+Super Shy|NewJeans|2023|kpop
+Supernatural|NewJeans|2024|kpop
+APT.|ROSÉ & Bruno Mars|2024|kpop
+裏表ラバーズ|wowaka|2009|vocalo
+ローリンガール|wowaka|2010|vocalo
+ワールズエンド・ダンスホール|wowaka|2010|vocalo
+アンハッピーリフレイン|wowaka|2011|vocalo
+モザイクロール|DECO*27|2010|vocalo
+ハッピーシンセサイザ|EasyPop|2010|vocalo
+ハロ/ハワユ|ナノウ|2010|vocalo
+パンダヒーロー|ハチ|2011|vocalo
+天ノ弱|164|2011|vocalo
+からくりピエロ|40mP|2011|vocalo
+東京テディベア|Neru|2011|vocalo
+メランコリック|Junky|2011|vocalo
+夜咄ディセイブ|じん|2011|vocalo
+チルドレンレコード|じん|2012|vocalo
+六兆年と一夜物語|kemu|2012|vocalo
+イカサマライフゲイム|kemu|2012|vocalo
+ネトゲ廃人シュプレヒコール|さつき が てんこもり|2012|vocalo
+威風堂々|梅とら|2012|vocalo
+ドーナツホール|ハチ|2013|vocalo
+ロストワンの号哭|Neru|2013|vocalo
+ブリキノダンス|日向電工|2013|vocalo
+ECHO|Crusher-P|2014|vocalo
+乙女解剖|DECO*27|2014|vocalo
+アスノヨゾラ哨戒班|Orangestar|2014|vocalo
+ヒビカセ|ギガ|2014|vocalo
+ゴーストルール|DECO*27|2016|vocalo
+ヒバナ|DECO*27|2017|vocalo
+命に嫌われている。|カンザキイオリ|2017|vocalo
+テオ|Omoi|2017|vocalo
+エイリアンエイリアン|ナユタン星人|2017|vocalo
+ダンスロボットダンス|ナユタン星人|2017|vocalo
+グリーンライツ・セレナーデ|Omoi|2018|vocalo
+ベノム|かいりきベア|2018|vocalo
+ダーリンダンス|かいりきベア|2019|vocalo
+酔いどれ知らず|Kanaria|2019|vocalo
+テレキャスタービーボーイ|すりぃ|2019|vocalo
+KING|Kanaria|2020|vocalo
+グッバイ宣言|Chinozo|2020|vocalo
+ジャンキーナイトタウンオーケストラ|すりぃ|2020|vocalo
+フォニイ|ツミキ|2021|vocalo
+神っぽいな|ピノキオピー|2021|vocalo
+マーシャル・マキシマイザー|柊マグネタイト|2021|vocalo
+ヴァンパイア|DECO*27|2021|vocalo
+ロウワー|ぬゆり|2021|vocalo
+ラビットホール|DECO*27|2023|vocalo
+強風オールバック|ゆこぴ|2023|vocalo
+オーバーライド|吉田夜世|2023|vocalo
+メズマライザー|サツキ|2024|vocalo
+`.trim().split('\n').map(l=>{const [t,a,y,c]=l.split('|');return {id:t+'|'+a,t,a,y:+y,c}});
 
 const ERAS=[
  {k:'~79',label:'〜1979',from:0,to:1979},
@@ -340,8 +511,8 @@ const ERAS=[
  {k:'10b',label:'2015〜19',from:2015,to:2019},
  {k:'20s',label:'2020〜',from:2020,to:2100},
 ];
-const CATS=[{k:'pop',label:'J-POP・歌謡'},{k:'anime',label:'アニメ・特撮'},{k:'vocalo',label:'ボカロ'},{k:'school',label:'学校・合唱'}];
-const CATLABEL={pop:'J-POP・歌謡',anime:'アニメ',vocalo:'ボカロ',school:'学校・合唱'};
+const CATS=[{k:'pop',label:'J-POP・歌謡'},{k:'anime',label:'アニメ'},{k:'vocalo',label:'ボカロ'},{k:'vkei',label:'ヴィジュアル系'},{k:'kpop',label:'K-POP'}];
+const CATLABEL={pop:'J-POP・歌謡',anime:'アニメ',vocalo:'ボカロ',vkei:'ヴィジュアル系',kpop:'K-POP'};
 
 const ODAI=[
  '中学生のとき、教室で誰かが歌ってた曲は？','高校の文化祭・体育祭で流れてた曲は？','部活の帰りや通学中にイヤホンで聴いてた曲は？',
@@ -351,7 +522,7 @@ const ODAI=[
  '失恋したときに聴いてた曲は？','夏になると思い出す曲は？','冬・クリスマスになると思い出す曲は？',
  '着メロ・着うたにしてた曲は？','ゲームの主題歌やエンディングで好きだった曲は？','映画館で泣いた映画の主題歌は？',
  '「歌ってみた」やTikTokで流行ってた曲は？','バイト先の店内でずっと流れてた曲は？','結婚式の余興で使われてた曲は？',
- '修学旅行のバスで盛り上がった曲は？','音楽番組（Mステ・HEY!HEY!HEY!など）で印象に残ってる曲は？','子ども向け番組で覚えた歌は？',
+ '修学旅行のバスで盛り上がった曲は？','音楽番組（Mステ・HEY!HEY!HEY!など）で印象に残ってる曲は？','子ども向け番組で覚えた歌は？','韓国ドラマやK-POPアイドルにハマった友達が歌ってた曲は？','バンドブームのころ、コピーしたかった・憧れたバンドの曲は？','ニコニコ動画やYouTubeで繰り返し聴いてたボカロ曲は？',
  'よく行ったお店やゲーセンで流れてた曲は？','好きな芸能人がハマってた・出てた曲は？','いま好きな歌手の、デビューのころの曲は？',
  '「サビだけなら歌える」曲を3つ思い浮かべて','いつも歌う曲の「同じ歌手の別の曲」は？','いつも歌う曲が出た年の、他のヒット曲は？',
  'デュエットできそうな曲は？','声が低くても歌える落ち着いた曲は？','手拍子・合いの手で盛り上がる曲は？'
@@ -363,8 +534,8 @@ const store={get(k,d){try{const v=localStorage.getItem('kgacha_'+k);return v?JSO
 
 let birth=store.get('birth',null);
 let eraOn=new Set(store.get('eras',ERAS.map(e=>e.k)));
-let catOn=new Set(store.get('cats',CATS.map(c=>c.k)));
-let judged=store.get('judged',{}); // id -> sing/know/no
+let catOn=new Set(store.get('cats2',CATS.map(c=>c.k)));
+let judged=store.get('judged2',{}); // id -> sing/know/no
 let saved=store.get('saved',[]); // {t,a,y,c}
 let current=null;
 
@@ -387,7 +558,7 @@ function pool(){
 }
 function updateStat(){
   const p=pool().length;
-  $('#stat').textContent=`残り ${p} 曲`+(Object.keys(judged).length?` ・ 判定済み ${Object.keys(judged).length} 曲`:'')+(p===0?'（年代やジャンルを広げるか、下でリセット）':'');
+  $('#stat').textContent=`残り ${p} 曲`+(Object.keys(judged).length?` ・ 判定済み ${Object.keys(judged).length} 曲`:'')+(p===0?'（年代やジャンルを広げてください）':'');
   $('#cnt').textContent=saved.length?`(${saved.length})`:'';
 }
 function spin(){
@@ -395,12 +566,12 @@ function spin(){
   if(!p.length){
     $('#card').innerHTML=`<div class="prompt" style="font-size:16px">この条件の曲は全部見ました！<br><br><button class="btn small" id="reset">判定をリセット</button></div>`;
     $('#judge').style.visibility='hidden';
-    $('#reset').onclick=()=>{judged={};store.set('judged',judged);spin()};
+    $('#reset').onclick=()=>{judged={};store.set('judged2',judged);spin()};
     return;
   }
   current=p[Math.floor(Math.random()*p.length)];
   const age=birth&&current.y?current.y-birth:null;
-  const meta=current.y?`${current.y}年ごろ`+(age!==null&&age>=0?` ・ あなたが${age}歳のころ`:''):'学校で歌った・聴いた曲';
+  const meta=`${current.y}年ごろ`+(age!==null&&age>=0?` ・ あなたが${age}歳のころ`:'');
   $('#card').innerHTML=`<span class="tag">${CATLABEL[current.c]}</span>
     <div class="title"></div><div class="artist"></div>
     <div class="meta">${meta}</div>
@@ -431,7 +602,7 @@ async function copy(text){try{await navigator.clipboard.writeText(text);toast('�
 // events
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
-  ['gacha','odai','list'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  ['gacha','odai','all','list'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
 });
 $('#by').oninput=e=>{
   const v=+e.target.value;
@@ -439,11 +610,11 @@ $('#by').oninput=e=>{
     $('#byNote').textContent=`→ ${ERAS.filter(x=>eraOn.has(x.k)).map(x=>x.label).join('・')}`;}
 };
 $('#eraChips').onclick=e=>{const k=e.target.dataset.era;if(!k)return;eraOn.has(k)?eraOn.delete(k):eraOn.add(k);store.set('eras',[...eraOn]);renderChips();updateStat()};
-$('#catChips').onclick=e=>{const k=e.target.dataset.cat;if(!k)return;catOn.has(k)?catOn.delete(k):catOn.add(k);store.set('cats',[...catOn]);renderChips();updateStat()};
+$('#catChips').onclick=e=>{const k=e.target.dataset.cat;if(!k)return;catOn.has(k)?catOn.delete(k):catOn.add(k);store.set('cats2',[...catOn]);renderChips();updateStat()};
 $('#spin').onclick=spin;
 $('#judge').onclick=e=>{
   const j=e.target.closest('[data-j]');if(!j||!current)return;
-  judged[current.id]=j.dataset.j;store.set('judged',judged);
+  judged[current.id]=j.dataset.j;store.set('judged2',judged);
   if(j.dataset.j==='sing')addSaved({t:current.t,a:current.a,y:current.y,c:current.c});
   spin();
 };
@@ -457,7 +628,25 @@ $('#list').onclick=e=>{
 };
 $('#copyAll').onclick=()=>copy(saved.map(s=>s.a?`${s.t} / ${s.a}`:s.t).join('\n'));
 
+let allCat='vocalo';
+function renderAll(){
+  $('#allCats').innerHTML=CATS.map(c=>`<button class="chip ${allCat===c.k?'on':''}" data-allcat="${c.k}">${c.label}（${RAW.filter(s=>s.c===c.k).length}）</button>`).join('');
+  const items=RAW.filter(s=>s.c===allCat).sort((a,b)=>a.y-b.y);
+  const ul=$('#allList');ul.innerHTML='';let lastEra='';
+  items.forEach(s=>{
+    const er=eraOf(s.y).label;
+    if(er!==lastEra){const h=document.createElement('li');h.innerHTML=`<b style="color:var(--accent2);font-size:13px">${er}</b>`;ul.appendChild(h);lastEra=er}
+    const li=document.createElement('li');
+    li.innerHTML=`<div class="t"><b></b><small></small></div><button class="btn small" data-add="${RAW.indexOf(s)}">＋</button>`;
+    li.querySelector('b').textContent=s.t;li.querySelector('small').textContent=`${s.a} ・ ${s.y}年ごろ`;
+    ul.appendChild(li);
+  });
+}
+$('#allCats').onclick=e=>{const k=e.target.dataset.allcat;if(!k)return;allCat=k;renderAll()};
+$('#allList').onclick=e=>{const i=e.target.dataset.add;if(i===undefined)return;const s=RAW[+i];addSaved({t:s.t,a:s.a,y:s.y,c:s.c})};
+
 // init
+renderAll();
 if(birth){$('#by').value=birth;$('#byNote').textContent=`→ ${ERAS.filter(x=>eraOn.has(x.k)).map(x=>x.label).join('・')}`}
 renderChips();renderList();updateStat();nextOdai();
 </script>
