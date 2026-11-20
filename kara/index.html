@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カラオケ思い出しガチャ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14101f;--panel:#1f1830;--panel2:#2a2140;--text:#f3eefc;--muted:#a99cc4;--accent:#ff4f9a;--accent2:#ffd23f;--ok:#3ddc97;--line:#3a2f55}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0%,#2b1747 0,var(--bg) 55%);color:var(--text);font-family:"Noto Sans JP",system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;font-weight:900;margin:4px 0 2px;letter-spacing:.02em}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:10px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+label.lbl{font-size:13px;color:var(--muted);margin-right:4px}
+input[type=number]{width:96px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer}
+.chip.on{border-color:var(--accent2);color:#1a1300;background:var(--accent2);font-weight:700}
+details summary{cursor:pointer;color:var(--muted);font-size:13px}
+.card{background:linear-gradient(160deg,#3a1d5c,#22183a);border:1px solid #5a3f86;border-radius:18px;padding:26px 20px 20px;text-align:center;min-height:230px;display:flex;flex-direction:column;justify-content:center}
+.card .tag{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.1);color:var(--accent2);margin:0 auto 10px}
+.card .title{font-size:28px;font-weight:900;line-height:1.3;word-break:break-word}
+.card .artist{font-size:16px;color:#d9cdf0;margin-top:6px}
+.card .meta{font-size:13px;color:var(--muted);margin-top:10px}
+.card .hint{font-size:12.5px;color:#c7b8e6;margin-top:14px;border-top:1px dashed #5a3f86;padding-top:10px}
+.prompt{font-size:22px;font-weight:700;line-height:1.5}
+.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.btn{padding:13px 6px;border-radius:12px;border:none;font:inherit;font-weight:700;font-size:14px;cursor:pointer;color:#fff;background:var(--panel2)}
+.btn.ok{background:var(--ok);color:#06281a}
+.btn.big{background:var(--accent);font-size:17px;padding:16px;width:100%;margin-top:12px}
+.btn.small{padding:6px 10px;font-size:12px;border-radius:8px}
+.stat{font-size:12.5px;color:var(--muted);text-align:center;margin-top:10px}
+.list{list-style:none;padding:0;margin:0}
+.list li{display:flex;align-items:center;gap:8px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.list .t{flex:1;min-width:0}
+.list .t b{display:block;font-size:15px}
+.list .t small{color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:24px 0;font-size:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#fff;color:#111;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:.2s;pointer-events:none}
+.toast.show{opacity:1}
+.note{font-size:11.5px;color:var(--muted);margin-top:18px;line-height:1.6}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>カラオケ<span>思い出し</span>ガチャ</h1>
+  <p class="sub">「ああ、これあった！」を引き当てて、歌える曲リストを育てよう。</p>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="gacha">曲ガチャ</button>
+    <button class="tab" data-tab="odai">記憶のお題</button>
+    <button class="tab" data-tab="list">歌えるリスト <span id="cnt"></span></button>
+  </div>
+
+  <!-- ガチャ -->
+  <section id="tab-gacha">
+    <div class="box">
+      <div class="row">
+        <label class="lbl" for="by">生まれ年</label>
+        <input id="by" type="number" min="1940" max="2020" placeholder="例 1990">
+        <span class="lbl" id="byNote">→ 6〜30歳ごろの年代を自動で選びます</span>
+      </div>
+      <details style="margin-top:10px">
+        <summary>年代・ジャンルを細かく選ぶ</summary>
+        <div class="chips" id="eraChips"></div>
+        <div class="chips" id="catChips"></div>
+      </details>
+    </div>
+
+    <div class="card" id="card">
+      <div class="prompt" style="color:var(--muted);font-size:16px">下のボタンでガチャを回してください</div>
+    </div>
+    <div class="btns" id="judge" style="visibility:hidden">
+      <button class="btn ok" data-j="sing">歌える！</button>
+      <button class="btn" data-j="know">知ってるけど<br>微妙</button>
+      <button class="btn" data-j="no">知らない</button>
+    </div>
+    <button class="btn big" id="spin">ガチャを回す 🎤</button>
+    <div class="stat" id="stat"></div>
+  </section>
+
+  <!-- お題 -->
+  <section id="tab-odai" class="hidden">
+    <div class="card"><div class="prompt" id="odaiText"></div></div>
+    <button class="btn big" id="nextOdai">次のお題</button>
+    <p class="stat">思い浮かんだ曲は、そのままJOYSOUNDで検索！<br>候補が出たら下に書いてリストへ。</p>
+    <div class="box row">
+      <input id="freeTitle" placeholder="思い出した曲名" style="flex:1;min-width:140px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit">
+      <button class="btn ok small" id="addFree" style="padding:10px 14px">リストに追加</button>
+    </div>
+  </section>
+
+  <!-- リスト -->
+  <section id="tab-list" class="hidden">
+    <div class="box">
+      <div class="row" style="justify-content:space-between">
+        <b>歌える曲リスト</b>
+        <button class="btn small" id="copyAll">全部コピー</button>
+      </div>
+      <ul class="list" id="list"></ul>
+    </div>
+    <p class="stat">次にカラオケするとき、ここから選べば迷いません。</p>
+  </section>
+
+  <p class="note">※ 曲の年はヒットした時期の目安です。JOYSOUNDに配信があるかは曲検索で確認してください。リストはこのブラウザだけに保存されます。</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const RAW = `
+異邦人|久保田早紀|1979|pop
+いとしのエリー|サザンオールスターズ|1979|pop
+UFO|ピンク・レディー|1977|pop
+津軽海峡・冬景色|石川さゆり|1977|pop
+北国の春|千昌夫|1977|pop
+ルビーの指環|寺尾聰|1981|pop
+悪女|中島みゆき|1981|pop
+赤いスイートピー|松田聖子|1982|pop
+ワインレッドの心|安全地帯|1983|pop
+I LOVE YOU|尾崎豊|1983|pop
+涙のリクエスト|チェッカーズ|1984|pop
+六本木心中|アン・ルイス|1984|pop
+フレンズ|REBECCA|1985|pop
+なんてったってアイドル|小泉今日子|1985|pop
+卒業|斉藤由貴|1985|pop
+仮面舞踏会|少年隊|1985|pop
+DESIRE -情熱-|中森明菜|1986|pop
+My Revolution|渡辺美里|1986|pop
+Missing|久保田利伸|1986|pop
+天城越え|石川さゆり|1986|pop
+時の流れに身をまかせ|テレサ・テン|1986|pop
+MARIONETTE|BOØWY|1987|pop
+パラダイス銀河|光GENJI|1988|pop
+とんぼ|長渕剛|1988|pop
+Diamonds|プリンセス プリンセス|1989|pop
+淋しい熱帯魚|Wink|1989|pop
+川の流れのように|美空ひばり|1989|pop
+おどるポンポコリン|B.B.クィーンズ|1990|pop
+少年時代|井上陽水|1990|pop
+愛は勝つ|KAN|1990|pop
+ラブ・ストーリーは突然に|小田和正|1991|pop
+SAY YES|CHAGE&ASKA|1991|pop
+どんなときも。|槇原敬之|1991|pop
+それが大事|大事MANブラザーズバンド|1991|pop
+君がいるだけで|米米CLUB|1992|pop
+もう恋なんてしない|槇原敬之|1992|pop
+世界中の誰よりきっと|中山美穂&WANDS|1992|pop
+負けないで|ZARD|1993|pop
+YAH YAH YAH|CHAGE&ASKA|1993|pop
+ロード|THE 虎舞竜|1993|pop
+ロマンスの神様|広瀬香美|1993|pop
+愛のままにわがままに 僕は君だけを傷つけない|B'z|1993|pop
+TRUE LOVE|藤井フミヤ|1993|pop
+innocent world|Mr.Children|1994|pop
+survival dAnce ～no no cry more～|trf|1994|pop
+恋しさと せつなさと 心強さと|篠原涼子 with t.komuro|1994|pop
+LOVE LOVE LOVE|DREAMS COME TRUE|1995|pop
+WOW WAR TONIGHT ～時には起こせよムーヴメント～|H Jungle with t|1995|pop
+ら・ら・ら|大黒摩季|1995|pop
+HELLO|福山雅治|1995|pop
+ロビンソン|スピッツ|1995|pop
+チェリー|スピッツ|1996|pop
+DEPARTURES|globe|1996|pop
+アジアの純真|PUFFY|1996|pop
+名もなき詩|Mr.Children|1996|pop
+I'm proud|華原朋美|1996|pop
+CAN YOU CELEBRATE?|安室奈美恵|1997|pop
+硝子の少年|KinKi Kids|1997|pop
+HOWEVER|GLAY|1997|pop
+ひだまりの詩|Le Couple|1997|pop
+White Love|SPEED|1997|pop
+HONEY|L'Arc～en～Ciel|1998|pop
+夜空ノムコウ|SMAP|1998|pop
+There will be love there -愛のある場所-|the brilliant green|1998|pop
+First Love|宇多田ヒカル|1999|pop
+LOVEマシーン|モーニング娘。|1999|pop
+Boys & Girls|浜崎あゆみ|1999|pop
+だんご3兄弟|速水けんたろう・茂森あゆみ|1999|pop
+ここでキスして。|椎名林檎|1999|pop
+カブトムシ|aiko|1999|pop
+TSUNAMI|サザンオールスターズ|2000|pop
+桜坂|福山雅治|2000|pop
+Everything|MISIA|2000|pop
+SEASONS|浜崎あゆみ|2000|pop
+小さな恋のうた|MONGOL800|2001|pop
+traveling|宇多田ヒカル|2001|pop
+ultra soul|B'z|2001|pop
+天体観測|BUMP OF CHICKEN|2001|pop
+もらい泣き|一青窈|2002|pop
+ワダツミの木|元ちとせ|2002|pop
+亜麻色の髪の乙女|島谷ひとみ|2002|pop
+世界に一つだけの花|SMAP|2003|pop
+さくら（独唱）|森山直太朗|2003|pop
+雪の華|中島美嘉|2003|pop
+さくらんぼ|大塚愛|2003|pop
+空に唄えば|175R|2003|pop
+夏の思い出|ケツメイシ|2003|pop
+瞳をとじて|平井堅|2004|pop
+花|ORANGE RANGE|2004|pop
+ロコローション|ORANGE RANGE|2004|pop
+Sign|Mr.Children|2004|pop
+キューティーハニー|倖田來未|2004|pop
+青春アミーゴ|修二と彰|2005|pop
+さくら|ケツメイシ|2005|pop
+粉雪|レミオロメン|2005|pop
+GLAMOROUS SKY|NANA starring MIKA NAKASHIMA|2005|pop
+三日月|絢香|2006|pop
+千の風になって|秋川雅史|2006|pop
+Real Face|KAT-TUN|2006|pop
+純恋歌|湘南乃風|2006|pop
+有心論|RADWIMPS|2006|pop
+マタアイマショウ|SEAMO|2006|pop
+蕾|コブクロ|2007|pop
+Love so sweet|嵐|2007|pop
+ポリリズム|Perfume|2007|pop
+そばにいるね|青山テルマ feat.SoulJa|2008|pop
+キセキ|GReeeeN|2008|pop
+ブルーバード|いきものがかり|2008|pop
+Ti Amo|EXILE|2008|pop
+羞恥心|羞恥心|2008|pop
+決意の朝に|Aqua Timez|2008|pop
+YELL|いきものがかり|2009|pop
+Butterfly|木村カエラ|2009|pop
+トイレの神様|植村花菜|2010|pop
+ヘビーローテーション|AKB48|2010|pop
+会いたくて 会いたくて|西野カナ|2010|pop
+Troublemaker|嵐|2010|pop
+行くぜっ!怪盗少女|ももいろクローバーZ|2010|pop
+マル・マル・モリ・モリ!|薫と友樹、たまにムック。|2011|pop
+フライングゲット|AKB48|2011|pop
+家族になろうよ|福山雅治|2011|pop
+つけまつける|きゃりーぱみゅぱみゅ|2012|pop
+女々しくて|ゴールデンボンバー|2012|pop
+ヒカリへ|miwa|2012|pop
+恋するフォーチュンクッキー|AKB48|2013|pop
+RPG|SEKAI NO OWARI|2013|pop
+高嶺の花子さん|back number|2013|pop
+雨のち晴レルヤ|ゆず|2013|pop
+レット・イット・ゴー～ありのままで～|松たか子|2014|pop
+R.Y.U.S.E.I.|三代目 J Soul Brothers|2014|pop
+ひまわりの約束|秦基博|2014|pop
+SUN|星野源|2015|pop
+クリスマスソング|back number|2015|pop
+トリセツ|西野カナ|2015|pop
+恋|星野源|2016|pop
+前前前世|RADWIMPS|2016|pop
+花束を君に|宇多田ヒカル|2016|pop
+サイレントマジョリティー|欅坂46|2016|pop
+インフルエンサー|乃木坂46|2017|pop
+Lemon|米津玄師|2018|pop
+U.S.A.|DA PUMP|2018|pop
+マリーゴールド|あいみょん|2018|pop
+パプリカ|Foorin|2018|pop
+さよならエレジー|菅田将暉|2018|pop
+青と夏|Mrs. GREEN APPLE|2018|pop
+Pretender|Official髭男dism|2019|pop
+白日|King Gnu|2019|pop
+夜に駆ける|YOASOBI|2020|pop
+香水|瑛人|2020|pop
+ドライフラワー|優里|2020|pop
+うっせぇわ|Ado|2020|pop
+Make you happy|NiziU|2020|pop
+怪獣の花唄|Vaundy|2020|pop
+死ぬのがいいわ|藤井風|2020|pop
+Subtitle|Official髭男dism|2022|pop
+新時代|Ado|2022|pop
+KICK BACK|米津玄師|2022|pop
+アイドル|YOASOBI|2023|pop
+ケセラセラ|Mrs. GREEN APPLE|2023|pop
+晩餐歌|tuki.|2023|pop
+Bling-Bang-Bang-Born|Creepy Nuts|2024|pop
+ライラック|Mrs. GREEN APPLE|2024|pop
+はいよろこんで|こっちのけんと|2024|pop
+愛をとりもどせ!!|クリスタルキング（北斗の拳）|1984|anime
+タッチ|岩崎良美（タッチ）|1985|anime
+CAT'S EYE|杏里（キャッツ・アイ）|1983|anime
+Get Wild|TM NETWORK（シティーハンター）|1987|anime
+アンパンマンのマーチ|ドリーミング（アンパンマン）|1988|anime
+CHA-LA HEAD-CHA-LA|影山ヒロノブ（ドラゴンボールZ）|1989|anime
+ムーンライト伝説|DALI（美少女戦士セーラームーン）|1992|anime
+ゆずれない願い|田村直美（魔法騎士レイアース）|1994|anime
+残酷な天使のテーゼ|高橋洋子（新世紀エヴァンゲリオン）|1995|anime
+めざせポケモンマスター|松本梨香（ポケットモンスター）|1997|anime
+勇者王誕生!|遠藤正明（勇者王ガオガイガー）|1997|anime
+ウィーアー!|きただにひろし（ONE PIECE）|1999|anime
+Butter-Fly|和田光司（デジモンアドベンチャー）|1999|anime
+おジャ魔女カーニバル!!|MAHO堂（おジャ魔女どれみ）|1999|anime
+創聖のアクエリオン|AKINO（創聖のアクエリオン）|2005|anime
+ハレ晴レユカイ|平野綾・茅原実里・後藤邑子（涼宮ハルヒの憂鬱）|2006|anime
+夢をかなえてドラえもん|mao（ドラえもん）|2007|anime
+ライオン|May'n／中島愛（マクロスF）|2008|anime
+only my railgun|fripSide（とある科学の超電磁砲）|2009|anime
+コネクト|ClariS（魔法少女まどか☆マギカ）|2011|anime
+Hacking to the Gate|いとうかなこ（STEINS;GATE）|2011|anime
+紅蓮の弓矢|Linked Horizon（進撃の巨人）|2013|anime
+unravel|TK from 凛として時雨（東京喰種）|2014|anime
+シルエット|KANA-BOON（NARUTO疾風伝）|2014|anime
+紅蓮華|LiSA（鬼滅の刃）|2019|anime
+炎|LiSA（劇場版 鬼滅の刃）|2020|anime
+残響散歌|Aimer（鬼滅の刃 遊郭編）|2022|anime
+マトリョシカ|ハチ|2010|vocalo
+メルト|ryo(supercell)|2007|vocalo
+ワールドイズマイン|ryo(supercell)|2008|vocalo
+炉心融解|iroha(sasaki)|2008|vocalo
+ロミオとシンデレラ|doriko|2009|vocalo
+千本桜|黒うさP|2011|vocalo
+カゲロウデイズ|じん|2011|vocalo
+脳漿炸裂ガール|れるりり|2012|vocalo
+シャルル|バルーン|2016|vocalo
+砂の惑星|ハチ|2017|vocalo
+ロキ|みきとP|2018|vocalo
+劣等上等|Giga|2019|vocalo
+旅立ちの日に|合唱曲|0|school
+COSMOS|合唱曲（ミマス）|0|school
+翼をください|合唱曲・赤い鳥|0|school
+大地讃頌|合唱曲|0|school
+マイバラード|合唱曲|0|school
+怪獣のバラード|合唱曲|0|school
+BELIEVE|合唱曲（杉本竜一）|0|school
+時の旅人|合唱曲|0|school
+手紙 ～拝啓 十五の君へ～|アンジェラ・アキ|2008|school
+`.trim().split('\n').map((l,i)=>{const [t,a,y,c]=l.split('|');return {id:i,t,a,y:+y,c}});
+
+const ERAS=[
+ {k:'~79',label:'〜1979',from:0,to:1979},
+ {k:'80s',label:'80年代',from:1980,to:1989},
+ {k:'90a',label:'1990〜94',from:1990,to:1994},
+ {k:'90b',label:'1995〜99',from:1995,to:1999},
+ {k:'00a',label:'2000〜04',from:2000,to:2004},
+ {k:'00b',label:'2005〜09',from:2005,to:2009},
+ {k:'10a',label:'2010〜14',from:2010,to:2014},
+ {k:'10b',label:'2015〜19',from:2015,to:2019},
+ {k:'20s',label:'2020〜',from:2020,to:2100},
+];
+const CATS=[{k:'pop',label:'J-POP・歌謡'},{k:'anime',label:'アニメ・特撮'},{k:'vocalo',label:'ボカロ'},{k:'school',label:'学校・合唱'}];
+const CATLABEL={pop:'J-POP・歌謡',anime:'アニメ',vocalo:'ボカロ',school:'学校・合唱'};
+
+const ODAI=[
+ '中学生のとき、教室で誰かが歌ってた曲は？','高校の文化祭・体育祭で流れてた曲は？','部活の帰りや通学中にイヤホンで聴いてた曲は？',
+ '初めてCD（またはダウンロード）で買った曲は？','好きだったドラマの主題歌は？','毎週見てたアニメのオープニングは？',
+ '頭から離れなかったCMソングは？','紅白歌合戦で家族と見てた曲は？','親が車でよくかけてた曲は？',
+ '友達がカラオケで毎回入れてた「十八番」は？','卒業式で歌った・流れた曲は？','運動会のダンスで踊った曲は？',
+ '失恋したときに聴いてた曲は？','夏になると思い出す曲は？','冬・クリスマスになると思い出す曲は？',
+ '着メロ・着うたにしてた曲は？','ゲームの主題歌やエンディングで好きだった曲は？','映画館で泣いた映画の主題歌は？',
+ '「歌ってみた」やTikTokで流行ってた曲は？','バイト先の店内でずっと流れてた曲は？','結婚式の余興で使われてた曲は？',
+ '修学旅行のバスで盛り上がった曲は？','音楽番組（Mステ・HEY!HEY!HEY!など）で印象に残ってる曲は？','子ども向け番組で覚えた歌は？',
+ 'よく行ったお店やゲーセンで流れてた曲は？','好きな芸能人がハマってた・出てた曲は？','いま好きな歌手の、デビューのころの曲は？',
+ '「サビだけなら歌える」曲を3つ思い浮かべて','いつも歌う曲の「同じ歌手の別の曲」は？','いつも歌う曲が出た年の、他のヒット曲は？',
+ 'デュエットできそうな曲は？','声が低くても歌える落ち着いた曲は？','手拍子・合いの手で盛り上がる曲は？'
+];
+const HINTS=['同じ歌手の別の曲も思い出してみて','この年にほかに流行ってた曲は？','この曲がかかってた場面を思い出してみて','似た雰囲気の曲で歌えるものは？'];
+
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem('kgacha_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('kgacha_'+k,JSON.stringify(v))}catch(e){}}};
+
+let birth=store.get('birth',null);
+let eraOn=new Set(store.get('eras',ERAS.map(e=>e.k)));
+let catOn=new Set(store.get('cats',CATS.map(c=>c.k)));
+let judged=store.get('judged',{}); // id -> sing/know/no
+let saved=store.get('saved',[]); // {t,a,y,c}
+let current=null;
+
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1400)}
+function eraOf(y){return ERAS.find(e=>y>=e.from&&y<=e.to)}
+
+function autoEras(){
+  if(!birth)return;
+  const lo=birth+6,hi=birth+30;
+  eraOn=new Set(ERAS.filter(e=>e.to>=lo&&e.from<=hi).map(e=>e.k));
+  if(!eraOn.size)eraOn=new Set(ERAS.map(e=>e.k));
+  store.set('eras',[...eraOn]);
+}
+function renderChips(){
+  $('#eraChips').innerHTML=ERAS.map(e=>`<button class="chip ${eraOn.has(e.k)?'on':''}" data-era="${e.k}">${e.label}</button>`).join('');
+  $('#catChips').innerHTML=CATS.map(c=>`<button class="chip ${catOn.has(c.k)?'on':''}" data-cat="${c.k}">${c.label}</button>`).join('');
+}
+function pool(){
+  return RAW.filter(s=>catOn.has(s.c)&&(s.y===0||eraOn.has(eraOf(s.y).k))&&!judged[s.id]);
+}
+function updateStat(){
+  const p=pool().length;
+  $('#stat').textContent=`残り ${p} 曲`+(Object.keys(judged).length?` ・ 判定済み ${Object.keys(judged).length} 曲`:'')+(p===0?'（年代やジャンルを広げるか、下でリセット）':'');
+  $('#cnt').textContent=saved.length?`(${saved.length})`:'';
+}
+function spin(){
+  const p=pool();
+  if(!p.length){
+    $('#card').innerHTML=`<div class="prompt" style="font-size:16px">この条件の曲は全部見ました！<br><br><button class="btn small" id="reset">判定をリセット</button></div>`;
+    $('#judge').style.visibility='hidden';
+    $('#reset').onclick=()=>{judged={};store.set('judged',judged);spin()};
+    return;
+  }
+  current=p[Math.floor(Math.random()*p.length)];
+  const age=birth&&current.y?current.y-birth:null;
+  const meta=current.y?`${current.y}年ごろ`+(age!==null&&age>=0?` ・ あなたが${age}歳のころ`:''):'学校で歌った・聴いた曲';
+  $('#card').innerHTML=`<span class="tag">${CATLABEL[current.c]}</span>
+    <div class="title"></div><div class="artist"></div>
+    <div class="meta">${meta}</div>
+    <div class="hint">💭 ${HINTS[Math.floor(Math.random()*HINTS.length)]}</div>`;
+  $('#card .title').textContent=current.t;
+  $('#card .artist').textContent=current.a;
+  $('#judge').style.visibility='visible';
+  updateStat();
+}
+function addSaved(item){
+  if(saved.some(s=>s.t===item.t&&s.a===item.a)){toast('もうリストにあります');return}
+  saved.unshift(item);store.set('saved',saved);renderList();updateStat();toast('リストに追加しました');
+}
+function renderList(){
+  const ul=$('#list');
+  if(!saved.length){ul.innerHTML='<li class="empty" style="display:block">まだありません。ガチャで「歌える！」を押すとここに貯まります。</li>';return}
+  ul.innerHTML='';
+  saved.forEach((s,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<div class="t"><b></b><small></small></div><button class="btn small" data-copy="${i}">コピー</button><button class="btn small" data-del="${i}">✕</button>`;
+    li.querySelector('b').textContent=s.t;
+    li.querySelector('small').textContent=(s.a||'')+(s.y?` ・ ${s.y}年ごろ`:'');
+    ul.appendChild(li);
+  });
+}
+async function copy(text){try{await navigator.clipboard.writeText(text);toast('コピーしました')}catch(e){toast('コピーできませんでした')}}
+
+// events
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
+  ['gacha','odai','list'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+});
+$('#by').oninput=e=>{
+  const v=+e.target.value;
+  if(v>=1940&&v<=2020){birth=v;store.set('birth',v);autoEras();renderChips();updateStat();
+    $('#byNote').textContent=`→ ${ERAS.filter(x=>eraOn.has(x.k)).map(x=>x.label).join('・')}`;}
+};
+$('#eraChips').onclick=e=>{const k=e.target.dataset.era;if(!k)return;eraOn.has(k)?eraOn.delete(k):eraOn.add(k);store.set('eras',[...eraOn]);renderChips();updateStat()};
+$('#catChips').onclick=e=>{const k=e.target.dataset.cat;if(!k)return;catOn.has(k)?catOn.delete(k):catOn.add(k);store.set('cats',[...catOn]);renderChips();updateStat()};
+$('#spin').onclick=spin;
+$('#judge').onclick=e=>{
+  const j=e.target.closest('[data-j]');if(!j||!current)return;
+  judged[current.id]=j.dataset.j;store.set('judged',judged);
+  if(j.dataset.j==='sing')addSaved({t:current.t,a:current.a,y:current.y,c:current.c});
+  spin();
+};
+let lastOdai=-1;
+function nextOdai(){let i;do{i=Math.floor(Math.random()*ODAI.length)}while(i===lastOdai);lastOdai=i;$('#odaiText').textContent=ODAI[i]}
+$('#nextOdai').onclick=nextOdai;
+$('#addFree').onclick=()=>{const v=$('#freeTitle').value.trim();if(!v)return;addSaved({t:v,a:'',y:0,c:'free'});$('#freeTitle').value=''};
+$('#list').onclick=e=>{
+  if(e.target.dataset.copy!==undefined)copy(saved[+e.target.dataset.copy].t);
+  if(e.target.dataset.del!==undefined){saved.splice(+e.target.dataset.del,1);store.set('saved',saved);renderList();updateStat()}
+};
+$('#copyAll').onclick=()=>copy(saved.map(s=>s.a?`${s.t} / ${s.a}`:s.t).join('\n'));
+
+// init
+if(birth){$('#by').value=birth;$('#byNote').textContent=`→ ${ERAS.filter(x=>eraOn.has(x.k)).map(x=>x.label).join('・')}`}
+renderChips();renderList();updateStat();nextOdai();
+</script>
+</body>
+</html>
