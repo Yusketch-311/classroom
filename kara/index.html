@@ -31,7 +31,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
 .card .meta{font-size:13px;color:var(--muted);margin-top:10px}
 .card .hint{font-size:12.5px;color:#c7b8e6;margin-top:14px;border-top:1px dashed #5a3f86;padding-top:10px}
 .prompt{font-size:22px;font-weight:700;line-height:1.5}
-.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .btn{padding:13px 6px;border-radius:12px;border:none;font:inherit;font-weight:700;font-size:14px;cursor:pointer;color:#fff;background:var(--panel2)}
 .btn.ok{background:var(--ok);color:#06281a}
 .btn.big{background:var(--accent);font-size:17px;padding:16px;width:100%;margin-top:12px}
@@ -56,7 +56,6 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
 
   <div class="tabs">
     <button class="tab on" data-tab="gacha">曲ガチャ</button>
-    <button class="tab" data-tab="odai">記憶のお題</button>
     <button class="tab" data-tab="all">曲一覧</button>
     <button class="tab" data-tab="list">歌えるリスト <span id="cnt"></span></button>
   </div>
@@ -69,6 +68,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
         <input id="by" type="number" min="1940" max="2020" placeholder="例 1990">
         <span class="lbl" id="byNote">→ 6〜30歳ごろの年代を自動で選びます</span>
       </div>
+      <div class="chips" id="typeChips"></div>
       <details style="margin-top:10px">
         <summary>年代・ジャンルを細かく選ぶ</summary>
         <div class="chips" id="eraChips"></div>
@@ -81,29 +81,19 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
     </div>
     <div class="btns" id="judge" style="visibility:hidden">
       <button class="btn ok" data-j="sing">歌える！</button>
+      <button class="btn" data-j="fav" style="background:var(--accent2);color:#1a1300">気になる<br><small>（あとで聴く）</small></button>
       <button class="btn" data-j="know">知ってるけど<br>微妙</button>
-      <button class="btn" data-j="no">知らない</button>
+      <button class="btn" data-j="no">知らない<br><small>（パス）</small></button>
     </div>
     <button class="btn big" id="spin">ガチャを回す 🎤</button>
     <div class="stat" id="stat"></div>
-  </section>
-
-  <!-- お題 -->
-  <section id="tab-odai" class="hidden">
-    <div class="card"><div class="prompt" id="odaiText"></div></div>
-    <button class="btn big" id="nextOdai">次のお題</button>
-    <p class="stat">思い浮かんだ曲は、そのままJOYSOUNDで検索！<br>候補が出たら下に書いてリストへ。</p>
-    <div class="box row">
-      <input id="freeTitle" placeholder="思い出した曲名" style="flex:1;min-width:140px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit">
-      <button class="btn ok small" id="addFree" style="padding:10px 14px">リストに追加</button>
-    </div>
   </section>
 
   <!-- 一覧 -->
   <section id="tab-all" class="hidden">
     <div class="box">
       <div class="chips" id="allCats" style="margin-top:0"></div>
-      <p class="stat" style="text-align:left;margin:10px 0 0">年代順に並んでいます。気になった曲は「＋」でリストへ。</p>
+      <p class="stat" style="text-align:left;margin:10px 0 0">年代順に並んでいます。💎は隠れた名曲。気になった曲は「＋」でリストへ。</p>
       <ul class="list" id="allList"></ul>
     </div>
   </section>
@@ -112,10 +102,14 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
   <section id="tab-list" class="hidden">
     <div class="box">
       <div class="row" style="justify-content:space-between">
-        <b>歌える曲リスト</b>
+        <b>歌える曲 ＆ 気になる曲</b>
         <button class="btn small" id="copyAll">全部コピー</button>
       </div>
       <ul class="list" id="list"></ul>
+      <div class="row" style="margin-top:12px">
+        <input id="freeTitle" placeholder="自分で思い出した曲名を追加" style="flex:1;min-width:140px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit">
+        <button class="btn ok small" id="addFree" style="padding:10px 14px">追加</button>
+      </div>
     </div>
     <p class="stat">次にカラオケするとき、ここから選べば迷いません。</p>
   </section>
@@ -126,379 +120,439 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
 
 <script>
 const RAW = `
-異邦人|久保田早紀|1979|pop
-いとしのエリー|サザンオールスターズ|1979|pop
-UFO|ピンク・レディー|1977|pop
-津軽海峡・冬景色|石川さゆり|1977|pop
-北国の春|千昌夫|1977|pop
-ルビーの指環|寺尾聰|1981|pop
-悪女|中島みゆき|1981|pop
-赤いスイートピー|松田聖子|1982|pop
-ワインレッドの心|安全地帯|1983|pop
-I LOVE YOU|尾崎豊|1983|pop
-涙のリクエスト|チェッカーズ|1984|pop
-六本木心中|アン・ルイス|1984|pop
-フレンズ|REBECCA|1985|pop
-なんてったってアイドル|小泉今日子|1985|pop
-卒業|斉藤由貴|1985|pop
-仮面舞踏会|少年隊|1985|pop
-DESIRE -情熱-|中森明菜|1986|pop
-My Revolution|渡辺美里|1986|pop
-Missing|久保田利伸|1986|pop
-天城越え|石川さゆり|1986|pop
-時の流れに身をまかせ|テレサ・テン|1986|pop
-MARIONETTE|BOØWY|1987|pop
-パラダイス銀河|光GENJI|1988|pop
-とんぼ|長渕剛|1988|pop
-Diamonds|プリンセス プリンセス|1989|pop
-淋しい熱帯魚|Wink|1989|pop
-川の流れのように|美空ひばり|1989|pop
-おどるポンポコリン|B.B.クィーンズ|1990|pop
-少年時代|井上陽水|1990|pop
-愛は勝つ|KAN|1990|pop
-ラブ・ストーリーは突然に|小田和正|1991|pop
-SAY YES|CHAGE&ASKA|1991|pop
-どんなときも。|槇原敬之|1991|pop
-それが大事|大事MANブラザーズバンド|1991|pop
-君がいるだけで|米米CLUB|1992|pop
-もう恋なんてしない|槇原敬之|1992|pop
-世界中の誰よりきっと|中山美穂&WANDS|1992|pop
-負けないで|ZARD|1993|pop
-YAH YAH YAH|CHAGE&ASKA|1993|pop
-ロード|THE 虎舞竜|1993|pop
-ロマンスの神様|広瀬香美|1993|pop
-愛のままにわがままに 僕は君だけを傷つけない|B'z|1993|pop
-TRUE LOVE|藤井フミヤ|1993|pop
-innocent world|Mr.Children|1994|pop
-survival dAnce ～no no cry more～|trf|1994|pop
-恋しさと せつなさと 心強さと|篠原涼子 with t.komuro|1994|pop
-LOVE LOVE LOVE|DREAMS COME TRUE|1995|pop
-WOW WAR TONIGHT ～時には起こせよムーヴメント～|H Jungle with t|1995|pop
-ら・ら・ら|大黒摩季|1995|pop
-HELLO|福山雅治|1995|pop
-ロビンソン|スピッツ|1995|pop
-チェリー|スピッツ|1996|pop
-DEPARTURES|globe|1996|pop
-アジアの純真|PUFFY|1996|pop
-名もなき詩|Mr.Children|1996|pop
-I'm proud|華原朋美|1996|pop
-CAN YOU CELEBRATE?|安室奈美恵|1997|pop
-硝子の少年|KinKi Kids|1997|pop
-HOWEVER|GLAY|1997|pop
-ひだまりの詩|Le Couple|1997|pop
-White Love|SPEED|1997|pop
-HONEY|L'Arc～en～Ciel|1998|vkei
-夜空ノムコウ|SMAP|1998|pop
-There will be love there -愛のある場所-|the brilliant green|1998|pop
-First Love|宇多田ヒカル|1999|pop
-LOVEマシーン|モーニング娘。|1999|pop
-Boys & Girls|浜崎あゆみ|1999|pop
-だんご3兄弟|速水けんたろう・茂森あゆみ|1999|pop
-ここでキスして。|椎名林檎|1999|pop
-カブトムシ|aiko|1999|pop
-TSUNAMI|サザンオールスターズ|2000|pop
-桜坂|福山雅治|2000|pop
-Everything|MISIA|2000|pop
-SEASONS|浜崎あゆみ|2000|pop
-小さな恋のうた|MONGOL800|2001|pop
-traveling|宇多田ヒカル|2001|pop
-ultra soul|B'z|2001|pop
-天体観測|BUMP OF CHICKEN|2001|pop
-もらい泣き|一青窈|2002|pop
-ワダツミの木|元ちとせ|2002|pop
-亜麻色の髪の乙女|島谷ひとみ|2002|pop
-世界に一つだけの花|SMAP|2003|pop
-さくら（独唱）|森山直太朗|2003|pop
-雪の華|中島美嘉|2003|pop
-さくらんぼ|大塚愛|2003|pop
-空に唄えば|175R|2003|pop
-夏の思い出|ケツメイシ|2003|pop
-瞳をとじて|平井堅|2004|pop
-花|ORANGE RANGE|2004|pop
-ロコローション|ORANGE RANGE|2004|pop
-Sign|Mr.Children|2004|pop
-キューティーハニー|倖田來未|2004|pop
-青春アミーゴ|修二と彰|2005|pop
-さくら|ケツメイシ|2005|pop
-粉雪|レミオロメン|2005|pop
-GLAMOROUS SKY|NANA starring MIKA NAKASHIMA|2005|pop
-三日月|絢香|2006|pop
-千の風になって|秋川雅史|2006|pop
-Real Face|KAT-TUN|2006|pop
-純恋歌|湘南乃風|2006|pop
-有心論|RADWIMPS|2006|pop
-マタアイマショウ|SEAMO|2006|pop
-蕾|コブクロ|2007|pop
-Love so sweet|嵐|2007|pop
-ポリリズム|Perfume|2007|pop
-そばにいるね|青山テルマ feat.SoulJa|2008|pop
-キセキ|GReeeeN|2008|pop
-ブルーバード|いきものがかり|2008|pop
-Ti Amo|EXILE|2008|pop
-羞恥心|羞恥心|2008|pop
-決意の朝に|Aqua Timez|2008|pop
-YELL|いきものがかり|2009|pop
-Butterfly|木村カエラ|2009|pop
-トイレの神様|植村花菜|2010|pop
-ヘビーローテーション|AKB48|2010|pop
-会いたくて 会いたくて|西野カナ|2010|pop
-Troublemaker|嵐|2010|pop
-行くぜっ!怪盗少女|ももいろクローバーZ|2010|pop
-マル・マル・モリ・モリ!|薫と友樹、たまにムック。|2011|pop
-フライングゲット|AKB48|2011|pop
-家族になろうよ|福山雅治|2011|pop
-つけまつける|きゃりーぱみゅぱみゅ|2012|pop
-女々しくて|ゴールデンボンバー|2012|vkei
-ヒカリへ|miwa|2012|pop
-恋するフォーチュンクッキー|AKB48|2013|pop
-RPG|SEKAI NO OWARI|2013|pop
-高嶺の花子さん|back number|2013|pop
-雨のち晴レルヤ|ゆず|2013|pop
-レット・イット・ゴー～ありのままで～|松たか子|2014|pop
-R.Y.U.S.E.I.|三代目 J Soul Brothers|2014|pop
-ひまわりの約束|秦基博|2014|pop
-SUN|星野源|2015|pop
-クリスマスソング|back number|2015|pop
-トリセツ|西野カナ|2015|pop
-恋|星野源|2016|pop
-前前前世|RADWIMPS|2016|pop
-花束を君に|宇多田ヒカル|2016|pop
-サイレントマジョリティー|欅坂46|2016|pop
-インフルエンサー|乃木坂46|2017|pop
-Lemon|米津玄師|2018|pop
-U.S.A.|DA PUMP|2018|pop
-マリーゴールド|あいみょん|2018|pop
-パプリカ|Foorin|2018|pop
-さよならエレジー|菅田将暉|2018|pop
-青と夏|Mrs. GREEN APPLE|2018|pop
-Pretender|Official髭男dism|2019|pop
-白日|King Gnu|2019|pop
-夜に駆ける|YOASOBI|2020|pop
-香水|瑛人|2020|pop
-ドライフラワー|優里|2020|pop
-うっせぇわ|Ado|2020|pop
-Make you happy|NiziU|2020|pop
-怪獣の花唄|Vaundy|2020|pop
-死ぬのがいいわ|藤井風|2020|pop
-Subtitle|Official髭男dism|2022|pop
-新時代|Ado|2022|pop
-KICK BACK|米津玄師|2022|pop
-アイドル|YOASOBI|2023|pop
-ケセラセラ|Mrs. GREEN APPLE|2023|pop
-晩餐歌|tuki.|2023|pop
-Bling-Bang-Bang-Born|Creepy Nuts|2024|pop
-ライラック|Mrs. GREEN APPLE|2024|pop
-はいよろこんで|こっちのけんと|2024|pop
-愛をとりもどせ!!|クリスタルキング（北斗の拳）|1984|anime
-タッチ|岩崎良美（タッチ）|1985|anime
-CAT'S EYE|杏里（キャッツ・アイ）|1983|anime
-Get Wild|TM NETWORK（シティーハンター）|1987|anime
-アンパンマンのマーチ|ドリーミング（アンパンマン）|1988|anime
-CHA-LA HEAD-CHA-LA|影山ヒロノブ（ドラゴンボールZ）|1989|anime
-ムーンライト伝説|DALI（美少女戦士セーラームーン）|1992|anime
-ゆずれない願い|田村直美（魔法騎士レイアース）|1994|anime
-残酷な天使のテーゼ|高橋洋子（新世紀エヴァンゲリオン）|1995|anime
-めざせポケモンマスター|松本梨香（ポケットモンスター）|1997|anime
-勇者王誕生!|遠藤正明（勇者王ガオガイガー）|1997|anime
-ウィーアー!|きただにひろし（ONE PIECE）|1999|anime
-Butter-Fly|和田光司（デジモンアドベンチャー）|1999|anime
-おジャ魔女カーニバル!!|MAHO堂（おジャ魔女どれみ）|1999|anime
-創聖のアクエリオン|AKINO（創聖のアクエリオン）|2005|anime
-ハレ晴レユカイ|平野綾・茅原実里・後藤邑子（涼宮ハルヒの憂鬱）|2006|anime
-夢をかなえてドラえもん|mao（ドラえもん）|2007|anime
-ライオン|May'n／中島愛（マクロスF）|2008|anime
-only my railgun|fripSide（とある科学の超電磁砲）|2009|anime
-コネクト|ClariS（魔法少女まどか☆マギカ）|2011|anime
-Hacking to the Gate|いとうかなこ（STEINS;GATE）|2011|anime
-紅蓮の弓矢|Linked Horizon（進撃の巨人）|2013|anime
-unravel|TK from 凛として時雨（東京喰種）|2014|anime
-シルエット|KANA-BOON（NARUTO疾風伝）|2014|anime
-紅蓮華|LiSA（鬼滅の刃）|2019|anime
-炎|LiSA（劇場版 鬼滅の刃）|2020|anime
-残響散歌|Aimer（鬼滅の刃 遊郭編）|2022|anime
-マトリョシカ|ハチ|2010|vocalo
-メルト|ryo(supercell)|2007|vocalo
-ワールドイズマイン|ryo(supercell)|2008|vocalo
-炉心融解|iroha(sasaki)|2008|vocalo
-ロミオとシンデレラ|doriko|2009|vocalo
-千本桜|黒うさP|2011|vocalo
-カゲロウデイズ|じん|2011|vocalo
-脳漿炸裂ガール|れるりり|2012|vocalo
-シャルル|バルーン|2016|vocalo
-砂の惑星|ハチ|2017|vocalo
-ロキ|みきとP|2018|vocalo
-劣等上等|Giga|2019|vocalo
-Hello, Again ～昔からある場所～|MY LITTLE LOVER|1995|pop
-TOMORROW|岡本真夜|1995|pop
-Time goes by|Every Little Thing|1998|pop
-長い間|Kiroro|1998|pop
-サウダージ|ポルノグラフィティ|2000|pop
-アゲハ蝶|ポルノグラフィティ|2001|pop
-secret base ～君がくれたもの～|ZONE|2001|pop
-おさかな天国|柴矢裕美|2002|pop
-ハナミズキ|一青窈|2004|pop
-奏(かなで)|スキマスイッチ|2004|pop
-全力少年|スキマスイッチ|2005|pop
-Story|AI|2005|pop
-愛唄|GReeeeN|2007|pop
-CHE.R.RY|YUI|2007|pop
-ありがとう|いきものがかり|2010|pop
-完全感覚Dreamer|ONE OK ROCK|2010|pop
-ヒロイン|back number|2015|pop
-群青|YOASOBI|2020|pop
-水平線|back number|2020|pop
-怪物|YOASOBI|2021|pop
-シンデレラボーイ|Saucy Dog|2021|pop
-Habit|SEKAI NO OWARI|2022|pop
-Overdose|なとり|2022|pop
-唱|Ado|2023|pop
-美しい鰭|スピッツ|2023|pop
-魂のルフラン|高橋洋子（新世紀エヴァンゲリオン劇場版）|1997|anime
-Catch You Catch Me|グミ（カードキャプターさくら）|1998|anime
-プラチナ|坂本真綾（カードキャプターさくら）|1999|anime
-ハム太郎とっとこうた|ハムちゃんず（とっとこハム太郎）|2000|anime
-READY STEADY GO|L'Arc～en～Ciel（鋼の錬金術師）|2004|anime
-GO!!!|FLOW（NARUTO）|2004|anime
-アスタリスク|ORANGE RANGE（BLEACH）|2005|anime
-God knows...|涼宮ハルヒ(平野綾)（涼宮ハルヒの憂鬱）|2006|anime
-もってけ!セーラーふく|泉こなた ほか（らき☆すた）|2007|anime
-曇天|DOES（銀魂）|2008|anime
-Again|YUI（鋼の錬金術師 FULLMETAL ALCHEMIST）|2009|anime
-Don't say "lazy"|放課後ティータイム（けいおん!）|2009|anime
-ふわふわ時間|放課後ティータイム（けいおん!）|2009|anime
-サムライハート (Some Like It Hot!!)|SPYAIR（銀魂）|2011|anime
-マジLOVE1000%|ST☆RISH（うたの☆プリンスさまっ♪）|2011|anime
-なんでもないや|RADWIMPS（君の名は。）|2016|anime
-ようこそジャパリパークへ|どうぶつビスケッツ×PPP（けものフレンズ）|2017|anime
-心臓を捧げよ!|Linked Horizon（進撃の巨人）|2017|anime
-ピースサイン|米津玄師（僕のヒーローアカデミア）|2017|anime
-打上花火|DAOKO×米津玄師（打ち上げ花火、下から見るか?横から見るか?）|2017|anime
-ドラえもん|星野源（映画ドラえもん）|2018|anime
-インフェルノ|Mrs. GREEN APPLE（炎炎ノ消防隊）|2019|anime
-廻廻奇譚|Eve（呪術廻戦）|2020|anime
-ミックスナッツ|Official髭男dism（SPY×FAMILY）|2022|anime
-祝福|YOASOBI（機動戦士ガンダム 水星の魔女）|2022|anime
-星座になれたら|結束バンド（ぼっち・ざ・ろっく!）|2022|anime
-ギターと孤独と蒼い惑星|結束バンド（ぼっち・ざ・ろっく!）|2022|anime
-青のすみか|キタニタツヤ（呪術廻戦）|2023|anime
-勇者|YOASOBI（葬送のフリーレン）|2023|anime
-オトノケ|Creepy Nuts（ダンダダン）|2024|anime
-JUST ONE MORE KISS|BUCK-TICK|1988|vkei
-紅|X JAPAN|1989|vkei
-ENDLESS RAIN|X JAPAN|1989|vkei
-Rusty Nail|X JAPAN|1994|vkei
-ROSIER|LUNA SEA|1994|vkei
-Forever Love|X JAPAN|1996|vkei
-flower|L'Arc～en～Ciel|1996|vkei
-BELOVED|GLAY|1996|vkei
-少年|黒夢|1997|vkei
-虹|L'Arc～en～Ciel|1997|vkei
-すみれ September Love|SHAZNA|1997|vkei
-未来航路|La'cryma Christi|1997|vkei
-誘惑|GLAY|1998|vkei
-STORM|LUNA SEA|1998|vkei
-I for You|LUNA SEA|1998|vkei
-ピンク スパイダー|hide with Spread Beaver|1998|vkei
-ROCKET DIVE|hide with Spread Beaver|1998|vkei
-月下の夜想曲|MALICE MIZER|1998|vkei
-ロマンス|PENICILLIN|1998|vkei
-Driver's High|L'Arc～en～Ciel|1999|vkei
-アクロの丘|Dir en grey|1999|vkei
-Vanilla|Gackt|1999|vkei
-君に逢いたくて|Gackt|2002|vkei
-月光花|Janne Da Arc|2004|vkei
-the WORLD|ナイトメア|2006|vkei
-Filth in the beauty|the GazettE|2006|vkei
-モノクロのキス|シド|2008|vkei
-嘘|シド|2009|vkei
-乱舞のメロディ|シド|2010|vkei
-VALENTI|BoA|2002|kpop
-メリクリ|BoA|2004|kpop
-どうして君を好きになってしまったんだろう?|東方神起|2008|kpop
-HARU HARU|BIGBANG|2008|kpop
-ガラガラ GO!!|BIGBANG|2009|kpop
-ミスター|KARA|2010|kpop
-ジャンピン|KARA|2010|kpop
-GENIE|少女時代|2010|kpop
-Gee|少女時代|2011|kpop
-MR.TAXI|少女時代|2011|kpop
-Why? (Keep Your Head Down)|東方神起|2011|kpop
-Bo Peep Bo Peep|T-ARA|2011|kpop
-I AM THE BEST|2NE1|2011|kpop
-FANTASTIC BABY|BIGBANG|2012|kpop
-江南スタイル|PSY|2012|kpop
-TT|TWICE|2016|kpop
-DNA|BTS|2017|kpop
-Likey|TWICE|2017|kpop
-DDU-DU DDU-DU|BLACKPINK|2018|kpop
-What is Love?|TWICE|2018|kpop
-好きと言わせたい|IZ*ONE|2018|kpop
-CALL CALL CALL!|SEVENTEEN|2018|kpop
-Fancy|TWICE|2019|kpop
-Lights|BTS|2019|kpop
-Dynamite|BTS|2020|kpop
-How You Like That|BLACKPINK|2020|kpop
-WANNABE|ITZY|2020|kpop
-God's Menu|Stray Kids|2020|kpop
-Butter|BTS|2021|kpop
-Next Level|aespa|2021|kpop
-LOVE DIVE|IVE|2022|kpop
-ANTIFRAGILE|LE SSERAFIM|2022|kpop
-Hype Boy|NewJeans|2022|kpop
-Ditto|NewJeans|2022|kpop
-Queencard|(G)I-DLE|2023|kpop
-Super Shy|NewJeans|2023|kpop
-Supernatural|NewJeans|2024|kpop
-APT.|ROSÉ & Bruno Mars|2024|kpop
-裏表ラバーズ|wowaka|2009|vocalo
-ローリンガール|wowaka|2010|vocalo
-ワールズエンド・ダンスホール|wowaka|2010|vocalo
-アンハッピーリフレイン|wowaka|2011|vocalo
-モザイクロール|DECO*27|2010|vocalo
-ハッピーシンセサイザ|EasyPop|2010|vocalo
-ハロ/ハワユ|ナノウ|2010|vocalo
-パンダヒーロー|ハチ|2011|vocalo
-天ノ弱|164|2011|vocalo
-からくりピエロ|40mP|2011|vocalo
-東京テディベア|Neru|2011|vocalo
-メランコリック|Junky|2011|vocalo
-夜咄ディセイブ|じん|2011|vocalo
-チルドレンレコード|じん|2012|vocalo
-六兆年と一夜物語|kemu|2012|vocalo
-イカサマライフゲイム|kemu|2012|vocalo
-ネトゲ廃人シュプレヒコール|さつき が てんこもり|2012|vocalo
-威風堂々|梅とら|2012|vocalo
-ドーナツホール|ハチ|2013|vocalo
-ロストワンの号哭|Neru|2013|vocalo
-ブリキノダンス|日向電工|2013|vocalo
-ECHO|Crusher-P|2014|vocalo
-乙女解剖|DECO*27|2014|vocalo
-アスノヨゾラ哨戒班|Orangestar|2014|vocalo
-ヒビカセ|ギガ|2014|vocalo
-ゴーストルール|DECO*27|2016|vocalo
-ヒバナ|DECO*27|2017|vocalo
-命に嫌われている。|カンザキイオリ|2017|vocalo
-テオ|Omoi|2017|vocalo
-エイリアンエイリアン|ナユタン星人|2017|vocalo
-ダンスロボットダンス|ナユタン星人|2017|vocalo
-グリーンライツ・セレナーデ|Omoi|2018|vocalo
-ベノム|かいりきベア|2018|vocalo
-ダーリンダンス|かいりきベア|2019|vocalo
-酔いどれ知らず|Kanaria|2019|vocalo
-テレキャスタービーボーイ|すりぃ|2019|vocalo
-KING|Kanaria|2020|vocalo
-グッバイ宣言|Chinozo|2020|vocalo
-ジャンキーナイトタウンオーケストラ|すりぃ|2020|vocalo
-フォニイ|ツミキ|2021|vocalo
-神っぽいな|ピノキオピー|2021|vocalo
-マーシャル・マキシマイザー|柊マグネタイト|2021|vocalo
-ヴァンパイア|DECO*27|2021|vocalo
-ロウワー|ぬゆり|2021|vocalo
-ラビットホール|DECO*27|2023|vocalo
-強風オールバック|ゆこぴ|2023|vocalo
-オーバーライド|吉田夜世|2023|vocalo
-メズマライザー|サツキ|2024|vocalo
-`.trim().split('\n').map(l=>{const [t,a,y,c]=l.split('|');return {id:t+'|'+a,t,a,y:+y,c}});
+異邦人|久保田早紀|1979|pop|0
+UFO|ピンク・レディー|1977|pop|0
+ルビーの指環|寺尾聰|1981|pop|0
+悪女|中島みゆき|1981|pop|0
+ワインレッドの心|安全地帯|1983|pop|0
+涙のリクエスト|チェッカーズ|1984|pop|0
+六本木心中|アン・ルイス|1984|pop|0
+フレンズ|REBECCA|1985|pop|0
+なんてったってアイドル|小泉今日子|1985|pop|0
+卒業|斉藤由貴|1985|pop|0
+仮面舞踏会|少年隊|1985|pop|0
+My Revolution|渡辺美里|1986|pop|0
+Missing|久保田利伸|1986|pop|0
+MARIONETTE|BOØWY|1987|pop|0
+パラダイス銀河|光GENJI|1988|pop|0
+Diamonds|プリンセス プリンセス|1989|pop|0
+淋しい熱帯魚|Wink|1989|pop|0
+おどるポンポコリン|B.B.クィーンズ|1990|pop|0
+それが大事|大事MANブラザーズバンド|1991|pop|0
+君がいるだけで|米米CLUB|1992|pop|0
+もう恋なんてしない|槇原敬之|1992|pop|0
+世界中の誰よりきっと|中山美穂&WANDS|1992|pop|0
+愛のままにわがままに 僕は君だけを傷つけない|B'z|1993|pop|0
+TRUE LOVE|藤井フミヤ|1993|pop|0
+survival dAnce ～no no cry more～|trf|1994|pop|0
+恋しさと せつなさと 心強さと|篠原涼子 with t.komuro|1994|pop|0
+WOW WAR TONIGHT ～時には起こせよムーヴメント～|H Jungle with t|1995|pop|0
+ら・ら・ら|大黒摩季|1995|pop|0
+DEPARTURES|globe|1996|pop|0
+アジアの純真|PUFFY|1996|pop|0
+I'm proud|華原朋美|1996|pop|0
+硝子の少年|KinKi Kids|1997|pop|0
+ひだまりの詩|Le Couple|1997|pop|0
+White Love|SPEED|1997|pop|0
+There will be love there -愛のある場所-|the brilliant green|1998|pop|0
+LOVEマシーン|モーニング娘。|1999|pop|0
+Boys & Girls|浜崎あゆみ|1999|pop|0
+だんご3兄弟|速水けんたろう・茂森あゆみ|1999|pop|0
+ここでキスして。|椎名林檎|1999|pop|0
+カブトムシ|aiko|1999|pop|0
+桜坂|福山雅治|2000|pop|0
+SEASONS|浜崎あゆみ|2000|pop|0
+traveling|宇多田ヒカル|2001|pop|0
+ワダツミの木|元ちとせ|2002|pop|0
+亜麻色の髪の乙女|島谷ひとみ|2002|pop|0
+さくらんぼ|大塚愛|2003|pop|0
+空に唄えば|175R|2003|pop|0
+夏の思い出|ケツメイシ|2003|pop|0
+ロコローション|ORANGE RANGE|2004|pop|0
+キューティーハニー|倖田來未|2004|pop|0
+さくら|ケツメイシ|2005|pop|0
+GLAMOROUS SKY|NANA starring MIKA NAKASHIMA|2005|pop|0
+Real Face|KAT-TUN|2006|pop|0
+純恋歌|湘南乃風|2006|pop|0
+有心論|RADWIMPS|2006|pop|0
+マタアイマショウ|SEAMO|2006|pop|0
+ポリリズム|Perfume|2007|pop|0
+そばにいるね|青山テルマ feat.SoulJa|2008|pop|0
+Ti Amo|EXILE|2008|pop|0
+羞恥心|羞恥心|2008|pop|0
+決意の朝に|Aqua Timez|2008|pop|0
+Butterfly|木村カエラ|2009|pop|0
+行くぜっ!怪盗少女|ももいろクローバーZ|2010|pop|0
+マル・マル・モリ・モリ!|薫と友樹、たまにムック。|2011|pop|0
+フライングゲット|AKB48|2011|pop|0
+つけまつける|きゃりーぱみゅぱみゅ|2012|pop|0
+ヒカリへ|miwa|2012|pop|0
+雨のち晴レルヤ|ゆず|2013|pop|0
+R.Y.U.S.E.I.|三代目 J Soul Brothers|2014|pop|0
+トリセツ|西野カナ|2015|pop|0
+サイレントマジョリティー|欅坂46|2016|pop|0
+インフルエンサー|乃木坂46|2017|pop|0
+さよならエレジー|菅田将暉|2018|pop|0
+青と夏|Mrs. GREEN APPLE|2018|pop|0
+Make you happy|NiziU|2020|pop|0
+死ぬのがいいわ|藤井風|2020|pop|0
+愛をとりもどせ!!|クリスタルキング（北斗の拳）|1984|anime|0
+ムーンライト伝説|DALI（美少女戦士セーラームーン）|1992|anime|0
+ゆずれない願い|田村直美（魔法騎士レイアース）|1994|anime|0
+勇者王誕生!|遠藤正明（勇者王ガオガイガー）|1997|anime|0
+Butter-Fly|和田光司（デジモンアドベンチャー）|1999|anime|0
+おジャ魔女カーニバル!!|MAHO堂（おジャ魔女どれみ）|1999|anime|0
+創聖のアクエリオン|AKINO（創聖のアクエリオン）|2005|anime|0
+ハレ晴レユカイ|平野綾・茅原実里・後藤邑子（涼宮ハルヒの憂鬱）|2006|anime|0
+ライオン|May'n／中島愛（マクロスF）|2008|anime|0
+only my railgun|fripSide（とある科学の超電磁砲）|2009|anime|0
+コネクト|ClariS（魔法少女まどか☆マギカ）|2011|anime|0
+Hacking to the Gate|いとうかなこ（STEINS;GATE）|2011|anime|0
+シルエット|KANA-BOON（NARUTO疾風伝）|2014|anime|0
+炉心融解|iroha(sasaki)|2008|vocalo|0
+Hello, Again ～昔からある場所～|MY LITTLE LOVER|1995|pop|0
+TOMORROW|岡本真夜|1995|pop|0
+Time goes by|Every Little Thing|1998|pop|0
+長い間|Kiroro|1998|pop|0
+おさかな天国|柴矢裕美|2002|pop|0
+CHE.R.RY|YUI|2007|pop|0
+魂のルフラン|高橋洋子（新世紀エヴァンゲリオン劇場版）|1997|anime|0
+Catch You Catch Me|グミ（カードキャプターさくら）|1998|anime|0
+プラチナ|坂本真綾（カードキャプターさくら）|1999|anime|0
+ハム太郎とっとこうた|ハムちゃんず（とっとこハム太郎）|2000|anime|0
+READY STEADY GO|L'Arc～en～Ciel（鋼の錬金術師）|2004|anime|0
+GO!!!|FLOW（NARUTO）|2004|anime|0
+アスタリスク|ORANGE RANGE（BLEACH）|2005|anime|0
+God knows...|涼宮ハルヒ(平野綾)（涼宮ハルヒの憂鬱）|2006|anime|0
+もってけ!セーラーふく|泉こなた ほか（らき☆すた）|2007|anime|0
+曇天|DOES（銀魂）|2008|anime|0
+Again|YUI（鋼の錬金術師 FULLMETAL ALCHEMIST）|2009|anime|0
+Don't say "lazy"|放課後ティータイム（けいおん!）|2009|anime|0
+ふわふわ時間|放課後ティータイム（けいおん!）|2009|anime|0
+サムライハート (Some Like It Hot!!)|SPYAIR（銀魂）|2011|anime|0
+マジLOVE1000%|ST☆RISH（うたの☆プリンスさまっ♪）|2011|anime|0
+ようこそジャパリパークへ|どうぶつビスケッツ×PPP（けものフレンズ）|2017|anime|0
+インフェルノ|Mrs. GREEN APPLE（炎炎ノ消防隊）|2019|anime|0
+星座になれたら|結束バンド（ぼっち・ざ・ろっく!）|2022|anime|0
+ギターと孤独と蒼い惑星|結束バンド（ぼっち・ざ・ろっく!）|2022|anime|0
+JUST ONE MORE KISS|BUCK-TICK|1988|vkei|0
+ENDLESS RAIN|X JAPAN|1989|vkei|0
+Rusty Nail|X JAPAN|1994|vkei|0
+flower|L'Arc～en～Ciel|1996|vkei|0
+BELOVED|GLAY|1996|vkei|0
+少年|黒夢|1997|vkei|0
+すみれ September Love|SHAZNA|1997|vkei|0
+未来航路|La'cryma Christi|1997|vkei|0
+STORM|LUNA SEA|1998|vkei|0
+ピンク スパイダー|hide with Spread Beaver|1998|vkei|0
+ROCKET DIVE|hide with Spread Beaver|1998|vkei|0
+月下の夜想曲|MALICE MIZER|1998|vkei|0
+ロマンス|PENICILLIN|1998|vkei|0
+Driver's High|L'Arc～en～Ciel|1999|vkei|0
+アクロの丘|Dir en grey|1999|vkei|0
+Vanilla|Gackt|1999|vkei|0
+君に逢いたくて|Gackt|2002|vkei|0
+月光花|Janne Da Arc|2004|vkei|0
+the WORLD|ナイトメア|2006|vkei|0
+Filth in the beauty|the GazettE|2006|vkei|0
+モノクロのキス|シド|2008|vkei|0
+嘘|シド|2009|vkei|0
+乱舞のメロディ|シド|2010|vkei|0
+裏表ラバーズ|wowaka|2009|vocalo|0
+ローリンガール|wowaka|2010|vocalo|0
+ワールズエンド・ダンスホール|wowaka|2010|vocalo|0
+アンハッピーリフレイン|wowaka|2011|vocalo|0
+モザイクロール|DECO*27|2010|vocalo|0
+ハッピーシンセサイザ|EasyPop|2010|vocalo|0
+ハロ/ハワユ|ナノウ|2010|vocalo|0
+からくりピエロ|40mP|2011|vocalo|0
+東京テディベア|Neru|2011|vocalo|0
+メランコリック|Junky|2011|vocalo|0
+夜咄ディセイブ|じん|2011|vocalo|0
+チルドレンレコード|じん|2012|vocalo|0
+六兆年と一夜物語|kemu|2012|vocalo|0
+イカサマライフゲイム|kemu|2012|vocalo|0
+ネトゲ廃人シュプレヒコール|さつき が てんこもり|2012|vocalo|0
+ロストワンの号哭|Neru|2013|vocalo|0
+ブリキノダンス|日向電工|2013|vocalo|0
+ECHO|Crusher-P|2014|vocalo|0
+乙女解剖|DECO*27|2014|vocalo|0
+アスノヨゾラ哨戒班|Orangestar|2014|vocalo|0
+ヒビカセ|ギガ|2014|vocalo|0
+テオ|Omoi|2017|vocalo|0
+エイリアンエイリアン|ナユタン星人|2017|vocalo|0
+ダンスロボットダンス|ナユタン星人|2017|vocalo|0
+グリーンライツ・セレナーデ|Omoi|2018|vocalo|0
+ベノム|かいりきベア|2018|vocalo|0
+ダーリンダンス|かいりきベア|2019|vocalo|0
+酔いどれ知らず|Kanaria|2019|vocalo|0
+テレキャスタービーボーイ|すりぃ|2019|vocalo|0
+ジャンキーナイトタウンオーケストラ|すりぃ|2020|vocalo|0
+フォニイ|ツミキ|2021|vocalo|0
+マーシャル・マキシマイザー|柊マグネタイト|2021|vocalo|0
+ロウワー|ぬゆり|2021|vocalo|0
+オーバーライド|吉田夜世|2023|vocalo|0
+真夜中のドア～stay with me|松原みき|1979|pop|1
+都会|大貫妙子|1977|pop|1
+SPARKLE|山下達郎|1982|pop|1
+プラスティック・ラブ|竹内まりや|1984|pop|1
+SOMEDAY|佐野元春|1981|pop|1
+MONEY|浜田省吾|1984|pop|1
+ファイト!|中島みゆき|1983|pop|1
+時をかける少女|原田知世|1983|pop|1
+Woman "Wの悲劇"より|薬師丸ひろ子|1984|pop|1
+君たちキウイ・パパイア・マンゴーだね。|中原めいこ|1984|pop|1
+ふたりの夏物語|杉山清貴&オメガトライブ|1985|pop|1
+だいすき|岡村靖幸|1988|pop|1
+カルアミルク|岡村靖幸|1990|pop|1
+遠く遠く|槇原敬之|1992|pop|1
+渡良瀬橋|森高千里|1993|pop|1
+接吻 -kiss-|ORIGINAL LOVE|1993|pop|1
+東京は夜の七時|ピチカート・ファイヴ|1993|pop|1
+いかれたBaby|フィッシュマンズ|1993|pop|1
+ラブリー|小沢健二|1994|pop|1
+さよならなんて云えないよ|小沢健二|1995|pop|1
+ナイトクルージング|フィッシュマンズ|1995|pop|1
+青春狂走曲|サニーデイ・サービス|1995|pop|1
+悲しみの果て|エレファントカシマシ|1996|pop|1
+JAM|THE YELLOW MONKEY|1996|pop|1
+花 -Mémento-Mori-|Mr.Children|1996|pop|1
+世界の終わり|THEE MICHELLE GUN ELEPHANT|1996|pop|1
+ストレンジ カメレオン|the pillows|1996|pop|1
+MIND CIRCUS|中谷美紀|1996|pop|1
+犬と猫|中村一義|1997|pop|1
+Lucky|SUPERCAR|1997|pop|1
+歌うたいのバラッド|斉藤和義|1997|pop|1
+くじら12号|JUDY AND MARY|1997|pop|1
+強く儚い者たち|Cocco|1997|pop|1
+東京|くるり|1998|pop|1
+赤いタンバリン|BLANKEY JET CITY|1998|pop|1
+透明少女|NUMBER GIRL|1999|pop|1
+Funny Bunny|the pillows|1999|pop|1
+丸の内サディスティック|椎名林檎|1999|pop|1
+エイリアンズ|キリンジ|2000|pop|1
+K|BUMP OF CHICKEN|2000|pop|1
+ばらの花|くるり|2001|pop|1
+笑えれば|ウルフルズ|2001|pop|1
+夜を駆ける|スピッツ|2002|pop|1
+君という花|ASIAN KUNG-FU GENERATION|2003|pop|1
+えりあし|aiko|2003|pop|1
+車輪の唄|BUMP OF CHICKEN|2004|pop|1
+群青日和|東京事変|2004|pop|1
+茜色の夕日|フジファブリック|2005|pop|1
+BABY BABY|銀杏BOYZ|2005|pop|1
+JOY|YUKI|2005|pop|1
+シャングリラ|チャットモンチー|2006|pop|1
+ふたりごと|RADWIMPS|2006|pop|1
+のうぜんかつら（リプライズ）|安藤裕子|2006|pop|1
+若者のすべて|フジファブリック|2007|pop|1
+鱗（うろこ）|秦基博|2007|pop|1
+空洞です|ゆらゆら帝国|2007|pop|1
+LOVEずっきゅん|相対性理論|2008|pop|1
+Telecastic fake show|凛として時雨|2008|pop|1
+風吹けば恋|チャットモンチー|2008|pop|1
+ネイティブダンサー|サカナクション|2009|pop|1
+ソラニン|ASIAN KUNG-FU GENERATION|2010|pop|1
+ばらばら|星野源|2010|pop|1
+できっこないを やらなくちゃ|サンボマスター|2010|pop|1
+Sunshine Girl|moumoon|2010|pop|1
+ルーキー|サカナクション|2011|pop|1
+花束|back number|2011|pop|1
+オリオンをなぞる|UNISON SQUARE GARDEN|2011|pop|1
+水星 feat.オノマトペ大臣|tofubeats|2012|pop|1
+憂、燦々|クリープハイプ|2013|pop|1
+よー、そこの若いの|竹原ピストル|2015|pop|1
+夏夜のマジック|indigo la End|2015|pop|1
+真赤|My Hair is Bad|2016|pop|1
+明るい未来|never young beach|2016|pop|1
+言って。|ヨルシカ|2017|pop|1
+ただ君に晴れ|ヨルシカ|2018|pop|1
+秒針を噛む|ずっと真夜中でいいのに。|2018|pop|1
+ノーダウト|Official髭男dism|2018|pop|1
+Prayer X|King Gnu|2018|pop|1
+東京フラッシュ|Vaundy|2019|pop|1
+春を告げる|yama|2020|pop|1
+なんでもないよ、|マカロニえんぴつ|2021|pop|1
+光るとき|羊文学|2022|pop|1
+悪の華|BUCK-TICK|1990|vkei|1
+Say Anything|X JAPAN|1991|vkei|1
+Déjàvu|LUNA SEA|1992|vkei|1
+Tears|X JAPAN|1993|vkei|1
+ドレス|BUCK-TICK|1993|vkei|1
+Blurry Eyes|L'Arc～en～Ciel|1994|vkei|1
+ずっと2人で…|GLAY|1995|vkei|1
+END OF SORROW|LUNA SEA|1996|vkei|1
+au revoir|MALICE MIZER|1997|vkei|1
+Like A Angel|黒夢|1997|vkei|1
+街|SOPHIA|1997|vkei|1
+花葬|L'Arc～en～Ciel|1998|vkei|1
+ever free|hide with Spread Beaver|1998|vkei|1
+Mizerable|Gackt|1999|vkei|1
+gravity|LUNA SEA|2000|vkei|1
+ain't afraid to die|Dir en grey|2002|vkei|1
+ダイヤモンドヴァージン|Janne Da Arc|2003|vkei|1
+瞳の住人|L'Arc～en～Ciel|2004|vkei|1
+THE FINAL|DIR EN GREY|2004|vkei|1
+蘭鋳|MUCC|2004|vkei|1
+Cassis|the GazettE|2005|vkei|1
+冬の幻|Acid Black Cherry|2007|vkei|1
+激しさと、この胸の中で絡み付いた灼熱の闇|DIR EN GREY|2008|vkei|1
+元カレ殺ス|ゴールデンボンバー|2011|vkei|1
+えれくとりっく・えんじぇぅ|ヤスオP|2007|vocalo|1
+ミラクルペイント|OSTER project|2008|vocalo|1
+歌に形はないけれど|doriko|2008|vocalo|1
+カンタレラ|黒うさP|2008|vocalo|1
+ハジメテノオト|malo|2009|vocalo|1
+from Y to Y|ジミーサムP|2009|vocalo|1
+ルカルカ★ナイトフィーバー|samfree|2009|vocalo|1
+ダブルラリアット|アゴアニキ|2009|vocalo|1
+天樂|ゆうゆ|2009|vocalo|1
+パラジクロロベンゼン|オワタP|2009|vocalo|1
+右肩の蝶|のりP|2009|vocalo|1
+結ンデ開イテ羅刹ト骸|ハチ|2009|vocalo|1
+アイロニ|すこっぷ|2010|vocalo|1
+深海少女|ゆうゆ|2010|vocalo|1
+心拍数#0822|蝶々P|2010|vocalo|1
+トリノコシティ|40mP|2010|vocalo|1
+ゆめゆめ|DECO*27|2010|vocalo|1
+独りんぼエンヴィー|電ポルP|2011|vocalo|1
+ヘッドフォンアクター|じん|2011|vocalo|1
+十面相|YM|2011|vocalo|1
+ODDS&ENDS|ryo(supercell)|2012|vocalo|1
+Tell Your World|livetune|2012|vocalo|1
+サリシノハラ|みきとP|2012|vocalo|1
+いーあるふぁんくらぶ|みきとP|2012|vocalo|1
+如月アテンション|じん|2012|vocalo|1
+アウターサイエンス|じん|2012|vocalo|1
+アヤノの幸福理論|じん|2012|vocalo|1
+人生リセットボタン|kemu|2012|vocalo|1
+放課後ストライド|Last Note.|2012|vocalo|1
+虎視眈々|梅とら|2012|vocalo|1
+リモコン|じーざすP|2012|vocalo|1
+心做し|蝶々P|2013|vocalo|1
+透明エレジー|n-buna|2013|vocalo|1
+ハッピーハロウィン|Junky|2013|vocalo|1
+ビバハピ|Mitchie M|2013|vocalo|1
+夜明けと蛍|n-buna|2014|vocalo|1
+神のまにまに|れるりり|2014|vocalo|1
+恋愛裁判|40mP|2014|vocalo|1
+おこちゃま戦争|ギガ|2014|vocalo|1
+少女レイ|みきとP|2014|vocalo|1
+ウミユリ海底譚|n-buna|2015|vocalo|1
+アンノウン・マザーグース|wowaka|2017|vocalo|1
+ボッカデラベリタ|柊キライ|2019|vocalo|1
+ビターチョコデコレーション|syudou|2019|vocalo|1
+シャンティ|wotaku|2019|vocalo|1
+アンドロイドガール|DECO*27|2019|vocalo|1
+ヴィラン|てにをは|2020|vocalo|1
+エゴロック|すりぃ|2022|vocalo|1
+Galaxy（우주를 줄게）|BOL4（赤頬思春期）|2016|kpop|1
+Travel（여행）|BOL4（赤頬思春期）|2020|kpop|1
+Cherry Blossom Ending（벚꽃 엔딩）|Busker Busker|2012|kpop|1
+Good Day（좋은 날）|IU|2010|kpop|1
+Through the Night（밤편지）|IU|2017|kpop|1
+Palette|IU|2017|kpop|1
+200%|AKMU（楽童ミュージシャン）|2014|kpop|1
+How can I love the heartbreak, you're the one I love|AKMU（楽童ミュージシャン）|2019|kpop|1
+What the Spring??（봄이 좋냐??）|10cm|2016|kpop|1
+Yanghwa BRDG（양화대교）|Zion.T|2014|kpop|1
+Beautiful|Crush（トッケビOST）|2017|kpop|1
+Every day, Every Moment（모든 날, 모든 순간）|Paul Kim|2018|kpop|1
+I|TAEYEON（テヨン）|2015|kpop|1
+Fine|TAEYEON（テヨン）|2017|kpop|1
+Starry Night|MAMAMOO|2018|kpop|1
+HIP|MAMAMOO|2019|kpop|1
+Psycho|Red Velvet|2019|kpop|1
+Feel My Rhythm|Red Velvet|2022|kpop|1
+NoNoNo|Apink|2013|kpop|1
+Electric Shock|f(x)|2012|kpop|1
+4 Walls|f(x)|2015|kpop|1
+Replay（누난 너무 예뻐）|SHINee|2008|kpop|1
+View|SHINee|2015|kpop|1
+Be Mine（내꺼하자）|INFINITE|2011|kpop|1
+Me Gustas Tu（오늘부터 우리는）|GFRIEND|2015|kpop|1
+Rough（시간을 달려서）|GFRIEND|2016|kpop|1
+Ah-Choo|Lovelyz|2015|kpop|1
+Secret Garden（비밀정원）|OH MY GIRL|2018|kpop|1
+Dun Dun Dance|OH MY GIRL|2021|kpop|1
+REALLY REALLY|WINNER|2017|kpop|1
+LOVE SCENARIO（사랑을 했다）|iKON|2018|kpop|1
+You Were Beautiful（예뻤어）|DAY6|2017|kpop|1
+Time of Our Life（한 페이지가 될 수 있게）|DAY6|2019|kpop|1
+8282|Davichi|2009|kpop|1
+BLUE|BIGBANG|2012|kpop|1
+Still Life（봄여름가을겨울）|BIGBANG|2022|kpop|1
+Abracadabra|Brown Eyed Girls|2009|kpop|1
+Bad Girl Good Girl|miss A|2010|kpop|1
+Touch my body|SISTAR|2014|kpop|1
+LATATA|(G)I-DLE|2018|kpop|1
+Very Nice（아주 NICE）|SEVENTEEN|2016|kpop|1
+Spring Day（봄날）|BTS|2017|kpop|1
+CHEER UP|TWICE|2016|kpop|1
+Any Song（아무노래）|ZICO|2020|kpop|1
+For Lovers Who Hesitate（주저하는 연인들을 위해）|JANNABI|2019|kpop|1
+Wi ing Wi ing（위잉위잉）|HYUKOH|2014|kpop|1
+Breathe（한숨）|LEE HI|2016|kpop|1
+You, Clouds, Rain（비도 오고 그래서）|Heize|2017|kpop|1
+Event Horizon（사건의 지평선）|YOUNHA|2022|kpop|1
+ASAP|STAYC|2021|kpop|1
+Discord（고민중독）|QWER|2024|kpop|1
+Bam Yang Gang（밤양갱）|BIBI|2024|kpop|1
+Midas Touch|KISS OF LIFE|2024|kpop|1
+ロマンティックあげるよ|橋本潮（ドラゴンボール）|1986|anime|1
+微笑みの爆弾|馬渡松子（幽☆遊☆白書）|1992|anime|1
+アンバランスなKissをして|高橋ひろ（幽☆遊☆白書）|1993|anime|1
+乙女のポリシー|石田よう子（美少女戦士セーラームーンR）|1993|anime|1
+君が好きだと叫びたい|BAAD（SLAM DUNK）|1993|anime|1
+あなただけ見つめてる|大黒摩季（SLAM DUNK）|1993|anime|1
+世界が終るまでは…|WANDS（SLAM DUNK）|1994|anime|1
+Get along|林原めぐみ&奥井雅美（スレイヤーズ）|1995|anime|1
+Give a reason|林原めぐみ（スレイヤーズNEXT）|1996|anime|1
+そばかす|JUDY AND MARY（るろうに剣心）|1996|anime|1
+1/2|川本真琴（るろうに剣心）|1996|anime|1
+DAN DAN 心魅かれてく|FIELD OF VIEW（ドラゴンボールGT）|1996|anime|1
+1/3の純情な感情|SIAM SHADE（るろうに剣心）|1997|anime|1
+輪舞-revolution|奥井雅美（少女革命ウテナ）|1997|anime|1
+謎|小松未歩（名探偵コナン）|1997|anime|1
+運命のルーレット廻して|ZARD（名探偵コナン）|1998|anime|1
+THE REAL FOLK BLUES|山根麻以（カウボーイビバップ）|1998|anime|1
+ターゲット ～赤い衝撃～|AiM（デジモンアドベンチャー02）|2000|anime|1
+The Biggest Dreamer|和田光司（デジモンテイマーズ）|2001|anime|1
+恋はスリル、ショック、サスペンス|愛内里菜（名探偵コナン）|2001|anime|1
+Get Over|dream（ヒカルの碁）|2002|anime|1
+INVOKE|T.M.Revolution（機動戦士ガンダムSEED）|2002|anime|1
+Believe|玉置成実（機動戦士ガンダムSEED）|2003|anime|1
+メリッサ|ポルノグラフィティ（鋼の錬金術師）|2003|anime|1
+リライト|ASIAN KUNG-FU GENERATION（鋼の錬金術師）|2004|anime|1
+ignited -イグナイテッド-|T.M.Revolution（機動戦士ガンダムSEED DESTINY）|2004|anime|1
+Shangri-La|angela（蒼穹のファフナー）|2004|anime|1
+鳥の詩|Lia（AIR）|2004|anime|1
+ETERNAL BLAZE|水樹奈々（魔法少女リリカルなのはA's）|2005|anime|1
+冒険でしょでしょ?|平野綾（涼宮ハルヒの憂鬱）|2006|anime|1
+だんご大家族|茶太（CLANNAD）|2007|anime|1
+時を刻む唄|Lia（CLANNAD AFTER STORY）|2008|anime|1
+恋愛サーキュレーション|千石撫子(花澤香菜)（化物語）|2009|anime|1
+君の知らない物語|supercell（化物語）|2009|anime|1
+ゴールデンタイムラバー|スキマスイッチ（鋼の錬金術師 FULLMETAL ALCHEMIST）|2009|anime|1
+Cagayake!GIRLS|放課後ティータイム（けいおん!）|2009|anime|1
+LEVEL5 -judgelight-|fripSide（とある科学の超電磁砲）|2010|anime|1
+oath sign|LiSA（Fate/Zero）|2011|anime|1
+Magia|Kalafina（魔法少女まどか☆マギカ）|2011|anime|1
+crossing field|LiSA（ソードアート・オンライン）|2012|anime|1
+to the beginning|Kalafina（Fate/Zero）|2012|anime|1
+Preserved Roses|T.M.Revolution×水樹奈々（革命機ヴァルヴレイヴ）|2013|anime|1
+Rising Hope|LiSA（魔法科高校の劣等生）|2014|anime|1
+This game|鈴木このみ（ノーゲーム・ノーライフ）|2014|anime|1
+イマジネーション|SPYAIR（ハイキュー!!）|2014|anime|1
+シュガーソングとビターステップ|UNISON SQUARE GARDEN（血界戦線）|2015|anime|1
+Brave Shine|Aimer（Fate/stay night [UBW]）|2015|anime|1
+Redo|鈴木このみ（Re:ゼロから始める異世界生活）|2016|anime|1
+Paradisus-Paradoxum|MYTH & ROID（Re:ゼロから始める異世界生活）|2016|anime|1
+Fly High!!|BURNOUT SYNDROMES（ハイキュー!!）|2016|anime|1
+Sincerely|TRUE（ヴァイオレット・エヴァーガーデン）|2018|anime|1
+青春コンプレックス|結束バンド（ぼっち・ざ・ろっく!）|2022|anime|1
+SPECIALZ|King Gnu（呪術廻戦）|2023|anime|1
+`.trim().split('\n').map(l=>{const [t,a,y,c,hd]=l.split('|');return {id:t+'|'+a,t,a,y:+y,c,h:hd==='1'}});
 
 const ERAS=[
  {k:'~79',label:'〜1979',from:0,to:1979},
@@ -514,20 +568,7 @@ const ERAS=[
 const CATS=[{k:'pop',label:'J-POP・歌謡'},{k:'anime',label:'アニメ'},{k:'vocalo',label:'ボカロ'},{k:'vkei',label:'ヴィジュアル系'},{k:'kpop',label:'K-POP'}];
 const CATLABEL={pop:'J-POP・歌謡',anime:'アニメ',vocalo:'ボカロ',vkei:'ヴィジュアル系',kpop:'K-POP'};
 
-const ODAI=[
- '中学生のとき、教室で誰かが歌ってた曲は？','高校の文化祭・体育祭で流れてた曲は？','部活の帰りや通学中にイヤホンで聴いてた曲は？',
- '初めてCD（またはダウンロード）で買った曲は？','好きだったドラマの主題歌は？','毎週見てたアニメのオープニングは？',
- '頭から離れなかったCMソングは？','紅白歌合戦で家族と見てた曲は？','親が車でよくかけてた曲は？',
- '友達がカラオケで毎回入れてた「十八番」は？','卒業式で歌った・流れた曲は？','運動会のダンスで踊った曲は？',
- '失恋したときに聴いてた曲は？','夏になると思い出す曲は？','冬・クリスマスになると思い出す曲は？',
- '着メロ・着うたにしてた曲は？','ゲームの主題歌やエンディングで好きだった曲は？','映画館で泣いた映画の主題歌は？',
- '「歌ってみた」やTikTokで流行ってた曲は？','バイト先の店内でずっと流れてた曲は？','結婚式の余興で使われてた曲は？',
- '修学旅行のバスで盛り上がった曲は？','音楽番組（Mステ・HEY!HEY!HEY!など）で印象に残ってる曲は？','子ども向け番組で覚えた歌は？','韓国ドラマやK-POPアイドルにハマった友達が歌ってた曲は？','バンドブームのころ、コピーしたかった・憧れたバンドの曲は？','ニコニコ動画やYouTubeで繰り返し聴いてたボカロ曲は？',
- 'よく行ったお店やゲーセンで流れてた曲は？','好きな芸能人がハマってた・出てた曲は？','いま好きな歌手の、デビューのころの曲は？',
- '「サビだけなら歌える」曲を3つ思い浮かべて','いつも歌う曲の「同じ歌手の別の曲」は？','いつも歌う曲が出た年の、他のヒット曲は？',
- 'デュエットできそうな曲は？','声が低くても歌える落ち着いた曲は？','手拍子・合いの手で盛り上がる曲は？'
-];
-const HINTS=['同じ歌手の別の曲も思い出してみて','この年にほかに流行ってた曲は？','この曲がかかってた場面を思い出してみて','似た雰囲気の曲で歌えるものは？'];
+const HINTS=['知らなかったら「気になる」に入れて、あとで聴いてみよう','同じ歌手の別の曲も思い出してみて','この年にほかに流行ってた曲は？','この曲がかかってた場面を思い出してみて','似た雰囲気の曲で歌えるものは？'];
 
 const $=s=>document.querySelector(s);
 const store={get(k,d){try{const v=localStorage.getItem('kgacha_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('kgacha_'+k,JSON.stringify(v))}catch(e){}}};
@@ -535,6 +576,8 @@ const store={get(k,d){try{const v=localStorage.getItem('kgacha_'+k);return v?JSO
 let birth=store.get('birth',null);
 let eraOn=new Set(store.get('eras',ERAS.map(e=>e.k)));
 let catOn=new Set(store.get('cats2',CATS.map(c=>c.k)));
+let typeOn=new Set(store.get('types',['hidden']));
+const TYPES=[{k:'hidden',label:'💎 隠れた名曲'},{k:'std',label:'📼 なつかしヒット'}];
 let judged=store.get('judged2',{}); // id -> sing/know/no
 let saved=store.get('saved',[]); // {t,a,y,c}
 let current=null;
@@ -551,10 +594,11 @@ function autoEras(){
 }
 function renderChips(){
   $('#eraChips').innerHTML=ERAS.map(e=>`<button class="chip ${eraOn.has(e.k)?'on':''}" data-era="${e.k}">${e.label}</button>`).join('');
+  $('#typeChips').innerHTML=TYPES.map(t=>`<button class="chip ${typeOn.has(t.k)?'on':''}" data-type="${t.k}">${t.label}</button>`).join('');
   $('#catChips').innerHTML=CATS.map(c=>`<button class="chip ${catOn.has(c.k)?'on':''}" data-cat="${c.k}">${c.label}</button>`).join('');
 }
 function pool(){
-  return RAW.filter(s=>catOn.has(s.c)&&(s.y===0||eraOn.has(eraOf(s.y).k))&&!judged[s.id]);
+  return RAW.filter(s=>catOn.has(s.c)&&typeOn.has(s.h?'hidden':'std')&&(s.y===0||eraOn.has(eraOf(s.y).k))&&!judged[s.id]);
 }
 function updateStat(){
   const p=pool().length;
@@ -572,28 +616,31 @@ function spin(){
   current=p[Math.floor(Math.random()*p.length)];
   const age=birth&&current.y?current.y-birth:null;
   const meta=`${current.y}年ごろ`+(age!==null&&age>=0?` ・ あなたが${age}歳のころ`:'');
-  $('#card').innerHTML=`<span class="tag">${CATLABEL[current.c]}</span>
+  const hint=current.c==='kpop'?'🇰🇷 JOYSOUNDでは韓国語版（カタカナルビ付き）を選んでね':HINTS[Math.floor(Math.random()*HINTS.length)];
+  $('#card').innerHTML=`<span class="tag">${CATLABEL[current.c]}${current.h?' ・ 💎隠れた名曲':''}</span>
     <div class="title"></div><div class="artist"></div>
     <div class="meta">${meta}</div>
-    <div class="hint">💭 ${HINTS[Math.floor(Math.random()*HINTS.length)]}</div>`;
+    <div class="hint">💭 ${hint}</div>`;
   $('#card .title').textContent=current.t;
   $('#card .artist').textContent=current.a;
   $('#judge').style.visibility='visible';
   updateStat();
 }
 function addSaved(item){
+  const ex=saved.find(s=>s.t===item.t&&s.a===item.a);
+  if(ex&&ex.fav&&!item.fav){ex.fav=false;store.set('saved',saved);renderList();toast('歌えるに変更しました');return}
   if(saved.some(s=>s.t===item.t&&s.a===item.a)){toast('もうリストにあります');return}
-  saved.unshift(item);store.set('saved',saved);renderList();updateStat();toast('リストに追加しました');
+  saved.unshift(item);store.set('saved',saved);renderList();updateStat();toast(item.fav?'「気になる」に追加しました':'リストに追加しました');
 }
 function renderList(){
   const ul=$('#list');
-  if(!saved.length){ul.innerHTML='<li class="empty" style="display:block">まだありません。ガチャで「歌える！」を押すとここに貯まります。</li>';return}
+  if(!saved.length){ul.innerHTML='<li class="empty" style="display:block">まだありません。ガチャで「歌える！」「気になる」を押すとここに貯まります。</li>';return}
   ul.innerHTML='';
   saved.forEach((s,i)=>{
     const li=document.createElement('li');
     li.innerHTML=`<div class="t"><b></b><small></small></div><button class="btn small" data-copy="${i}">コピー</button><button class="btn small" data-del="${i}">✕</button>`;
     li.querySelector('b').textContent=s.t;
-    li.querySelector('small').textContent=(s.a||'')+(s.y?` ・ ${s.y}年ごろ`:'');
+    li.querySelector('small').textContent=(s.fav?'☆気になる ・ ':'')+(s.a||'')+(s.y?` ・ ${s.y}年ごろ`:'');
     ul.appendChild(li);
   });
 }
@@ -602,7 +649,7 @@ async function copy(text){try{await navigator.clipboard.writeText(text);toast('�
 // events
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
-  ['gacha','odai','all','list'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  ['gacha','all','list'].forEach(t=>$('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
 });
 $('#by').oninput=e=>{
   const v=+e.target.value;
@@ -610,17 +657,16 @@ $('#by').oninput=e=>{
     $('#byNote').textContent=`→ ${ERAS.filter(x=>eraOn.has(x.k)).map(x=>x.label).join('・')}`;}
 };
 $('#eraChips').onclick=e=>{const k=e.target.dataset.era;if(!k)return;eraOn.has(k)?eraOn.delete(k):eraOn.add(k);store.set('eras',[...eraOn]);renderChips();updateStat()};
+$('#typeChips').onclick=e=>{const k=e.target.dataset.type;if(!k)return;typeOn.has(k)?typeOn.delete(k):typeOn.add(k);store.set('types',[...typeOn]);renderChips();updateStat()};
 $('#catChips').onclick=e=>{const k=e.target.dataset.cat;if(!k)return;catOn.has(k)?catOn.delete(k):catOn.add(k);store.set('cats2',[...catOn]);renderChips();updateStat()};
 $('#spin').onclick=spin;
 $('#judge').onclick=e=>{
   const j=e.target.closest('[data-j]');if(!j||!current)return;
   judged[current.id]=j.dataset.j;store.set('judged2',judged);
   if(j.dataset.j==='sing')addSaved({t:current.t,a:current.a,y:current.y,c:current.c});
+  if(j.dataset.j==='fav')addSaved({t:current.t,a:current.a,y:current.y,c:current.c,fav:true});
   spin();
 };
-let lastOdai=-1;
-function nextOdai(){let i;do{i=Math.floor(Math.random()*ODAI.length)}while(i===lastOdai);lastOdai=i;$('#odaiText').textContent=ODAI[i]}
-$('#nextOdai').onclick=nextOdai;
 $('#addFree').onclick=()=>{const v=$('#freeTitle').value.trim();if(!v)return;addSaved({t:v,a:'',y:0,c:'free'});$('#freeTitle').value=''};
 $('#list').onclick=e=>{
   if(e.target.dataset.copy!==undefined)copy(saved[+e.target.dataset.copy].t);
@@ -638,7 +684,7 @@ function renderAll(){
     if(er!==lastEra){const h=document.createElement('li');h.innerHTML=`<b style="color:var(--accent2);font-size:13px">${er}</b>`;ul.appendChild(h);lastEra=er}
     const li=document.createElement('li');
     li.innerHTML=`<div class="t"><b></b><small></small></div><button class="btn small" data-add="${RAW.indexOf(s)}">＋</button>`;
-    li.querySelector('b').textContent=s.t;li.querySelector('small').textContent=`${s.a} ・ ${s.y}年ごろ`;
+    li.querySelector('b').textContent=(s.h?'💎 ':'')+s.t;li.querySelector('small').textContent=`${s.a} ・ ${s.y}年ごろ`;
     ul.appendChild(li);
   });
 }
@@ -648,7 +694,7 @@ $('#allList').onclick=e=>{const i=e.target.dataset.add;if(i===undefined)return;c
 // init
 renderAll();
 if(birth){$('#by').value=birth;$('#byNote').textContent=`→ ${ERAS.filter(x=>eraOn.has(x.k)).map(x=>x.label).join('・')}`}
-renderChips();renderList();updateStat();nextOdai();
+renderChips();renderList();updateStat();
 </script>
 </body>
 </html>
